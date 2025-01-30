@@ -15,6 +15,7 @@
 	<link rel="canonical" href="https://demo-basic.adminkit.io/" />
 
 	<title>Super Admin</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css" rel="stylesheet">
 
 	<link href="{{asset('superadmin_asset/css/app.css')}}" rel="stylesheet">
 	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">

@@ -11,7 +11,15 @@
             </button>
         </a>
     </div>
-    
+    @if(session('success'))
+        <div class="alert alert-success fw-bold text-success ml-5">
+            {{ session('success') }}
+        </div>
+    @elseif(session('error'))
+        <div class="alert alert-danger fw-bold text-danger ml-5">
+            {{ session('error') }}
+        </div>
+    @endif
     <div class="card p-2">
         <div class="table-responsive">
           <table class="table">
@@ -41,7 +49,7 @@
                                 <form action="{{ route('SuperAdmin.page.user.delete', $user->id) }}" method="POST" style="display:inline;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" style="border: none; background: transparent; padding: 0;" onclick="return confirm('Are you sure?')"><i class="align-middle me-2" data-feather="trash-2"></i></button>
+                                    <button type="submit" style="border: none; background: transparent; padding: 0;" onclick="return confirm('Are you sure you want to delete user {{ $user->name }}?')"><i class="align-middle me-2" data-feather="trash-2"></i></button>
                                 </form>
                             </td>
                         </tr>
@@ -53,6 +61,12 @@
                 @endif
             </tbody>
         </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination d-flex align-items-end flex-column mb-3">
+                <!-- This will dynamically generate the pagination links -->
+                {{ $users->links('pagination::bootstrap-5') }}
+            </ul>
+        </nav>
         
         </div>
     </div>

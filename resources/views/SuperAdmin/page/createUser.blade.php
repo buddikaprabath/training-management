@@ -13,6 +13,16 @@
             </a>
         </button>
     </div>
+    @if(session('success'))
+        <div class="alert alert-success">
+            {{ session('success') }}
+        </div>
+    @elseif(session('error'))
+        <div class="alert alert-danger">
+            {{ session('error') }}
+        </div>
+    @endif
+    
     <div class="card-body p-4 bg-body rounded-md shadow-lg">
         <form class="row g-3" action="{{ isset($user) ? route('SuperAdmin.page.user.update', $user->id) : route('SuperAdmin.page.user.store') }}" method="POST">
             @csrf
@@ -22,62 +32,86 @@
             
             <div class="col-md-6">
                 <label for="name" class="form-label">Name</label>
-                <input name="name" type="text" class="form-control track-change" placeholder="Name" value="{{ isset($user) ? $user->name : '' }}" required>
+                <input name="name" type="text" class="form-control track-change @error('name') is-invalid @enderror" placeholder="Name" value="{{ old('name', isset($user) ? $user->name : '') }}" required>
+                @error('name')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
             <div class="col-md-6">
                 <label for="username" class="form-label">User Name</label>
-                <input name="username" type="text" class="form-control track-change" placeholder="UserName" value="{{ isset($user) ? $user->username : '' }}" required>
+                <input name="username" type="text" class="form-control track-change @error('username') is-invalid @enderror" placeholder="UserName" value="{{ old('username', isset($user) ? $user->username : '') }}" required>
+                @error('username')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
             <div class="col-md-6">
                 <label for="inputEmail4" class="form-label">Email</label>
-                <input name="email" type="email" class="form-control track-change" id="inputEmail4" value="{{ isset($user) ? $user->email : '' }}" required>
+                <input name="email" type="email" class="form-control track-change @error('email') is-invalid @enderror" id="inputEmail4" value="{{ old('email', isset($user) ? $user->email : '') }}" required>
+                @error('email')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
             <div class="col-md-6">
                 <label for="password" class="form-label">Password</label>
-                <input name="password" type="password" class="form-control track-change" id="password" {{ isset($user) ? '' : 'required' }}>
+                <input name="password" type="password" class="form-control track-change @error('password') is-invalid @enderror" id="password" {{ isset($user) ? '' : 'required' }}>
+                @error('password')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
             <div class="col-md-6">
                 <label for="confirmPassword" class="form-label">Confirm Password</label>
-                <input type="password" class="form-control track-change" id="confirmPassword" name="password_confirmation" {{ isset($user) ? '' : 'required' }}>
+                <input type="password" class="form-control track-change @error('password_confirmation') is-invalid @enderror" id="confirmPassword" name="password_confirmation" {{ isset($user) ? '' : 'required' }}>
+                @error('password_confirmation')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
                 <small id="passwordError" class="text-danger"></small>
             </div>
             <div class="col-md-6">
                 <label for="role" class="form-label">User Role</label>
-                <select name="role" class="form-select track-change" required>
+                <select name="role" class="form-select track-change @error('role') is-invalid @enderror" required>
                     <option selected disabled>Choose...</option>
-                    <option value="superadmin" {{ isset($user) && $user->role == 'superadmin' ? 'selected' : '' }}>Super Admin</option>
-                    <option value="hradmin" {{ isset($user) && $user->role == 'hradmin' ? 'selected' : '' }}>HR Admin</option>
-                    <option value="catcadmin" {{ isset($user) && $user->role == 'catcadmin' ? 'selected' : '' }}>CATC Admin</option>
-                    <option value="user" {{ isset($user) && $user->role == 'user' ? 'selected' : '' }}>User</option>
+                    <option value="superadmin" {{ old('role', isset($user) && $user->role == 'superadmin' ? 'selected' : '') }}>Super Admin</option>
+                    <option value="hradmin" {{ old('role', isset($user) && $user->role == 'hradmin' ? 'selected' : '') }}>HR Admin</option>
+                    <option value="catcadmin" {{ old('role', isset($user) && $user->role == 'catcadmin' ? 'selected' : '') }}>CATC Admin</option>
+                    <option value="user" {{ old('role', isset($user) && $user->role == 'user' ? 'selected' : '') }}>User</option>
                 </select>
+                @error('role')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
             <div class="col-md-6">
                 <label for="division" class="form-label">Divisions</label>
-                <select name="division_id" id="division" class="form-select track-change" required>
+                <select name="division_id" id="division" class="form-select track-change @error('division_id') is-invalid @enderror" required>
                     <option selected disabled>Choose...</option>
-                    <option value="1" {{ isset($user) && $user->division_id == 1 ? 'selected' : '' }}>HR</option>
-                    <option value="2" {{ isset($user) && $user->division_id == 2 ? 'selected' : '' }}>CATC</option>
-                    <option value="3" {{ isset($user) && $user->division_id == 3 ? 'selected' : '' }}>IT</option>
-                    <option value="4" {{ isset($user) && $user->division_id == 4 ? 'selected' : '' }}>FINANCE</option>
-                    <option value="5" {{ isset($user) && $user->division_id == 5 ? 'selected' : '' }}>SCM</option>
-                    <option value="6" {{ isset($user) && $user->division_id == 6 ? 'selected' : '' }}>MARKETING</option>
-                    <option value="7" {{ isset($user) && $user->division_id == 7 ? 'selected' : '' }}>SECURITY</option>
+                    <option value="1" {{ old('division_id', isset($user) && $user->division_id == 1 ? 'selected' : '') }}>HR</option>
+                    <option value="2" {{ old('division_id', isset($user) && $user->division_id == 2 ? 'selected' : '') }}>CATC</option>
+                    <option value="3" {{ old('division_id', isset($user) && $user->division_id == 3 ? 'selected' : '') }}>IT</option>
+                    <option value="4" {{ old('division_id', isset($user) && $user->division_id == 4 ? 'selected' : '') }}>FINANCE</option>
+                    <option value="5" {{ old('division_id', isset($user) && $user->division_id == 5 ? 'selected' : '') }}>SCM</option>
+                    <option value="6" {{ old('division_id', isset($user) && $user->division_id == 6 ? 'selected' : '') }}>MARKETING</option>
+                    <option value="7" {{ old('division_id', isset($user) && $user->division_id == 7 ? 'selected' : '') }}>SECURITY</option>
                 </select>
+                @error('division_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
             
             <div class="col-md-6" id="sectionContainer" style="display: {{ isset($user) && $user->division_id == 2 ? 'block' : 'none' }};">
                 <label for="section_id" class="form-label">Sections</label>
-                <select name="section_id" id="section" class="form-select track-change" {{ isset($user) && $user->division_id != 2 ? 'disabled' : '' }}>
+                <select name="section_id" id="section" class="form-select track-change @error('section_id') is-invalid @enderror" {{ isset($user) && $user->division_id != 2 ? 'disabled' : '' }}>
                     <option disabled selected>Choose...</option>
-                    <option value="1" {{ isset($user) && $user->section_id == 1 ? 'selected' : '' }}>WING 1</option>
-                    <option value="2" {{ isset($user) && $user->section_id == 2 ? 'selected' : '' }}>WING 2</option>
-                    <option value="3" {{ isset($user) && $user->section_id == 3 ? 'selected' : '' }}>WING 3</option>
-                    <option value="4" {{ isset($user) && $user->section_id == 4 ? 'selected' : '' }}>WING 4</option>
-                    <option value="5" {{ isset($user) && $user->section_id == 5 ? 'selected' : '' }}>WING 5</option>
-                    <option value="6" {{ isset($user) && $user->section_id == 6 ? 'selected' : '' }}>WING 6</option>
-                    <option value="7" {{ isset($user) && $user->section_id == 7 ? 'selected' : '' }}>WING 7</option>
-                    <option value="8" {{ isset($user) && $user->section_id == 8 ? 'selected' : '' }}>WING 8</option>
+                    <option value="1" {{ old('section_id', isset($user) && $user->section_id == 1 ? 'selected' : '') }}>WING 1</option>
+                    <option value="2" {{ old('section_id', isset($user) && $user->section_id == 2 ? 'selected' : '') }}>WING 2</option>
+                    <option value="3" {{ old('section_id', isset($user) && $user->section_id == 3 ? 'selected' : '') }}>WING 3</option>
+                    <option value="4" {{ old('section_id', isset($user) && $user->section_id == 4 ? 'selected' : '') }}>WING 4</option>
+                    <option value="5" {{ old('section_id', isset($user) && $user->section_id == 5 ? 'selected' : '') }}>WING 5</option>
+                    <option value="6" {{ old('section_id', isset($user) && $user->section_id == 6 ? 'selected' : '') }}>WING 6</option>
+                    <option value="7" {{ old('section_id', isset($user) && $user->section_id == 7 ? 'selected' : '') }}>WING 7</option>
+                    <option value="8" {{ old('section_id', isset($user) && $user->section_id == 8 ? 'selected' : '') }}>WING 8</option>
                 </select>
+                @error('section_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
             </div>
                         
             <div class="col-12">

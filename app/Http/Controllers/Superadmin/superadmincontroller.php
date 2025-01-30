@@ -20,7 +20,7 @@ class superadmincontroller extends Controller
 
     public function userview()
     {
-        $users = \App\Models\User::with(['division', 'section'])->get();
+        $users = \App\Models\User::with(['division', 'section'])->paginate(10); // Paginate 10 users per page
 
         return view('SuperAdmin.page.UserDetails', compact('users'));
     }
@@ -42,6 +42,15 @@ class superadmincontroller extends Controller
             'section_id' => 'nullable|integer',  // section_id is optional, but must be an integer if provided
             'password' => 'required|string|min:8|confirmed', // Ensure password is confirmed
         ]);
+
+        // Check if user already exists
+        $existingUser = User::where('username', $validatedData['username'])
+            ->orWhere('email', $validatedData['email'])
+            ->first();
+
+        if ($existingUser) {
+            return redirect()->route('SuperAdmin.page.createUser')->with('error', 'User already exist!');
+        }
 
         // Create the user
         $user = User::create([
