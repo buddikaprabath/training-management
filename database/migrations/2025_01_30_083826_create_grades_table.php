@@ -12,8 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('grades', function (Blueprint $table) {
-            $table->id();
+            $table->string('unique_identifier');
+            $table->unsignedBigInteger('participant_id');
+            $table->unsignedBigInteger('subject_id');
+            $table->string('grade'); // Normal attribute for storing grade
             $table->timestamps();
+
+            // Define composite primary key
+            $table->primary(['unique_identifier', 'participant_id', 'subject_id']);
+
+            // Foreign key constraints
+            $table->foreign('participant_id')->references('id')->on('participants')->onDelete('cascade');
+            $table->foreign('subject_id')->references('id')->on('subjects')->onDelete('cascade');
         });
     }
 

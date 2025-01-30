@@ -11,9 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('training__trainers', function (Blueprint $table) {
-            $table->id();
+        Schema::create('training_trainers', function (Blueprint $table) {
+            $table->unsignedBigInteger('training_id');
+            $table->unsignedBigInteger('trainer_id');
             $table->timestamps();
+
+            // Define composite primary key
+            $table->primary(['training_id', 'trainer_id']);
+
+            // Foreign key constraints
+            $table->foreign('training_id')->references('id')->on('trainings')->onDelete('cascade');
+            $table->foreign('trainer_id')->references('id')->on('trainers')->onDelete('cascade');
         });
     }
 
@@ -22,6 +30,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('training__trainers');
+        Schema::dropIfExists('training_trainers');
     }
 };

@@ -20,8 +20,6 @@ return new class extends Migration
             $table->decimal('visa_fee', 10, 2)->nullable();
             $table->decimal('travel_insurance', 10, 2)->nullable();
             $table->decimal('warm_clothes', 10, 2)->nullable();
-            $table->decimal('total_per_head', 10, 2)->nullable();
-            $table->decimal('total_for_all_nomination', 10, 2)->nullable();
             $table->foreignId('training_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
