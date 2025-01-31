@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('mode_of_delivery');
             $table->date('training_period_from');
             $table->date('training_period_to');
-            $table->integer('total_training_hours'); // 8 digits in total, 2 decimal places
+            $table->integer('total_training_hours');
             $table->decimal('total_program_cost', 10, 2);
             $table->string('country')->nullable();
             $table->string('training_structure')->nullable();

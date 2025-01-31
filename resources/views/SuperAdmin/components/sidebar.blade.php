@@ -12,8 +12,8 @@
             </a>
         </li>
 
-        <li class="sidebar-item {{ request()->routeis('SuperAdmin.page.UserDetails')?'active':''}}">
-            <a class="sidebar-link" href="{{route('SuperAdmin.page.UserDetails')}}">
+        <li class="sidebar-item {{ request()->routeis('SuperAdmin.Users.Details')?'active':''}}">
+            <a class="sidebar-link" href="{{route('SuperAdmin.Users.Details')}}">
                 <i class="align-middle" data-feather="user"></i> <span class="align-middle">Manage User</span>
             </a>
         </li>

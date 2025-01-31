@@ -6,12 +6,12 @@
         <p class="p-1 m-0">User Details</p>
         
         <!-- Search Form -->
-        <form class="d-flex" method="GET" action="{{ route('SuperAdmin.page.user.search') }}">
+        <form class="d-flex" method="GET" action="{{ route('SuperAdmin.Users.user.search') }}">
             <input class="form-control me-2" type="search" name="query" placeholder="name, username, or email" value="{{ request('query') }}">
             <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
 
-        <a href="{{route('SuperAdmin.page.createUser')}}">
+        <a href="{{route('SuperAdmin.Users.Create')}}">
             <button type="button" class="btn btn-primary">
                 <i class="ml-2" data-feather="user-plus" style="width: 24px; height: 24px;"></i>
                 Create User
@@ -54,10 +54,10 @@
                                 <td>{{ $user->division->division_name }}</td>
                                 <td>{{ $user->section ? $user->section->section_name : 'None'}}</td>
                                 <td>
-                                    <a href="{{ route('SuperAdmin.page.user.edit', $user->id) }}">
+                                    <a href="{{ route('SuperAdmin.Users.edit', $user->id) }}">
                                         <i class="align-middle me-2" data-feather="edit"></i>
                                     </a>
-                                    <form action="{{ route('SuperAdmin.page.user.delete', $user->id) }}" method="POST" style="display:inline;">
+                                    <form action="{{ route('SuperAdmin.Users.user.delete', $user->id) }}" method="POST" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" style="border: none; background: transparent; padding: 0;" onclick="return confirm('Are you sure you want to delete user {{ $user->name }}?')">

@@ -4,7 +4,7 @@
 <div class="card">
     <div class="m-3 d-flex justify-content-between align-items-center">
         <p class="p-1 m-0">Training Details</p>
-        <a href="#" style="text-decoration: none">
+        <a href="{{route('SuperAdmin.training.create')}}" style="text-decoration: none">
          <button type="button" class="btn btn-primary d-flex align-items-center">
             <svg xmlns="http://www.w3.org/2000/svg" style="width: 30px; height: 30px; margin-right: 5px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                <circle cx="12" cy="12" r="10"></circle>
@@ -38,6 +38,7 @@
                     <th>Batch Size</th>
                     <th>Category</th>
                     <th>Participant</th>
+                    <th>Cost break down</th>
                     <th>Action</th>
                 </tr>
             </thead>

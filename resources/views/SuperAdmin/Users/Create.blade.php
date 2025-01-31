@@ -4,7 +4,7 @@
     <div class="card-header d-flex justify-content-between">
         <p class="fw-bold">{{ isset($user) ? 'Edit User' : 'Create User' }}</p>
         <button id="backButton" style="border: none; background: transparent; padding: 0;" type="button">
-            <a href="{{ route('SuperAdmin.page.UserDetails') }}" class="text-white text-decoration-none">
+            <a href="{{ route('SuperAdmin.Users.Details') }}" class="text-white text-decoration-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left-circle w-75 h-75">
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 8 8 12 12 16"></polyline>
@@ -24,7 +24,7 @@
     @endif
     
     <div class="card-body p-4 bg-body rounded-md shadow-lg">
-        <form class="row g-3" action="{{ isset($user) ? route('SuperAdmin.page.user.update', $user->id) : route('SuperAdmin.page.user.store') }}" method="POST">
+        <form class="row g-3" action="{{ isset($user) ? route('SuperAdmin.Users.user.update', $user->id) : route('SuperAdmin.Users.user.store') }}" method="POST">
             @csrf
             @if(isset($user))
                 @method('PUT') <!-- HTTP method spoofing for PUT request -->
@@ -149,7 +149,7 @@
             event.preventDefault(); // Stop default navigation
             let confirmLeave = confirm("You have unsaved changes. Are you sure you want to go back?");
             if (confirmLeave) {
-                window.location.href = "{{ route('SuperAdmin.page.UserDetails') }}";
+                window.location.href = "{{ route('SuperAdmin.Users.Details') }}";
             }
         }
     });

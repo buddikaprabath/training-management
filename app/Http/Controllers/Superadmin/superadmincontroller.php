@@ -9,6 +9,7 @@ use APP\Models\Division;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\Country;
 use Illuminate\Support\Facades\Hash;
 
 class superadmincontroller extends Controller
@@ -32,12 +33,12 @@ class superadmincontroller extends Controller
             $users = User::paginate(10); // Load all users if no search
         }
 
-        return view('SuperAdmin.page.UserDetails', compact('users', 'query'));
+        return view('SuperAdmin.Users.Details', compact('users', 'query'));
     }
 
     public function createUserView()
     {
-        return view('SuperAdmin.page.createUser');
+        return view('SuperAdmin.Users.Create');
     }
 
     public function create(Request $request)
@@ -59,7 +60,7 @@ class superadmincontroller extends Controller
             ->first();
 
         if ($existingUser) {
-            return redirect()->route('SuperAdmin.page.createUser')->with('error', 'User already exist!');
+            return redirect()->route('SuperAdmin.Users.Create')->with('error', 'User already exist!');
         }
 
         // Create the user
@@ -74,13 +75,13 @@ class superadmincontroller extends Controller
         ]);
 
         // Redirect to the specified route with success message
-        return redirect()->route('SuperAdmin.page.UserDetails')->with('success', 'User created successfully!');
+        return redirect()->route('SuperAdmin.Users.Details')->with('success', 'User created successfully!');
     }
 
     public function edit($id)
     {
         $user = User::findOrFail($id); // Find the user by ID
-        return view('SuperAdmin.page.createUser', compact('user')); // Pass the user data to the edit view
+        return view('SuperAdmin.Users.Create', compact('user')); // Pass the user data to the edit view
     }
 
     public function update(Request $request, $id)
@@ -113,7 +114,7 @@ class superadmincontroller extends Controller
         ]);
 
         // Redirect to the specified route with success message
-        return redirect()->route('SuperAdmin.page.UserDetails')->with('success', 'User updated successfully!');
+        return redirect()->route('SuperAdmin.Users.Details')->with('success', 'User updated successfully!');
     }
 
     public function destroy($id)
@@ -125,17 +126,26 @@ class superadmincontroller extends Controller
         $user->delete();
 
         // Redirect back with success message
-        return redirect()->route('SuperAdmin.page.UserDetails')->with('success', 'User deleted successfully!');
+        return redirect()->route('SuperAdmin.Users.Details')->with('success', 'User deleted successfully!');
     }
+    //end user handling functions
 
     //training handling
 
+    //training details view page
     public function trainingview()
     {
         return view('SuperAdmin.training.Detail');
     }
 
+    //training create page
+    public function createtrainingview()
+    {
+        $countries = DB::table('countries')->get();
 
+        return view('SuperAdmin.training.create', compact('countries'));
+    }
+    //end training handling functions
     //participant handling
 
     public function participantview()

@@ -12,18 +12,21 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(function () {
     Route::controller(superadmincontroller::class)->group(function () {
         Route::prefix('SuperAdmin')->name('SuperAdmin.')->group(function () {
-            //users details routes
+            //dashboard routes
             Route::prefix('page')->name('page.')->group(function () {
                 Route::get('dashboard', 'index')->name('dashboard');
+            });
+            //users details routes
+            Route::prefix('Users')->name('Users.')->group(function () {
 
-                Route::get('UserDetails', 'userview')->name('UserDetails'); //load the user details page
-                Route::get('createUser', 'createUserView')->name('createUser'); //load the create user page 
+                Route::get('Details', 'userview')->name('Details'); //load the user details page
+                Route::get('Create', 'createUserView')->name('Create'); //load the create user page 
 
                 // Store user (for create)
                 Route::post('store', 'create')->name('user.store');
 
                 // Edit user (for edit form)
-                Route::get('editUser/{id}', 'edit')->name('user.edit');
+                Route::get('editUser/{id}', 'edit')->name('edit');
 
                 // Update user (for edit)
                 Route::put('updateUser/{id}', 'update')->name('user.update');
@@ -37,6 +40,8 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
             //training routes
             Route::prefix('training')->name('training.')->group(function () {
                 Route::get('Detail', 'trainingview')->name('Detail'); //load training details view
+                Route::get('create', 'createtrainingview')->name('create'); //load the training create page
+                Route::post('store', 'create')->name('store'); // Store user (for create)
             });
 
             //participant routes
