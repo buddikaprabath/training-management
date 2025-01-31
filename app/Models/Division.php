@@ -21,4 +21,19 @@ class Division extends Model
     {
         return $this->hasMany(Section::class);
     }
+
+    public function budget()
+    {
+        return $this->hasMany(Budget::class);
+    }
+
+    public function training()
+    {
+        return $this->hasMany(Training::class);
+    }
+
+    public function participant()
+    {
+        return $this->hasMany(Participant::class);
+    }
 }

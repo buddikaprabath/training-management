@@ -22,6 +22,7 @@ return new class extends Migration
             $table->primary(['unique_identifier', 'participant_id', 'subject_id']);
 
             // Foreign key constraints
+            $table->foreign('unique_identifier')->references('id')->on('trainings')->onDelete('cascade');
             $table->foreign('participant_id')->references('id')->on('participants')->onDelete('cascade');
             $table->foreign('subject_id')->references('id')->on('subjects')->onDelete('cascade');
         });
