@@ -11,6 +11,8 @@ class Training extends Model
 
     protected $primaryKey = 'id';  // Primary key is 'id' (custom format)
     public $incrementing = false;  // Disable auto-incrementing for the primary key
+    protected $keyType = 'string'; // Ensure primary key is treated as a string
+
     protected $fillable = [
         'id',
         'training_code',
@@ -24,7 +26,6 @@ class Training extends Model
         'training_structure',
         'exp_date',
         'batch_size',
-        'awarding_institute',
         'training_custodian',
         'course_type',
         'category',
@@ -42,18 +43,19 @@ class Training extends Model
     protected static function booted()
     {
         static::creating(function ($training) {
-            // Generate custom 'id' (primary key) in the format 'UI-001', 'UI-002', etc.
+            // Generate a unique 'id' (primary key) in the format 'UI-001'
             $latest = self::latest('created_at')->first();
-            $number = $latest ? (int) substr($latest->id, 3) + 1 : 1;
+            $number = $latest ? ((int) substr($latest->id, 3)) + 1 : 1;
             $training->id = 'UI-' . str_pad($number, 3, '0', STR_PAD_LEFT);
 
-            // Generate custom 'training_code' in the format 'TC-001', 'TC-002', etc.
-            $trainingCodeNumber = $latest ? (int) substr($latest->training_code, 3) + 1 : 1;
+            // Generate a unique 'training_code' in the format 'TC-001'
+            $latestTrainingCode = self::latest('created_at')->first();
+            $trainingCodeNumber = $latestTrainingCode ? ((int) substr($latestTrainingCode->training_code, 3)) + 1 : 1;
             $training->training_code = 'TC-' . str_pad($trainingCodeNumber, 3, '0', STR_PAD_LEFT);
         });
     }
 
-    // Relations (example)
+    // Relationships
     public function division()
     {
         return $this->belongsTo(Division::class);
@@ -61,11 +63,21 @@ class Training extends Model
 
     public function section()
     {
-        return $this->belongsTo(Section::class);
+        return $this->belongsTo(Section::class, 'section_id');
     }
 
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function trainers()
+    {
+        return $this->belongsToMany(Trainer::class, 'training_trainers');
+    }
+
+    public function institutes()
+    {
+        return $this->belongsToMany(Institute::class, 'training_institutes');
     }
 }

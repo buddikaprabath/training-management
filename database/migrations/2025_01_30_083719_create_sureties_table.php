@@ -16,11 +16,11 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('epf_number')->nullable();
             $table->text('address')->nullable();
-            $table->integer('mobile')->nullable();
+            $table->string('mobile')->nullable();
             $table->string('nic')->nullable();
             $table->decimal('salary_scale', 10, 2)->nullable();
             $table->string('designation')->nullable();
-            $table->foreignId('participant_id')->nullable()->constrained()->onDelete('cascade');
+            $table->foreignId('participant_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }
