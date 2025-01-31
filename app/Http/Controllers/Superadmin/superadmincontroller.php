@@ -18,11 +18,21 @@ class superadmincontroller extends Controller
         return view('SuperAdmin.page.dashboard');
     }
 
-    public function userview()
+    public function userview(Request $request)
     {
-        $users = \App\Models\User::with(['division', 'section'])->paginate(10); // Paginate 10 users per page
+        $query = $request->input('query');
 
-        return view('SuperAdmin.page.UserDetails', compact('users'));
+        // If search query exists, filter users
+        if ($query) {
+            $users = User::where('name', 'LIKE', "%{$query}%")
+                ->orWhere('username', 'LIKE', "%{$query}%")
+                ->orWhere('email', 'LIKE', "%{$query}%")
+                ->paginate(10);
+        } else {
+            $users = User::paginate(10); // Load all users if no search
+        }
+
+        return view('SuperAdmin.page.UserDetails', compact('users', 'query'));
     }
 
     public function createUserView()

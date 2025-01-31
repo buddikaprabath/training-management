@@ -29,6 +29,9 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::put('updateUser/{id}', 'update')->name('user.update');
                 // Delete user
                 Route::delete('deleteUser/{id}', 'destroy')->name('user.delete');
+
+                // Search Route for User Details
+                Route::get('searchUsers', 'userview')->name('user.search'); // Search users by name, username, or email
             });
 
             //training routes

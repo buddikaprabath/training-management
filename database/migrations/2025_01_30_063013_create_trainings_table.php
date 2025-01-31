@@ -24,7 +24,6 @@ return new class extends Migration
             $table->string('training_structure')->nullable();
             $table->date('exp_date')->nullable();
             $table->integer('batch_size')->nullable();
-            $table->string('awarding_institute');
             $table->text('training_custodian')->nullable();
             $table->string('course_type');
             $table->string('category');

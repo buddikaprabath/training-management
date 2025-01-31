@@ -25,8 +25,7 @@ return new class extends Migration
             $table->date('date_of_signing');
             $table->decimal('age_as_at_commencement_date', 2, 2, 2);
             $table->date('date_of_appointment');
-            $table->date('date_of_appointment_to_the_present');
-            $table->string('post');
+            $table->date('date_of_appointment_to_the_present_post');
             $table->date('date_of_birth');
             $table->foreignId('division_id')->constrained()->onDelete('cascade');
             $table->foreignId('training_id')->constrained()->onDelete('cascade');
