@@ -9,7 +9,7 @@
                     <circle cx="12" cy="12" r="10"></circle>
                     <polyline points="12 8 8 12 12 16"></polyline>
                     <line x1="16" y1="12" x2="8" y2="12"></line>
-                </svg>                              
+                </svg>
             </a>
         </button>
     </div>
@@ -22,14 +22,28 @@
             {{ session('error') }}
         </div>
     @endif
-    
+
     <div class="card-body p-4 bg-body rounded-md shadow-lg">
-        <form class="row g-3" action="{{ isset($training) ? route('SuperAdmin.training.update', $user->id) : route('SuperAdmin.training.store') }}" method="POST">
+        <form class="row g-3" action="{{ isset($training) ? route('SuperAdmin.training.update', $training->id) : route('SuperAdmin.training.store') }}" method="POST">
             @csrf
             @if(isset($training))
                 @method('PUT') <!-- HTTP method spoofing for PUT request -->
             @endif
-            
+
+            <div class="col-md-6">
+                <label for="id" class="form-label">Unique Identifier</label>
+                <input name="id" type="text" class="form-control track-change @error('id') is-invalid @enderror" placeholder="Unique Identifier" value="{{ old('id', isset($training) ? $training->id : '') }}" required>
+                @error('id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-6">
+                <label for="training_code" class="form-label">Training Code</label>
+                <input name="training_code" type="text" class="form-control track-change @error('training_code') is-invalid @enderror" placeholder="Training Code" value="{{ old('training_code', isset($training) ? $training->training_code : '') }}" required>
+                @error('training_code')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
             <div class="col-md-6">
                 <label for="training name" class="form-label">Training Name</label>
                 <input name="training_name" type="text" class="form-control track-change @error('training_name') is-invalid @enderror" placeholder="Training Name" value="{{ old('training_name', isset($training) ? $training->training_name : '') }}" required>
@@ -81,7 +95,7 @@
                 <select name="country" id="country" class="form-control track-change @error('country') is-invalid @enderror" required>
                     <option value="">Select a country</option>
                     @foreach($countries as $country)
-                        <option value="{{ $country->name }}" 
+                        <option value="{{ $country->name }}"
                             {{ old('country', isset($training) ? $training->country : '') == $country->name ? 'selected' : '' }}>
                             {{ $country->name }}
                         </option>
@@ -126,12 +140,12 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-                        
+
             <div class="col-12">
               <button type="submit" class="btn btn-primary">{{ isset($training) ? 'Update' : 'Create' }}</button>
             </div>
         </form>
-    </div>    
+    </div>
  </div>
 
  <!-- Include jQuery and Select2 -->

@@ -4,7 +4,7 @@
 <div class="card">
     <div class="m-3 d-flex justify-content-between align-items-center">
         <p class="p-1 m-0">User Details</p>
-        
+
         <!-- Search Form -->
         <form class="d-flex" method="GET" action="{{ route('SuperAdmin.Users.user.search') }}">
             <input class="form-control me-2" type="search" name="query" placeholder="name, username, or email" value="{{ request('query') }}">
@@ -74,7 +74,7 @@
                     @endif
                 </tbody>
             </table>
-            
+
             <!-- Pagination -->
             <nav aria-label="Page navigation example">
                 <ul class="pagination d-flex align-items-end flex-column mb-3">
