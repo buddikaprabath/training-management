@@ -76,7 +76,7 @@
 
             <div class="col-md-6">
                 <label for="total_training_hours" class="form-label">Total Training Hours</label>
-                <input name="total_training_hours" type="text" class="form-control track-change @error('total_training_hours') is-invalid @enderror" value="{{ old('total_training_hours', isset($training) ? $training->total_training_hours : '') }}" required>
+                <input name="total_training_hours" type="text" class="form-control track-change @error('total_training_hours') is-invalid @enderror" placeholder="Total Training Hours" value="{{ old('total_training_hours', isset($training) ? $training->total_training_hours : '') }}" required>
                 @error('total_training_hours')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -84,8 +84,15 @@
 
             <div class="col-md-6">
                 <label for="total_program_cost" class="form-label">Total Program Cost</label>
-                <input name="total_program_cost" type="text" class="form-control track-change @error('total_program_cost') is-invalid @enderror" value="{{ old('total_program_cost', isset($training) ? $training->total_program_cost : '') }}" required>
+                <input name="total_program_cost" type="text" class="form-control track-change @error('total_program_cost') is-invalid @enderror" placeholder="Total Program Cost" value="{{ old('total_program_cost', isset($training) ? $training->total_program_cost : '') }}" required>
                 @error('total_program_cost')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-6">
+                <label for="course_type" class="form-label">Course Type</label>
+                <input name="course_type" type="text" class="form-control track-change @error('course_type') is-invalid @enderror" placeholder="Course Type" value="{{ old('course_type', isset($training) ? $training->course_type : '') }}" required>
+                @error('course_type')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
