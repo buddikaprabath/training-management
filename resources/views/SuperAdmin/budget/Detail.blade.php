@@ -24,10 +24,24 @@
         <div class="col-md-6 ">
             <label for="division_id" class="form-label">Division</label>
             <div class="d-flex justify-content-between align-items-center w-50">
-                <input name="division_id" type="text" class="form-control track-change @error('division_id') is-invalid @enderror" placeholder="division_id" value="{{ old('division_id', isset($training) ? $training->division_id : '') }}" required>
+
+
+
+            <select name="division_id" id="division" class=" form-select track-change @error('division_id') is-invalid @enderror" required>
+                <option selected disabled>Choose...</option>
+                <option value="1" {{ old('division_id', isset($training) && $training->division_id == 1 ? 'selected' : '') }}>HR</option>
+                <option value="2" {{ old('division_id', isset($training) && $training->division_id == 2 ? 'selected' : '') }}>CATC</option>
+                <option value="3" {{ old('division_id', isset($training) && $training->division_id == 3 ? 'selected' : '') }}>IT</option>
+                <option value="4" {{ old('division_id', isset($training) && $training->division_id == 4 ? 'selected' : '') }}>FINANCE</option>
+                <option value="5" {{ old('division_id', isset($training) && $training->division_id == 5 ? 'selected' : '') }}>SCM</option>
+                <option value="6" {{ old('division_id', isset($training) && $training->division_id == 6 ? 'selected' : '') }}>MARKETING</option>
+                <option value="7" {{ old('division_id', isset($training) && $training->division_id == 7 ? 'selected' : '') }}>SECURITY</option>
+            </select>
             @error('division_id')
                 <div class="invalid-feedback">{{ $message }}</div>
             @enderror
+
+
             <button type="button" class="ms-3 btn btn-primary d-flex align-items-center">
                 Filter
              </button>
