@@ -4,12 +4,13 @@ namespace App\Http\Controllers\Superadmin;
 
 use Log;
 use APP\Models\User;
+use App\Models\Country;
 use APP\Models\Section;
 use APP\Models\Division;
+use App\Models\Training;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
-use App\Models\Country;
 use Illuminate\Support\Facades\Hash;
 
 class superadmincontroller extends Controller
@@ -133,9 +134,20 @@ class superadmincontroller extends Controller
     //training handling
 
     //training details view page
-    public function trainingview()
+    public function trainingview(Request $request)
     {
-        return view('SuperAdmin.training.Detail');
+        $query = $request->input('query');
+
+        $training = Training::join('divisions', 'trainings.division_id', '=', 'divisions.id')
+            ->select('trainings.*', 'divisions.division_name') // Selecting required fields
+            ->when($query, function ($q) use ($query) {
+                $q->where('trainings.training_name', 'LIKE', "%{$query}%")
+                    ->orWhere('trainings.training_code', 'LIKE', "%{$query}%")
+                    ->orWhere('divisions.division_name', 'LIKE', "%{$query}%"); // Search by division name
+            })
+            ->paginate(10);
+
+        return view('SuperAdmin.training.Detail', compact('training', 'query'));
     }
 
     //training create page
