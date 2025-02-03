@@ -13,7 +13,7 @@
             </svg>
             Create Training
          </button>
-         
+
         </a>
     </div>
     @if(session('success'))
@@ -43,19 +43,47 @@
                 </tr>
             </thead>
             <tbody>
-                
+                <td>AASL</td>
+                <td>Online</td>
+                <td>40</td>
+                <td>6,500,000</td>
+                <td>IT</td>
+                <td>25</td>
+                <td>Development</td>
+                <td>
+                    <a href="#">
+                        <i class="align-middle me-2" data-feather="eye"></i>
+                    </a>
+                    <a href="#">
+                        <i class="align-middle me-2" data-feather="user-plus"></i>
+                    </a>
+                </td>
+                <td>
+                    <a href="#">
+                        <i class="align-middle me-2" data-feather="file-plus"></i>
+                    </a>
+                </td>
+                <td>
+                    <a href="#">
+                        <i class="align-middle me-2" data-feather="edit"></i>
+                    </a>
+                    <a href="#">
+                        <i class="align-middle me-2" data-feather="trash-2"></i>
+                    </a>
+                </td>
+
             </tbody>
         </table>
         <nav aria-label="Page navigation example">
             <ul class="pagination d-flex align-items-end flex-column mb-3">
                 <!-- This will dynamically generate the pagination links -->
-               
+
             </ul>
         </nav>
-        
+
         </div>
     </div>
-    
+
 </div>
 
 @endsection

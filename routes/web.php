@@ -20,7 +20,7 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
             Route::prefix('Users')->name('Users.')->group(function () {
 
                 Route::get('Details', 'userview')->name('Details'); //load the user details page
-                Route::get('Create', 'createUserView')->name('Create'); //load the create user page 
+                Route::get('Create', 'createUserView')->name('Create'); //load the create user page
 
                 // Store user (for create)
                 Route::post('store', 'create')->name('user.store');
@@ -52,6 +52,8 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
             //budget routes
             Route::prefix('budget')->name('budget.')->group(function () {
                 Route::get('Detail', 'budgetview')->name('Detail'); //load budget details view
+                Route::get('Create', 'createBudgetView')->name('Create'); //load the create budget page
+                Route::post('store', 'create')->name('store'); // Store user (for create)
             });
 
             //institute routes

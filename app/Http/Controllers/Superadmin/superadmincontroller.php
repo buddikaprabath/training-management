@@ -170,6 +170,12 @@ class superadmincontroller extends Controller
     {
         return view('SuperAdmin.budget.Detail');
     }
+    //budget create page
+    public function createbudgetview()
+    {
+        return view('SuperAdmin.budget.Create');
+    }
+    //end budget handling functions
 
 
     //Institute handling
