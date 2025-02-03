@@ -23,7 +23,7 @@
         </div>
     @endif
 
-    <div class="card-body p-4 bg-body rounded-md shadow-lg">
+    <div class="card-body p-4 rounded-3 shadow-lg" style="background-color: #A8BDDB;">
         <form class="row g-3" action="{{ isset($training) ? route('SuperAdmin.training.update', $training->id) : route('SuperAdmin.training.store') }}" method="POST">
             @csrf
             @if(isset($training))
