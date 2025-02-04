@@ -262,10 +262,12 @@
     });
 
     document.addEventListener('DOMContentLoaded', function () {
-        //
         const divisionSelect = document.getElementById('division');
         const sectionContainer = document.getElementById('sectionContainer');
         const sectionSelect = document.getElementById('section');
+        const courseTypeSelect = document.getElementById('course_type');
+        const countryContainer = document.querySelector('[for="country"]').parentElement;  // Get the country container
+        const countrySelect = document.getElementById('country');
 
         // Function to toggle the Section dropdown based on Division selection
         function toggleSectionDropdown() {
@@ -283,11 +285,6 @@
 
         // Listen for changes on the Division dropdown
         divisionSelect.addEventListener('change', toggleSectionDropdown);
-
-        //
-        const courseTypeSelect = document.getElementById('course_type');
-        const countryContainer = document.querySelector('[for="country"]').parentElement;  // Get the country container
-        const countrySelect = document.getElementById('country');
 
         // Function to toggle the Country dropdown based on Course Type selection
         function toggleCountryDropdown() {
