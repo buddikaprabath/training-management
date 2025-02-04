@@ -71,7 +71,9 @@
                             <a href="#"><i data-feather="user-plus"></i></a>
                         </td>
                         <td class="text-center">
-                            <a href="#"><i data-feather="dollar-sign"></i></a>
+                            <a href="#" class="open-cost-modal" data-training-id="1">
+                                <i data-feather="dollar-sign"></i>
+                            </a>
                         </td>
                         <td class="text-center">
                             <a href="#"><i data-feather="edit"></i></a>
@@ -90,7 +92,7 @@
     </div>
 </div>
 
-<!-- Modal -->
+<!-- Modal for Training Tasks -->
 <div class="modal fade" id="trainingModal" tabindex="-1" aria-labelledby="trainingModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
@@ -122,19 +124,71 @@
     </div>
 </div>
 
-
+<!-- Modal for Cost Breakdown -->
+<div class="modal fade" id="costModal" tabindex="-1" aria-labelledby="costModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="costModalLabel">Cost Breakdown</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Type -->
+                <div class="col-md-6">
+                    <label for="cost_break_downs" class="form-label">Cost Type</label>
+                    <select name="cost_break_downs" id="cost_break_downs" class="form-select track-change @error('cost_break_downs') is-invalid @enderror" required>
+                        <option selected disabled>Choose...</option>
+                        <option value="1" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 1 ? 'selected' : '') }}>Airfare</option>
+                        <option value="2" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 2 ? 'selected' : '') }}>Subsistence Including Travel Day</option>
+                        <option value="3" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 3 ? 'selected' : '') }}>Incidental Including Travel Day</option>
+                        <option value="4" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 4 ? 'selected' : '') }}>Registration Fee</option>
+                        <option value="5" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 5 ? 'selected' : '') }}>Visa Fee</option>
+                        <option value="6" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 6 ? 'selected' : '') }}>Travel Insurance</option>
+                        <option value="7" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 7 ? 'selected' : '') }}>Warm Clothes</option>
+                    </select>
+                    @error('cost_break_downs')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+                <!-- Amount -->
+                <div class="col-md-6">
+                    <label for="amount" class="form-label">Amount</label>
+                    <input name="amount" type="number" class="form-control track-change @error('amount') is-invalid @enderror" placeholder="0.00" value="{{ old('amount', isset($training) ? $training->amount : '') }}" required>
+                    @error('amount')
+                        <div class="invalid-feedback">{{ $message }}</div>
+                    @enderror
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="saveCost">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         let trainingModalElement = document.getElementById("trainingModal");
         let trainingModal = new bootstrap.Modal(trainingModalElement);
 
-        // Open modal and set training ID
+        let costModalElement = document.getElementById("costModal");
+        let costModal = new bootstrap.Modal(costModalElement);
+
+        // Open modal and set training ID for tasks
         document.querySelectorAll(".open-modal").forEach(button => {
             button.addEventListener("click", function () {
                 let trainingId = this.getAttribute("data-training-id");
                 document.getElementById("trainingId").value = trainingId;
-                trainingModal.show(); // Open the modal
+                trainingModal.show(); // Open the training tasks modal
+            });
+        });
+
+        // Open modal for cost breakdown when clicking dollar-sign
+        document.querySelectorAll(".open-cost-modal").forEach(button => {
+            button.addEventListener("click", function () {
+                let trainingId = this.getAttribute("data-training-id");
+                document.getElementById("trainingId").value = trainingId;
+                costModal.show(); // Open the cost breakdown modal
             });
         });
 
@@ -146,7 +200,7 @@
             });
         });
 
-        // Save UI changes without sending data
+        // For training tasks
         document.getElementById("saveTraining").addEventListener("click", function () {
             let trainingId = document.getElementById("trainingId").value;
             let completed = document.getElementById("trainingCompleted").checked;
@@ -169,11 +223,17 @@
             }, 500);
         });
 
+        // For cost breakdown
+        document.getElementById("saveCost").addEventListener("click", function () {
+            // Add functionality to save the cost details here
+            console.log("Cost details saved!");
+
+            // Close the modal
+            costModal.hide();
+        });
+
         feather.replace(); // Initialize Feather icons
     });
 </script>
-
-
-
 
 @endsection
