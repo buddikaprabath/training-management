@@ -34,16 +34,17 @@
           <table class="table">
             <thead>
                 <tr>
-                    <th>Training Name</th>
-                    <th>Mode of Delivery</th>
-                    <th>Total Training Hours</th>
-                    <th>Total Program Cost</th>
-                    <th>Division</th>
-                    <th>Batch Size</th>
-                    <th>Category</th>
-                    <th>Participant</th>
-                    <th>Cost break down</th>
-                    <th>Action</th>
+                    <th class="text-center align-top">Training Name</th>
+                    <th class="text-center align-top">Mode of Delivery</th>
+                    <th class="text-center align-top">Total Training Hours</th>
+                    <th class="text-center align-top">Total Program Cost</th>
+                    <th class="text-center align-top">Division</th>
+                    <th class="text-center align-top">Batch Size</th>
+                    <th class="text-center align-top">Category</th>
+                    <th class="text-center align-top">Training Status</th>
+                    <th class="text-center align-top">Participant</th>
+                    <th class="text-center align-top">Cost break down</th>
+                    <th class="text-center align-top">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -54,7 +55,12 @@
                 <td>IT</td>
                 <td>25</td>
                 <td>Development</td>
-                <td>
+                <td class="text-center">
+                    <a href="#">
+                        <i class="align-middle me-2" data-feather="check-circle"></i>
+                   </a>
+                </td>
+                <td class="text-center">
                     <a href="#">
                         <i class="align-middle me-2" data-feather="eye"></i>
                     </a>
@@ -62,12 +68,12 @@
                         <i class="align-middle me-2" data-feather="user-plus"></i>
                     </a>
                 </td>
-                <td>
+                <td class="text-center">
                     <a href="#">
-                        <i class="align-middle me-2" data-feather="file-plus"></i>
+                        <i class="align-middle me-2" data-feather="dollar-sign"></i>
                     </a>
                 </td>
-                <td>
+                <td class="text-center">
                     <a href="#">
                         <i class="align-middle me-2" data-feather="edit"></i>
                     </a>
