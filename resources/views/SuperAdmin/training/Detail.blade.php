@@ -48,13 +48,13 @@
                 </tr>
             </thead>
             <tbody>
-                <td>AASL</td>
-                <td>Online</td>
-                <td>40</td>
-                <td>6,500,000</td>
-                <td>IT</td>
-                <td>25</td>
-                <td>Development</td>
+                <td class="text-center">AASL</td>
+                <td class="text-center">Online</td>
+                <td class="text-center">40</td>
+                <td class="text-center">6,500,000</td>
+                <td class="text-center">IT</td>
+                <td class="text-center">25</td>
+                <td class="text-center">Development</td>
                 <td class="text-center">
                     <a href="#">
                         <i class="align-middle me-2" data-feather="check-circle"></i>
