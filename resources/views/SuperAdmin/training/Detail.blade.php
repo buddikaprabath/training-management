@@ -86,11 +86,11 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination Links -->
         <div class="pagination">
             {{ $training->links() }}
-        </div>        
+        </div>
     </div>
 </div>
 
