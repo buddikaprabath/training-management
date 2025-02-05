@@ -10,9 +10,11 @@ use App\Models\Surety;
 use App\Models\Country;
 use APP\Models\Section;
 use App\Models\Subject;
+use App\Models\Trainer;
 use APP\Models\Division;
 use App\Models\Document;
 use App\Models\Training;
+use App\Models\Institute;
 use App\Models\Participant;
 use Illuminate\Http\Request;
 use App\Models\CostBreakDown;
@@ -158,13 +160,16 @@ class superadmincontroller extends Controller
     }
 
 
-    //training create page
     public function createtrainingview()
     {
         $countries = DB::table('countries')->get();
+        $institutes = Institute::all();
+        $trainers = Trainer::all(); // Fetch all trainers
 
-        return view('SuperAdmin.training.create', compact('countries'));
+        return view('SuperAdmin.training.create', compact('countries', 'institutes', 'trainers'));
     }
+
+
 
     public function createtraining(Request $request)
     {
@@ -175,24 +180,24 @@ class superadmincontroller extends Controller
             'training_period_from'  => 'required|date',
             'training_period_to'    => 'required|date|after_or_equal:training_period_from',
             'total_training_hours'  => 'required|integer|max:255',
-            'total_program_cost'    => 'required|numeric|max:9999999.99',
-            'country'               => 'nullable|string|max:255',
-            'training_structure'    => 'nullable|string|max:255',
-            'exp_date'              => 'nullable|date',
-            'batch_size'            => 'nullable|integer',
-            'training_custodian'    => 'nullable|string|max:255',
+            'total_program_cost'    => 'required|numeric|between:0,9999999.99',
             'course_type'           => 'required|string|max:255',
             'category'              => 'required|string|max:255',
-            'dead_line'             => 'required|date',
+            'training_custodian'    => 'nullable|string|max:255',
+            'batch_size'            => 'nullable|integer|min:1', // Added min validation for positive batch size
             'division_id'           => 'required|exists:divisions,id',
             'section_id'            => 'nullable|exists:sections,id',
+            'other_comments'        => 'nullable|string|max:255', // Added max length for comments
+            'training_structure'    => 'nullable|string|max:255',
+            'exp_date'              => 'nullable|date|after_or_equal:training_period_to', // Updated to ensure the expiration date is after the training end date
             'institutes'            => 'required|array',
             'institutes.*'          => 'exists:institutes,id',
             'trainers'              => 'required|array',
             'trainers.*'            => 'exists:trainers,id',
-            'remark'                => 'nullable|string',
+            'remark'                => 'nullable|string|max:255', // Added max length for remark
             'subject_type'          => 'nullable|string|max:255',
             'subject_name'          => 'nullable|string|max:255',
+            'dead_line'             => 'required|date',
         ]);
 
         \Log::info('Validated Data:', $validated);
@@ -218,14 +223,14 @@ class superadmincontroller extends Controller
                 'category'              => $validated['category'],
                 'dead_line'             => $validated['dead_line'],
                 'division_id'           => $validated['division_id'],
-                'section_id'            => $validated['section_id'] ?? null,
+                'section_id'            => $validated['section_id'] ?? 0,
             ]);
 
             // Attach related institutes
-            $training->institutes()->attach($validated['institutes']);
+            $training->institutes()->sync($validated['institutes']);
 
             // Attach related trainers
-            $training->trainers()->attach($validated['trainers']);
+            $training->trainers()->sync($validated['trainers']);
 
             // Create a subject if provided
             if (!empty($validated['subject_name'])) {
@@ -254,6 +259,29 @@ class superadmincontroller extends Controller
             return redirect()->back()->with('error', 'Error occurred while saving training: ' . $e->getMessage());
         }
     }
+
+
+    //load training edit page
+    public function trainingedit($id)
+    {
+        try {
+            // Retrieve the training along with related data
+            $training = Training::with(['institutes', 'trainers', 'subjects'])->findOrFail($id);
+
+            // Fetch the list of institutes, trainers, subjects, and countries (add the countries data here)
+            $institutes = Institute::all();
+            $trainers = Trainer::all();
+            $subjects = Subject::all();
+            $countries = Country::all();  // Fetching the countries
+
+            // Return the view with all necessary data
+            return view('SuperAdmin.training.create', compact('training', 'institutes', 'trainers', 'subjects', 'countries'));
+        } catch (\Exception $e) {
+            // If an error occurs, redirect back with an error message
+            return back()->with('error', 'Error loading training details: ' . $e->getMessage());
+        }
+    }
+
     //handle the update training function
     public function updatetraining(Request $request, $id)
     {

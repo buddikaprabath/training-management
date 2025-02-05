@@ -42,6 +42,9 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('Detail', 'trainingview')->name('Detail'); //load training details view
                 Route::get('create', 'createtrainingview')->name('create'); //load the training create page
                 Route::post('store', 'createtraining')->name('store'); // Store user (for create)
+                Route::get('{id}/edit', 'trainingedit')->name('edit');
+                Route::put('{id}/update', 'updatetraining')->name('update'); // Update training details
+                Route::post('{trainingId}/cost-breakdown', 'storeCostBreakdown')->name('cost-breakdown.store');
             });
 
             //participant routes

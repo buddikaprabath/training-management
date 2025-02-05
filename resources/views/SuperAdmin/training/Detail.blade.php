@@ -78,7 +78,9 @@
                                 </a>
                             </td>
                             <td class="text-center">
-                                <a href="#"><i data-feather="edit"></i></a>
+                                <a href="{{ route('SuperAdmin.training.edit', $item->id) }}">
+                                    <i data-feather="edit"></i>
+                                </a>
                                 <a href="#"><i data-feather="trash-2"></i></a>
                             </td>
                         </tr>
@@ -106,7 +108,7 @@
                 <form id="trainingForm">
                     <input type="hidden" id="trainingId" name="training_id">
 
-                    @foreach (['Training Status', 'Feedback Form', 'E-Report', 'Warm Clothes Allowance', 'Presentation'] as $index => $task)
+                    @foreach (['Feedback Form', 'E-Report', 'Warm Clothes Allowance', 'Presentation'] as $index => $task)
                         <div class="form-check">
                             <label class="form-check-label" for="task{{ $index }}">{{ $task }}</label>
                             <input class="form-check-input task-checkbox" type="checkbox" id="task{{ $index }}">
@@ -135,7 +137,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form method="POST" action="#" id="costForm">
+                <form method="POST" id="costForm">
                     @csrf <!-- CSRF token for security -->
 
                     <div class="col-md-6">
@@ -187,10 +189,17 @@
         document.querySelectorAll(".open-cost-modal").forEach(button => {
             button.addEventListener("click", function () {
                 let trainingId = this.getAttribute("data-training-id");
-                document.getElementById("trainingId").value = trainingId;
-                costModal.show(); // Open the cost breakdown modal
+
+                // Set the form action dynamically
+                let costForm = document.getElementById("costForm");
+                costForm.action = `/SuperAdmin/training/cost-breakdown/store/${trainingId}`;
+
+                // Show the modal
+                let costModal = new bootstrap.Modal(document.getElementById('costModal'));
+                costModal.show();
             });
         });
+
 
         // Enable 'Training Completed' checkbox only when all tasks are checked
         document.querySelectorAll(".task-checkbox").forEach(checkbox => {
