@@ -43,35 +43,36 @@
                 </tr>
             </thead>
             <tbody>
-                <td>AASL</td>
-                <td>Online</td>
-                <td>40</td>
-                <td>6,500,000</td>
-                <td>IT</td>
-                <td>25</td>
-                <td>Development</td>
-                <td>
-                    <a href="#">
-                        <i class="align-middle me-2" data-feather="eye"></i>
-                    </a>
-                    <a href="#">
-                        <i class="align-middle me-2" data-feather="user-plus"></i>
-                    </a>
-                </td>
-                <td>
-                    <a href="#">
-                        <i class="align-middle me-2" data-feather="file-plus"></i>
-                    </a>
-                </td>
-                <td>
-                    <a href="#">
-                        <i class="align-middle me-2" data-feather="edit"></i>
-                    </a>
-                    <a href="#">
-                        <i class="align-middle me-2" data-feather="trash-2"></i>
-                    </a>
-                </td>
-
+                @foreach ($training as $training)
+                    <td>{{$training->training_name}}</td>
+                    <td>{{$training->mode_of_delivery}}</td>
+                    <td>{{$training->total_training_hours}}</td>
+                    <td>{{$training->total_program_cost}}</td>
+                    <td>{{$training->division->division_name}}</td>
+                    <td>{{$training->batch_size}}</td>
+                    <td>{{$training->category}}</td>
+                    <td>
+                        <a href="#">
+                            <i class="align-middle me-2" data-feather="eye"></i>
+                        </a>
+                        <a href="#">
+                            <i class="align-middle me-2" data-feather="user-plus"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="#">
+                            <i class="align-middle me-2" data-feather="file-plus"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <a href="#">
+                            <i class="align-middle me-2" data-feather="edit"></i>
+                        </a>
+                        <a href="#">
+                            <i class="align-middle me-2" data-feather="trash-2"></i>
+                        </a>
+                    </td>
+                @endforeach
             </tbody>
         </table>
         <nav aria-label="Page navigation example">

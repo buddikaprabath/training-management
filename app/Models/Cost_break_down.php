@@ -11,13 +11,8 @@ class CostBreakDown extends Model
 
     protected $table = 'cost_break_downs'; // Explicitly defining table name
     protected $fillable = [
-        'airfare',
-        'subsistence_including_travel_day',
-        'incidental_including_travel_day',
-        'registration_fee',
-        'visa_fee',
-        'travel_insurance',
-        'warm_clothes',
+        'cost_type',
+        'amount',
         'training_id'
     ];
 

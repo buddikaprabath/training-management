@@ -4,11 +4,18 @@ namespace App\Http\Controllers\Superadmin;
 
 use Log;
 use APP\Models\User;
+use App\Models\Budget;
+use App\Models\Remark;
+use App\Models\Surety;
 use App\Models\Country;
 use APP\Models\Section;
+use App\Models\Subject;
 use APP\Models\Division;
+use App\Models\Document;
 use App\Models\Training;
+use App\Models\Participant;
 use Illuminate\Http\Request;
+use App\Models\CostBreakDown;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -157,18 +164,563 @@ class superadmincontroller extends Controller
 
         return view('SuperAdmin.training.create', compact('countries'));
     }
+
+    //store training data
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'training_name'         => 'required|string|max:255',
+            'training_code'         => 'required|string|max:10|unique:trainings,training_code',
+            'mode_of_delivery'      => 'required|string|max:255',
+            'training_period_from'  => 'required|date',
+            'training_period_to'    => 'required|date|after_or_equal:training_period_from',
+            'total_training_hours'  => 'required|integer|max:255',
+            'total_program_cost'    => 'required|numeric|max:9999999.99',
+            'country'               => 'nullable|string|max:255',
+            'training_structure'    => 'nullable|string|max:255',
+            'exp_date'              => 'nullable|date',
+            'batch_size'            => 'nullable|integer|max:255',
+            'training_custodian'    => 'nullable|string|max:255',
+            'course_type'           => 'required|string|max:255',
+            'category'              => 'required|string|max:255',
+            'dead_line'             => 'required|date',
+            'division_id'           => 'required|exists:divisions,id',
+            'section_id'            => 'nullable|exists:sections,id',
+            'institutes'            => 'required|array',
+            'institutes.*'          => 'exists:institutes,id',
+            'trainers'              => 'required|array',
+            'trainers.*'            => 'exists:trainers,id',
+            'remark'                => 'nullable|string',
+            'subject_type'          => 'nullable|string|max:255',
+            'subject_name'          => 'nullable|string|max:255',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Create a new training record
+            $training = Training::create([
+                'training_name'         => $validated['training_name'],
+                'training_code'         => $validated['training_code'],
+                'mode_of_delivery'      => $validated['mode_of_delivery'],
+                'training_period_from'  => $validated['training_period_from'],
+                'training_period_to'    => $validated['training_period_to'],
+                'total_training_hours'  => $validated['total_training_hours'],
+                'total_program_cost'    => $validated['total_program_cost'],
+                'country'               => $validated['country'] ?? null,
+                'training_structure'    => $validated['training_structure'] ?? null,
+                'exp_date'              => $validated['exp_date'] ?? null,
+                'batch_size'            => $validated['batch_size'] ?? null,
+                'training_custodian'    => $validated['training_custodian'] ?? null,
+                'course_type'           => $validated['course_type'],
+                'category'              => $validated['category'],
+                'dead_line'             => $validated['dead_line'],
+                'division_id'           => $validated['division_id'],
+                'section_id'            => $validated['section_id'] ?? null,
+            ]);
+
+            // Attach related institutes
+            $training->institutes()->attach($validated['institutes']);
+
+            // Attach related trainers
+            $training->trainers()->attach($validated['trainers']);
+
+            // Create a subject if provided
+            if (!empty($validated['subject_name'])) {
+                Subject::create([
+                    'subject_name' => $validated['subject_name'],
+                    'subject_type' => $validated['subject_type'],
+                    'training_id'  => $training->id,
+                ]);
+            }
+
+            // Store remark if provided
+            if (!empty($validated['remark'])) {
+                Remark::create([
+                    'remark'        => $validated['remark'],
+                    'training_id'   => $training->id,
+                    'participant_id' => null, // Change this if participant ID is available
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->route('SuperAdmin.training.Detail')->with('success', 'Training created successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error occurred while saving training: ' . $e->getMessage());
+        }
+    }
+    //handle the update training function
+    public function updatetraining(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'training_name'         => 'required|string|max:255',
+            'training_code'         => 'required|string|max:10|unique:trainings,training_code,' . $id,
+            'mode_of_delivery'      => 'required|string|max:255',
+            'training_period_from'  => 'required|date',
+            'training_period_to'    => 'required|date|after_or_equal:training_period_from',
+            'total_training_hours'  => 'required|integer|max:255',
+            'total_program_cost'    => 'required|numeric|max:9999999.99',
+            'country'               => 'nullable|string|max:255',
+            'training_structure'    => 'nullable|string|max:255',
+            'exp_date'              => 'nullable|date',
+            'batch_size'            => 'nullable|integer|max:255',
+            'training_custodian'    => 'nullable|string|max:255',
+            'course_type'           => 'required|string|max:255',
+            'category'              => 'required|string|max:255',
+            'dead_line'             => 'required|date',
+            'division_id'           => 'required|exists:divisions,id',
+            'section_id'            => 'nullable|exists:sections,id',
+            'institutes'            => 'required|array',
+            'institutes.*'          => 'exists:institutes,id',
+            'trainers'              => 'required|array',
+            'trainers.*'            => 'exists:trainers,id',
+            'remark'                => 'nullable|string',
+            'subject_type'          => 'nullable|string|max:255',
+            'subject_name'          => 'nullable|string|max:255',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Find the training by ID
+            $training = Training::findOrFail($id);
+
+            // Update the training record
+            $training->update([
+                'training_name'         => $validated['training_name'],
+                'training_code'         => $validated['training_code'],
+                'mode_of_delivery'      => $validated['mode_of_delivery'],
+                'training_period_from'  => $validated['training_period_from'],
+                'training_period_to'    => $validated['training_period_to'],
+                'total_training_hours'  => $validated['total_training_hours'],
+                'total_program_cost'    => $validated['total_program_cost'],
+                'country'               => $validated['country'] ?? null,
+                'training_structure'    => $validated['training_structure'] ?? null,
+                'exp_date'              => $validated['exp_date'] ?? null,
+                'batch_size'            => $validated['batch_size'] ?? null,
+                'training_custodian'    => $validated['training_custodian'] ?? null,
+                'course_type'           => $validated['course_type'],
+                'category'              => $validated['category'],
+                'dead_line'             => $validated['dead_line'],
+                'division_id'           => $validated['division_id'],
+                'section_id'            => $validated['section_id'] ?? null,
+            ]);
+
+            // Sync related institutes
+            $training->institutes()->sync($validated['institutes']);
+
+            // Sync related trainers
+            $training->trainers()->sync($validated['trainers']);
+
+            // Update or create a subject if provided
+            if (!empty($validated['subject_name'])) {
+                $training->subject()->updateOrCreate(
+                    ['training_id' => $training->id],
+                    [
+                        'subject_name' => $validated['subject_name'],
+                        'subject_type' => $validated['subject_type'],
+                    ]
+                );
+            }
+
+            // Update or create remark if provided
+            if (!empty($validated['remark'])) {
+                Remark::updateOrCreate(
+                    ['training_id' => $training->id],
+                    [
+                        'remark'        => $validated['remark'],
+                        'participant_id' => null, // Change this if participant ID is available
+                    ]
+                );
+            }
+
+            DB::commit();
+            return redirect()->route('SuperAdmin.training.Detail')->with('success', 'Training updated successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error occurred while updating training: ' . $e->getMessage());
+        }
+    }
+
+    //add cost break down amounts
+
+    public function storeCostBreakdown(Request $request, $trainingId)
+    {
+        $validated = $request->validate([
+            'cost_type' => 'required|string|max:255',
+            'amount'    => 'required|numeric|min:0',
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Ensure training exists
+            $training = Training::findOrFail($trainingId);
+
+            // Create a new cost breakdown entry
+            CostBreakdown::create([
+                'training_id' => $training->id,
+                'cost_type'   => $validated['cost_type'],
+                'amount'      => $validated['amount'],
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Cost breakdown added successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error occurred while adding cost breakdown: ' . $e->getMessage());
+        }
+    }
+
+    //store document for each training
+    public function storeTrainingDocument(Request $request, $trainingId)
+    {
+        $validated = $request->validate([
+            'name'               => 'required|string|max:255',
+            'status'             => 'nullable|string|max:50',
+            'date_of_submitting' => 'nullable|date',
+            'document_file'      => 'required|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Max 2MB
+        ]);
+
+        try {
+            DB::beginTransaction();
+
+            // Ensure the training exists
+            $training = Training::findOrFail($trainingId);
+
+            // Store file in storage/app/public/documents
+            $filePath = $request->file('document_file')->store('documents', 'public');
+
+            // Create the document record
+            Document::create([
+                'name'               => $validated['name'],
+                'status'             => $validated['status'] ?? null,
+                'date_of_submitting' => $validated['date_of_submitting'] ?? null,
+                'training_id'        => $training->id,
+                'file_path'          => $filePath,
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Document uploaded successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error uploading document: ' . $e->getMessage());
+        }
+    }
+
+
+    //training delete function
+    public function trainingdestroy($id)
+    {
+        try {
+            DB::beginTransaction();
+
+            // Find the training by ID
+            $training = Training::findOrFail($id);
+
+            // Detach related institutes and trainers from pivot tables
+            $training->institutes()->detach();
+            $training->trainers()->detach();
+
+            // Delete related subjects
+            $training->subject()->delete();
+
+            // Delete related remarks
+            Remark::where('training_id', $training->id)->delete();
+
+            // Delete related cost breakdown entries (if applicable)
+            CostBreakDown::where('training_id', $training->id)->delete();
+
+            // Finally, delete the training record
+            $training->delete();
+
+            DB::commit();
+            return redirect()->route('SuperAdmin.training.Detail')->with('success', 'Training deleted successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error occurred while deleting training: ' . $e->getMessage());
+        }
+    }
+
+
+
     //end training handling functions
     //participant handling
 
-    public function participantview()
+    //load the participant view blade
+    public function participantview($id)
     {
-        return view('SuperAdmin.participant.Detail');
+        // Find the training and load related data for participants
+        $training = Training::with([
+            'participants.surety',
+            'participants.remarks',
+            'participants.grades',
+            'participants.documents'
+        ])->findOrFail($id);
+
+        return view('SuperAdmin.participant.Detail', compact('training'));
     }
 
-    //budget handling
-    public function budgetview()
+    //load the create participant blade
+    public function createparticipant($trainingId)
     {
-        return view('SuperAdmin.budget.Detail');
+        // Find the training to ensure it exists
+        $training = Training::findOrFail($trainingId);
+
+        return view('participants.create', compact('training'));
+    }
+
+    //store participant
+    public function participantstore(Request $request)
+    {
+        $request->validate([
+            'name'                         => 'required|string|max:255',
+            'epf_number'                   => 'required|string|max:50|unique:participants,epf_number',
+            'designation'                  => 'required|string|max:255',
+            'salary_scale'                 => 'nullable|string|max:255',
+            'location'                     => 'nullable|string|max:255',
+            'obligatory_period'            => 'nullable|string|max:255',
+            'cost_per_head'                => 'nullable|numeric',
+            'bond_completion_date'         => 'nullable|date',
+            'bond_value'                   => 'nullable|numeric',
+            'date_of_signing'              => 'nullable|date',
+            'age_as_at_commencement_date'  => 'nullable|integer',
+            'date_of_appointment'          => 'nullable|date',
+            'date_of_appointment_to_the_present_post' => 'nullable|date',
+            'date_of_birth'                => 'nullable|date',
+            'division_id'                  => 'nullable|exists:divisions,id',
+            'section_id'                   => 'nullable|exists:sections,id',
+            'training_id'                  => 'required|exists:trainings,id',
+
+            // Surety Validation (2 sureties)
+            'sureties'                    => 'nullable|array|max:2',
+            'sureties.*.name'             => 'required_with:sureties|string|max:255',
+            'sureties.*.nic'              => 'required_with:sureties|string|max:12',
+            'sureties.*.mobile'           => 'required_with:sureties|string|max:15',
+            'sureties.*.address'          => 'required_with:sureties|string|max:255',
+            'sureties.*.salary_scale'     => 'nullable|string|max:255',
+            'sureties.*.designation'      => 'nullable|string|max:255',
+
+            // Remarks Validation (Multiple remarks)
+            'remarks'                     => 'nullable|array',
+            'remarks.*'                   => 'nullable|string|max:500',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Store Participant
+            $participant = Participant::create([
+                'name'                          => $request->name,
+                'epf_number'                    => $request->epf_number,
+                'designation'                   => $request->designation,
+                'salary_scale'                  => $request->salary_scale,
+                'location'                      => $request->location,
+                'obligatory_period'             => $request->obligatory_period,
+                'cost_per_head'                 => $request->cost_per_head,
+                'bond_completion_date'          => $request->bond_completion_date,
+                'bond_value'                    => $request->bond_value,
+                'date_of_signing'               => $request->date_of_signing,
+                'age_as_at_commencement_date'   => $request->age_as_at_commencement_date,
+                'date_of_appointment'           => $request->date_of_appointment,
+                'date_of_appointment_to_the_present_post' => $request->date_of_appointment_to_the_present_post,
+                'date_of_birth'                 => $request->date_of_birth,
+                'division_id'                   => $request->division_id,
+                'section_id'                    => $request->section_id,
+                'training_id'                   => $request->training_id, // Passed from the clicked training
+            ]);
+
+            // Store Sureties (up to 2)
+            if ($request->sureties) {
+                foreach ($request->sureties as $suretyData) {
+                    Surety::create([
+                        'name'         => $suretyData['name'],
+                        'nic'          => $suretyData['nic'],
+                        'mobile'       => $suretyData['mobile'],
+                        'address'      => $suretyData['address'],
+                        'salary_scale' => $suretyData['salary_scale'] ?? null,
+                        'designation'  => $suretyData['designation'] ?? null,
+                        'participant_id' => $participant->id,
+                    ]);
+                }
+            }
+
+            // Store Multiple Remarks
+            if ($request->remarks) {
+                foreach ($request->remarks as $remark) {
+                    Remark::create([
+                        'remark'        => $remark,
+                        'training_id'   => $request->training_id,
+                        'participant_id' => $participant->id,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            return redirect()->route('participants.index')->with('success', 'Participant added successfully! You can now upload documents.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to add participant: ' . $e->getMessage());
+        }
+    }
+
+    public function viewcreatedocument($participantId)
+    {
+        // Find the participant to ensure they exist
+        $participant = Participant::with('training')->findOrFail($participantId);
+
+        return view('documents.create', compact('participant'));
+    }
+
+    //store participant document
+    public function storeParticipantDocument(Request $request, $participantId)
+    {
+        $request->validate([
+            'documents'         => 'required|array',
+            'documents.*'       => 'file|mimes:pdf,doc,docx,jpg,png|max:2048',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            foreach ($request->file('documents') as $document) {
+                $path = $document->store('documents');
+                Document::create([
+                    'name'          => $document->getClientOriginalName(),
+                    'file_path'     => $path,
+                    'training_id'   => Participant::findOrFail($participantId)->training_id,
+                    'participant_id' => $participantId,
+                ]);
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Documents uploaded successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to upload documents: ' . $e->getMessage());
+        }
+    }
+
+    //load the edit blade 
+    public function participantedit($id)
+    {
+        try {
+            // Find the participant and load related data
+            $participant = Participant::with(['remarks', 'sureties', 'training'])->findOrFail($id);
+
+            return view('participants.edit', compact('participant'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading edit page: ' . $e->getMessage());
+        }
+    }
+    //create participant store method
+    public function participantupdate(Request $request, $id)
+    {
+        try {
+            // Validate the request data
+            $request->validate([
+                'name'                                  => 'required|string|max:255',
+                'epf_number'                            => 'required|string|max:255',
+                'designation'                           => 'nullable|string|max:255',
+                'salary_scale'                          => 'nullable|string|max:255',
+                'location'                              => 'nullable|string|max:255',
+                'obligatory_period'                     => 'nullable|string|max:255',
+                'cost_per_head'                         => 'nullable|numeric',
+                'bond_completion_date'                  => 'nullable|date',
+                'bond_value'                            => 'nullable|numeric',
+                'date_of_signing'                       => 'nullable|date',
+                'age_as_at_commencement_date'           => 'nullable|integer',
+                'date_of_appointment'                   => 'nullable|date',
+                'date_of_appointment_to_the_present_post' => 'nullable|date',
+                'date_of_birth'                         => 'nullable|date',
+                'division_id'                           => 'nullable|exists:divisions,id',
+                'section_id'                            => 'nullable|exists:sections,id',
+                'remarks'                               => 'nullable|array',
+                'remarks.*'                             => 'nullable|string',
+                'sureties'                              => 'nullable|array',
+                'sureties.*.name'                       => 'nullable|string|max:255',
+                'sureties.*.epf_number'                 => 'nullable|string|max:255',
+                'sureties.*.address'                    => 'nullable|string|max:255',
+                'sureties.*.mobile'                     => 'nullable|string|max:20',
+                'sureties.*.nic'                        => 'nullable|string|max:12',
+                'sureties.*.salary_scale'               => 'nullable|string|max:255',
+                'sureties.*.designation'                => 'nullable|string|max:255',
+            ]);
+
+            // Find the participant
+            $participant = Participant::findOrFail($id);
+
+            // Update participant details
+            $participant->update($request->except(['remarks', 'sureties']));
+
+            // Update or create remarks
+            if ($request->has('remarks')) {
+                $participant->remarks()->delete(); // Remove old remarks before adding new ones
+                foreach ($request->remarks as $remarkText) {
+                    if (!empty($remarkText)) {
+                        $participant->remarks()->create(['remark' => $remarkText, 'training_id' => $participant->training_id]);
+                    }
+                }
+            }
+
+            // Update or create sureties (Assuming a participant can have max 2 sureties)
+            if ($request->has('sureties')) {
+                $participant->sureties()->delete(); // Remove old sureties before adding new ones
+                foreach ($request->sureties as $suretyData) {
+                    if (!empty($suretyData['name'])) {
+                        $participant->sureties()->create($suretyData);
+                    }
+                }
+            }
+
+            return redirect()->route('participants.index')->with('success', 'Participant updated successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error updating participant: ' . $e->getMessage());
+        }
+    }
+
+    //delete participant
+    public function destroyparticipant($id)
+    {
+        try {
+            $participant = Participant::findOrFail($id);
+
+            // Delete related remarks
+            $participant->remarks()->delete();
+
+            // Delete related sureties
+            $participant->sureties()->delete();
+
+            // Delete related documents
+            $participant->documents()->delete();
+
+            // Finally, delete the participant
+            $participant->delete();
+
+            return redirect()->route('participants.index')->with('success', 'Participant deleted successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error deleting participant: ' . $e->getMessage());
+        }
+    }
+
+
+    //End Participant handling
+    //budget handling
+    public function budgetview(Request $request)
+    {
+        $query = $request->input('query');
+
+        // If search query exists, filter users
+        if ($query) {
+            $budget = Budget::where('name', 'LIKE', "%{$query}%")
+                ->orWhere('username', 'LIKE', "%{$query}%")
+                ->orWhere('email', 'LIKE', "%{$query}%")
+                ->paginate(10);
+        } else {
+            $budget = Budget::paginate(10); // Load all users if no search
+        }
+
+        return view('SuperAdmin.budget.Detail', compact('budget', 'query'));
     }
     //budget create page
     public function createbudgetview()

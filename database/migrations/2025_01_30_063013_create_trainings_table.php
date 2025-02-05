@@ -28,11 +28,11 @@ return new class extends Migration
             $table->string('course_type');
             $table->string('category');
             $table->date('dead_line');
-            $table->boolean('training_status');
-            $table->boolean('feedback_form');
-            $table->boolean('e_report');
-            $table->boolean('warm_clothe_allowance');
-            $table->boolean('presentation');
+            $table->boolean('training_status')->nullable();
+            $table->boolean('feedback_form')->nullable();
+            $table->boolean('e_report')->nullable();
+            $table->boolean('warm_clothe_allowance')->nullable();
+            $table->boolean('presentation')->nullable();
             $table->foreignId('division_id')->constrained()->onDelete('cascade');
             $table->unsignedBigInteger('section_id')->default(0);
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');

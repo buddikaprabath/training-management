@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Mockery\Matcher\Subset;
 
 class Training extends Model
 {
@@ -46,12 +47,7 @@ class Training extends Model
             // Generate a unique 'id' (primary key) in the format 'UI-001'
             $latest = self::latest('created_at')->first();
             $number = $latest ? ((int) substr($latest->id, 3)) + 1 : 1;
-            $training->id = 'UI-' . str_pad($number, 3, '0', STR_PAD_LEFT);
-
-            // Generate a unique 'training_code' in the format 'TC-001'
-            $latestTrainingCode = self::latest('created_at')->first();
-            $trainingCodeNumber = $latestTrainingCode ? ((int) substr($latestTrainingCode->training_code, 3)) + 1 : 1;
-            $training->training_code = 'TC-' . str_pad($trainingCodeNumber, 3, '0', STR_PAD_LEFT);
+            $training->id = 'TR-' . str_pad($number, 3, '0', STR_PAD_LEFT);
         });
     }
 
@@ -79,5 +75,30 @@ class Training extends Model
     public function institutes()
     {
         return $this->belongsToMany(Institute::class, 'training_institutes');
+    }
+
+    public function subjects()
+    {
+        return $this->hasMany(Subset::class);
+    }
+
+    public function costBrakedowns()
+    {
+        return $this->hasMany(CostBreakDown::class);
+    }
+
+    public function participants()
+    {
+        return $this->hasMany(Participant::class);
+    }
+
+    public function remarks()
+    {
+        return $this->hasMany(Remark::class);
+    }
+
+    public function documents()
+    {
+        return $this->hasMany(Document::class);
     }
 }
