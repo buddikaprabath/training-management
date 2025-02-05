@@ -35,12 +35,37 @@
                 <label for="type" class="form-label">Type</label>
                 <select name="type" id="type" class="form-select track-change @error('type') is-invalid @enderror" required>
                     <option selected disabled>Choose Type</option>
-                    <option value="1" {{ old('type', isset($budgets) && $budgets->type == 1 ? 'selected' : '') }}>Type 1</option>
-                    <option value="2" {{ old('type', isset($budgets) && $budgets->type == 2 ? 'selected' : '') }}>Type 2</option>
-                    <option value="3" {{ old('type', isset($budgets) && $budgets->type == 3 ? 'selected' : '') }}>Type 3</option>
-                    <option value="4" {{ old('type', isset($budgets) && $budgets->type == 4 ? 'selected' : '') }}>Type 4</option>
+                    <option value="1" {{ old('type', isset($budgets) && $budgets->type == 1 ? 'selected' : '') }}>Initial</option>
+                    <option value="2" {{ old('type', isset($budgets) && $budgets->type == 2 ? 'selected' : '') }}>Transfer</option>
                 </select>
                 @error('type')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-6">
+                <label for="provide_type" class="form-label">Category</label>
+                <select name="provide_type" id="provide_type" class="form-select track-change @error('provide_type') is-invalid @enderror" required>
+                    <option selected disabled>Choose Category</option>
+                    <option value="1" {{ old('provide_type', isset($budgets) && $budgets->provide_type == 1 ? 'selected' : '') }}>Foreign</option>
+                    <option value="2" {{ old('provide_type', isset($budgets) && $budgets->provide_type == 2 ? 'selected' : '') }}>Local</option>
+                </select>
+                @error('type')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-6">
+                <label for="division" class="form-label">Divisions</label>
+                <select name="division_id" id="division" class="form-select track-change @error('division_id') is-invalid @enderror" required>
+                    <option selected disabled>Choose...</option>
+                    <option value="1" {{ old('division_id', isset($user) && $user->division_id == 1 ? 'selected' : '') }}>HR</option>
+                    <option value="2" {{ old('division_id', isset($user) && $user->division_id == 2 ? 'selected' : '') }}>CATC</option>
+                    <option value="3" {{ old('division_id', isset($user) && $user->division_id == 3 ? 'selected' : '') }}>IT</option>
+                    <option value="4" {{ old('division_id', isset($user) && $user->division_id == 4 ? 'selected' : '') }}>FINANCE</option>
+                    <option value="5" {{ old('division_id', isset($user) && $user->division_id == 5 ? 'selected' : '') }}>SCM</option>
+                    <option value="6" {{ old('division_id', isset($user) && $user->division_id == 6 ? 'selected' : '') }}>MARKETING</option>
+                    <option value="7" {{ old('division_id', isset($user) && $user->division_id == 7 ? 'selected' : '') }}>SECURITY</option>
+                </select>
+                @error('division_id')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
