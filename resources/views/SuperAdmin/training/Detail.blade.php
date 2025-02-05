@@ -35,7 +35,7 @@
     @endif
 
     <div class="card p-3">
-        <div class="table-responsive"
+        <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
@@ -53,42 +53,44 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td class="text-center">AASL</td>
-                        <td class="text-center">Online</td>
-                        <td class="text-center">40</td>
-                        <td class="text-center">6,500,000</td>
-                        <td class="text-center">IT</td>
-                        <td class="text-center">25</td>
-                        <td class="text-center">Development</td>
-                        <td class="text-center">
-                            <a href="#" class="open-modal" data-training-id="1">
-                                <i data-feather="check-circle"></i>
-                            </a>
-                        </td>
-                        <td class="text-center">
-                            <a href="#"><i data-feather="eye"></i></a>
-                            <a href="#"><i data-feather="user-plus"></i></a>
-                        </td>
-                        <td class="text-center">
-                            <a href="#" class="open-cost-modal" data-training-id="1">
-                                <i data-feather="dollar-sign"></i>
-                            </a>
-                        </td>
-                        <td class="text-center">
-                            <a href="#"><i data-feather="edit"></i></a>
-                            <a href="#"><i data-feather="trash-2"></i></a>
-                        </td>
-                    </tr>
+                    @foreach($training as $item) <!-- Loop through each training item -->
+                        <tr>
+                            <td class="text-center">{{ $item->training_name }}</td>
+                            <td class="text-center">{{ $item->mode_of_delivery }}</td>
+                            <td class="text-center">{{ $item->total_training_hours }}</td>
+                            <td class="text-center">{{ $item->total_program_cost }}</td>
+                            <td class="text-center">{{ $item->division_name }}</td>
+                            <td class="text-center">{{ $item->batch_size }}</td>
+                            <td class="text-center">{{ $item->category }}</td>
+                            <td class="text-center">
+                                <a href="#" class="open-modal" data-training-id="{{ $item->id }}">
+                                    <i data-feather="check-circle"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="#"><i data-feather="eye"></i></a>
+                                <a href="#"><i data-feather="user-plus"></i></a>
+                            </td>
+                            <td class="text-center">
+                                <!-- For Cost Breakdown, Access Cost Breakdown for this specific training item -->
+                                <a href="#" class="open-cost-modal" data-training-id="{{ $item->id }}">
+                                    <i data-feather="dollar-sign"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="#"><i data-feather="edit"></i></a>
+                                <a href="#"><i data-feather="trash-2"></i></a>
+                            </td>
+                        </tr>
+                    @endforeach
                 </tbody>
             </table>
         </div>
-
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-end mx-3">
-                <!-- Dynamic pagination links go here -->
-            </ul>
-        </nav>
+        
+        <!-- Pagination Links -->
+        <div class="pagination">
+            {{ $training->links() }}
+        </div>        
     </div>
 </div>
 
@@ -133,38 +135,36 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- Type -->
-                <div class="col-md-6">
-                    <label for="cost_break_downs" class="form-label">Cost Type</label>
-                    <select name="cost_break_downs" id="cost_break_downs" class="form-select track-change @error('cost_break_downs') is-invalid @enderror" required>
-                        <option selected disabled>Choose...</option>
-                        <option value="1" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 1 ? 'selected' : '') }}>Airfare</option>
-                        <option value="2" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 2 ? 'selected' : '') }}>Subsistence Including Travel Day</option>
-                        <option value="3" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 3 ? 'selected' : '') }}>Incidental Including Travel Day</option>
-                        <option value="4" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 4 ? 'selected' : '') }}>Registration Fee</option>
-                        <option value="5" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 5 ? 'selected' : '') }}>Visa Fee</option>
-                        <option value="6" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 6 ? 'selected' : '') }}>Travel Insurance</option>
-                        <option value="7" {{ old('cost_break_downs', isset($training) && $training->cost_break_downs == 7 ? 'selected' : '') }}>Warm Clothes</option>
-                    </select>
-                    @error('cost_break_downs')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-                <!-- Amount -->
-                <div class="col-md-6">
-                    <label for="amount" class="form-label">Amount</label>
-                    <input name="amount" type="number" class="form-control track-change @error('amount') is-invalid @enderror" placeholder="0.00" value="{{ old('amount', isset($training) ? $training->amount : '') }}" required>
-                    @error('amount')
-                        <div class="invalid-feedback">{{ $message }}</div>
-                    @enderror
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="saveCost">Save</button>
+                <form method="POST" action="#" id="costForm">
+                    @csrf <!-- CSRF token for security -->
+
+                    <div class="col-md-6">
+                        <label for="cost_break_downs" class="form-label">Cost Type</label>
+                        <select name="cost_break_downs" id="cost_break_downs" class="form-select" required>
+                            <option value="1">Airfare</option>
+                            <option value="2">Subsistence Including Travel Day</option>
+                            <option value="3">Incidental Including Travel Day</option>
+                            <option value="4">Registration Fee</option>
+                            <option value="5">Visa Fee</option>
+                            <option value="6">Travel Insurance</option>
+                            <option value="7">Warm Clothes</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="amount" class="form-label">Amount</label>
+                        <input name="amount" type="number" class="form-control" placeholder="0.00" required>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" id="saveCost">Save</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {

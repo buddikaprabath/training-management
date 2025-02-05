@@ -59,8 +59,12 @@
             <!-- Mode of Delivery -->
             <div class="col-md-6">
                 <label for="mode_of_delivery" class="form-label">Mode of Delivery</label>
-                <input name="mode_of_delivery" type="text" class="form-control track-change @error('mode_of_delivery') is-invalid @enderror" placeholder="Mode of Delivery" value="{{ old('mode_of_delivery', isset($training) ? $training->mode_of_delivery : '') }}" required>
-                @error('mode_of_delivery')
+                <select name="mode_of_delivery" id="mode_of_delivery" class="form-select track-change @error('mode_of_delivery') is-invalid @enderror" required>
+                    <option selected disabled>Choose Type...</option>
+                    <option value="In person" {{ old('mode_of_delivery', isset($training) && $training->mode_of_delivery == 'In Person' ? 'selected' : '')}}>In person</option>
+                    <option value="In person" {{ old('mode_of_delivery', isset($training) && $training->mode_of_delivery == 'Online' ? 'selected' : '')}}>Online</option>
+                </select>
+                @error('course_type')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
@@ -121,10 +125,11 @@
                 <label for="course_type" class="form-label">Course Type</label>
                 <select name="course_type" id="course_type" class="form-select track-change @error('course_type') is-invalid @enderror" required>
                     <option selected disabled>Choose Type...</option>
-                    <option value="1" {{ old('course_type', isset($institutes) && $institutes->course_type == 1 ? 'selected' : '') }}>Foreign</option>
-                    <option value="2" {{ old('course_type', isset($institutes) && $institutes->course_type == 2 ? 'selected' : '') }}>Local</option>
-                    <option value="3" {{ old('course_type', isset($institutes) && $institutes->course_type == 3 ? 'selected' : '') }}>Test 1</option>
-                    <option value="4" {{ old('course_type', isset($institutes) && $institutes->course_type == 4 ? 'selected' : '') }}>Test 2</option>
+                    <option value="Local In-house" {{ old('course_type', isset($institutes) && $institutes->course_type == 'Local In-house' ? 'selected' : '') }}>Local In-house</option>
+                    <option value="Local Outside" {{ old('course_type', isset($institutes) && $institutes->course_type == 'Local Outside' ? 'selected' : '') }}>Local Outside</option>
+                    <option value="Local-Tailor Made" {{ old('course_type', isset($institutes) && $institutes->course_type == 'Local-Tailor Made' ? 'selected' : '') }}>Local-Tailor Made</option>
+                    <option value="Foreign" {{ old('course_type', isset($institutes) && $institutes->course_type == 'Foreign' ? 'selected' : '') }}>Foreign</option>
+                    <option value="CATC" {{ old('course_type', isset($institutes) && $institutes->course_type == 'CATC' ? 'selected' : '') }}>CATC</option>
                 </select>
                 @error('course_type')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -151,7 +156,11 @@
             <!-- Training Structure -->
             <div class="col-md-6">
                 <label for="training_structure" class="form-label">Training Structure</label>
-                <input name="training_structure" type="text" class="form-control track-change @error('training_structure') is-invalid @enderror" placeholder="Training Structure" value="{{ old('training_structure', isset($training) ? $training->training_structure : '') }}" required>
+                <select name="training_structure" id="training_structure" class="form-select track-change @error('training_structure') is-invalid @enderror" required>
+                    <option selected disabled>Choose Type...</option>
+                    <option value="One Time" {{ old('training_structure', isset($training) && $training->training_structure == 'One Time' ? 'selected' : '') }}>One Time</option>
+                    <option value="Recurrent" {{ old('training_structure', isset($training) && $training->training_structure == 'Recurrent' ? 'selected' : '') }}>Recurrent</option>
+                </select>
                 @error('training_structure')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -169,7 +178,18 @@
             <!-- Category -->
             <div class="col-md-6">
                 <label for="category" class="form-label">Category</label>
-                <input name="category" type="text" class="form-control track-change @error('category') is-invalid @enderror" placeholder="Category" value="{{ old('category', isset($training) ? $training->category : '') }}" required>
+                <select name="category" id="category" class="form-select track-change @error('category') is-invalid @enderror" required>
+                    <option selected disabled>Choose Type...</option>
+                    <option value="Training" {{ old('category', isset($training) && $training->category == 'Training' ? 'selected' : '') }}>Training</option>
+                    <option value="Meeting" {{ old('category', isset($training) && $training->category == 'Meeting' ? 'selected' : '') }}>Meeting</option>
+                    <option value="Seminar" {{ old('category', isset($training) && $training->category == 'Seminar' ? 'selected' : '') }}>Seminar</option>
+                    <option value="Study Tour" {{ old('category', isset($training) && $training->category == 'Study Tour' ? 'selected' : '') }}>Study Tour</option>
+                    <option value="FAM" {{ old('category', isset($training) && $training->category == 'FAM' ? 'selected' : '') }}>FAM</option>
+                    <option value="Exhibition" {{ old('category', isset($training) && $training->category == 'Exhibition' ? 'selected' : '') }}>Exhibition</option>
+                    <option value="Refresher" {{ old('category', isset($training) && $training->category == 'Refresher' ? 'selected' : '') }}>Refresher</option>
+                    <option value="Initial" {{ old('category', isset($training) && $training->category == 'Initial' ? 'selected' : '') }}>Initial</option>
+                    <option value="Other" {{ old('category', isset($training) && $training->category == 'Other' ? 'selected' : '') }}>Other</option>
+                </select>
                 @error('category')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror

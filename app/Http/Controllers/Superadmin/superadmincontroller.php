@@ -152,10 +152,11 @@ class superadmincontroller extends Controller
                     ->orWhere('trainings.training_code', 'LIKE', "%{$query}%")
                     ->orWhere('divisions.division_name', 'LIKE', "%{$query}%"); // Search by division name
             })
-            ->paginate(10);
+            ->paginate(10);  // Ensure you're paginating here
 
         return view('SuperAdmin.training.Detail', compact('training', 'query'));
     }
+
 
     //training create page
     public function createtrainingview()
@@ -165,8 +166,7 @@ class superadmincontroller extends Controller
         return view('SuperAdmin.training.create', compact('countries'));
     }
 
-    //store training data
-    public function store(Request $request)
+    public function createtraining(Request $request)
     {
         $validated = $request->validate([
             'training_name'         => 'required|string|max:255',
@@ -179,7 +179,7 @@ class superadmincontroller extends Controller
             'country'               => 'nullable|string|max:255',
             'training_structure'    => 'nullable|string|max:255',
             'exp_date'              => 'nullable|date',
-            'batch_size'            => 'nullable|integer|max:255',
+            'batch_size'            => 'nullable|integer',
             'training_custodian'    => 'nullable|string|max:255',
             'course_type'           => 'required|string|max:255',
             'category'              => 'required|string|max:255',
@@ -194,6 +194,8 @@ class superadmincontroller extends Controller
             'subject_type'          => 'nullable|string|max:255',
             'subject_name'          => 'nullable|string|max:255',
         ]);
+
+        \Log::info('Validated Data:', $validated);
 
         try {
             DB::beginTransaction();
@@ -244,9 +246,11 @@ class superadmincontroller extends Controller
             }
 
             DB::commit();
+
             return redirect()->route('SuperAdmin.training.Detail')->with('success', 'Training created successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
+            \Log::error('Error occurred while saving training: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error occurred while saving training: ' . $e->getMessage());
         }
     }
