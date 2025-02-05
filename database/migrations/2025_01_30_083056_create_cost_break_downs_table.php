@@ -13,13 +13,8 @@ return new class extends Migration
     {
         Schema::create('cost_break_downs', function (Blueprint $table) {
             $table->id();
-            $table->decimal('airfare', 10, 2)->nullable();
-            $table->decimal('subsistence_including_travel_day', 10, 2)->nullable();
-            $table->decimal('incidental_including_travel_day', 10, 2)->nullable();
-            $table->decimal('registration_fee', 10, 2)->nullable();
-            $table->decimal('visa_fee', 10, 2)->nullable();
-            $table->decimal('travel_insurance', 10, 2)->nullable();
-            $table->decimal('warm_clothes', 10, 2)->nullable();
+            $table->string('cost_type');
+            $table->decimal('amount', 10, 2);
             $table->foreignId('training_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
