@@ -62,7 +62,7 @@
                 <select name="mode_of_delivery" id="mode_of_delivery" class="form-select track-change @error('mode_of_delivery') is-invalid @enderror" required>
                     <option selected disabled>Choose Type...</option>
                     <option value="In person" {{ old('mode_of_delivery', isset($training) && $training->mode_of_delivery == 'In Person' ? 'selected' : '')}}>In person</option>
-                    <option value="In person" {{ old('mode_of_delivery', isset($training) && $training->mode_of_delivery == 'Online' ? 'selected' : '')}}>Online</option>
+                    <option value="Online" {{ old('mode_of_delivery', isset($training) && $training->mode_of_delivery == 'Online' ? 'selected' : '')}}>Online</option>
                 </select>
                 @error('course_type')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -105,33 +105,51 @@
                 @enderror
             </div>
 
-            <!-- Awarding Institute -->
-            <div class="col-md-6">
-                <label for="name" class="form-label">Awarding Institute</label>
-                <select name="name" id="name" class="form-select track-change @error('name') is-invalid @enderror" required>
-                    <option selected disabled>Choose Institute...</option>
-                    <option value="1" {{ old('name', isset($institutes) && $institutes->name == 1 ? 'selected' : '') }}>SLIIT</option>
-                    <option value="2" {{ old('name', isset($institutes) && $institutes->name == 2 ? 'selected' : '') }}>NIBM</option>
-                    <option value="3" {{ old('name', isset($institutes) && $institutes->name == 3 ? 'selected' : '') }}>ESOFT</option>
-                    <option value="4" {{ old('name', isset($institutes) && $institutes->name == 4 ? 'selected' : '') }}>APIT</option>
-                </select>
-                @error('name')
-                    <div class="invalid-feedback">{{ $message }}</div>
-                @enderror
-            </div>
-
             <!-- Course Type -->
             <div class="col-md-6">
                 <label for="course_type" class="form-label">Course Type</label>
                 <select name="course_type" id="course_type" class="form-select track-change @error('course_type') is-invalid @enderror" required>
                     <option selected disabled>Choose Type...</option>
-                    <option value="Local In-house" {{ old('course_type', isset($institutes) && $institutes->course_type == 'Local In-house' ? 'selected' : '') }}>Local In-house</option>
-                    <option value="Local Outside" {{ old('course_type', isset($institutes) && $institutes->course_type == 'Local Outside' ? 'selected' : '') }}>Local Outside</option>
-                    <option value="Local-Tailor Made" {{ old('course_type', isset($institutes) && $institutes->course_type == 'Local-Tailor Made' ? 'selected' : '') }}>Local-Tailor Made</option>
-                    <option value="Foreign" {{ old('course_type', isset($institutes) && $institutes->course_type == 'Foreign' ? 'selected' : '') }}>Foreign</option>
-                    <option value="CATC" {{ old('course_type', isset($institutes) && $institutes->course_type == 'CATC' ? 'selected' : '') }}>CATC</option>
+                    <option value="Local In-house" {{ old('course_type', isset($training) && $training->course_type == 'Local In-house' ? 'selected' : '') }}>Local In-house</option>
+                    <option value="Local Outside" {{ old('course_type', isset($training) && $training->course_type  == 'Local Outside' ? 'selected' : '') }}>Local Outside</option>
+                    <option value="Local-Tailor Made" {{ old('course_type', isset($training) && $training->course_type  == 'Local-Tailor Made' ? 'selected' : '') }}>Local-Tailor Made</option>
+                    <option value="Foreign" {{ old('course_type', isset($training) && $training->course_type  == 'Foreign' ? 'selected' : '') }}>Foreign</option>
+                    <option value="CATC" {{ old('course_type', isset($training) && $training->course_type  == 'CATC' ? 'selected' : '') }}>CATC</option>
                 </select>
                 @error('course_type')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <!-- Awarding Institute -->
+            <div class="col-md-6">
+                <label for="institutes" class="form-label">Awarding Institute</label>
+                <select name="institutes[]" id="institutes" class="form-select track-change @error('institutes') is-invalid @enderror" multiple required>
+                    <option disabled>Choose Institute...</option>
+                    @foreach($institutes as $institute)
+                        <option value="{{ $institute->id }}" 
+                            {{ in_array($institute->id, old('institutes', isset($training) ? $training->institutes->pluck('id')->toArray() : [])) ? 'selected' : '' }}>
+                            {{ $institute->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('institutes')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <!-- Trainer Selection -->
+            <div class="col-md-6">
+                <label for="trainers" class="form-label">Trainers</label>
+                <select name="trainers[]" id="trainers" class="form-select track-change @error('trainers') is-invalid @enderror" multiple required>
+                    <option disabled>Choose Trainers...</option>
+                    @foreach($trainers as $trainer)
+                        <option value="{{ $trainer->id }}" 
+                            {{ in_array($trainer->id, old('trainers', isset($training) ? $training->trainers->pluck('id')->toArray() : [])) ? 'selected' : '' }}>
+                            {{ $trainer->name }}
+                        </option>
+                    @endforeach
+                </select>
+                @error('trainers')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
@@ -246,6 +264,14 @@
                     <option value="8" {{ old('section_id', isset($training) && $training->section_id == 8 ? 'selected' : '') }}>WING 8</option>
                 </select>
                 @error('section_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <!-- deadline -->
+            <div class="col-md-6">
+                <label for="dead_line" class="form-label">Dead Line</label>
+                <input name="dead_line" type="date" class="form-control track-change @error('dead_line') is-invalid @enderror" value="{{ old('dead_line', isset($training) ? $training->dead_line : '') }}" required>
+                @error('dead_line')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>

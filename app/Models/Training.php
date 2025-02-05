@@ -4,7 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Mockery\Matcher\Subset;
+use App\Models\Division;
+use App\Models\Section;
+use App\Models\User;
+use App\Models\Trainer;
+use App\Models\Institute;
+use App\Models\Subject;
+use App\Models\CostBreakDown;
+use App\Models\Participant;
+use App\Models\Remark;
+use App\Models\Document;
 
 class Training extends Model
 {
@@ -44,10 +53,10 @@ class Training extends Model
     protected static function booted()
     {
         static::creating(function ($training) {
-            // Generate a unique 'id' (primary key) in the format 'UI-001'
-            $latest = self::latest('created_at')->first();
-            $number = $latest ? ((int) substr($latest->id, 3)) + 1 : 1;
-            $training->id = 'TR-' . str_pad($number, 3, '0', STR_PAD_LEFT);
+            // Generate a unique 'id' (primary key) in the format 'TR-001'
+            $latest = self::orderBy('id', 'desc')->first();  // Get the latest ID in the table
+            $number = $latest ? ((int) substr($latest->id, 3)) + 1 : 1; // Increment the number
+            $training->id = 'TR-' . str_pad($number, 3, '0', STR_PAD_LEFT); // Format as TR-001, TR-002, etc.
         });
     }
 
@@ -79,7 +88,7 @@ class Training extends Model
 
     public function subjects()
     {
-        return $this->hasMany(Subset::class);
+        return $this->hasMany(Subject::class);
     }
 
     public function costBrakedowns()

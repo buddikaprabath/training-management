@@ -22,6 +22,9 @@ class DatabaseSeeder extends Seeder
             AdminSeeder::class,
             UserSeeder::class,
             CountryTableSeeder::class,
+            InstituteSeeder::class,
+            TrainerSeeder::class,
+            TrainingSeeder::class
         ]);
     }
 }
