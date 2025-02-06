@@ -40,11 +40,11 @@
             <thead>
                 <tr>
                     <th class="text-center align-top">ID</th>
-                    <th class="text-center align-top">INSTITUTE NAME</th>
-                    <th class="text-center align-top">INSTITUTE TYPE</th>
-                    <th class="text-center align-top">CREATED BY</th>
-                    <th class="text-center align-top">TRAINER DETAILS</th>
-                    <th class="text-center align-top">ACTION</th>
+                    <th class="text-center align-top">Institute Name</th>
+                    <th class="text-center align-top">Institute Type</th>
+                    <th class="text-center align-top">Created By</th>
+                    <th class="text-center align-top">Trainer Details</th>
+                    <th class="text-center align-top">Action</th>
                 </tr>
             </thead>
             <tbody>
@@ -56,7 +56,7 @@
                     <a href="#"><i data-feather="eye"></i></a>
                 </td>
                 <td class="text-center">
-                    <a href="#"><i data-feather="edit"></i></a>
+                    <a href="#"><i data-feather="edit"></i></a>&nbsp;&nbsp;
                     <a href="#"><i data-feather="trash-2"></i></a>
                 </td>
             </tbody>

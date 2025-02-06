@@ -68,7 +68,7 @@
                                 </a>
                             </td>
                             <td class="text-center">
-                                <a href="#"><i data-feather="eye"></i></a>
+                                <a href="#"><i data-feather="eye"></i></a>&nbsp;&nbsp;
                                 <a href="#"><i data-feather="user-plus"></i></a>
                             </td>
                             <td class="text-center">
