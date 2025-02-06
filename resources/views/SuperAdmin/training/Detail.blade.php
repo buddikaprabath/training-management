@@ -68,8 +68,11 @@
                                 </a>
                             </td>
                             <td class="text-center">
-                                <a href="#"><i data-feather="eye"></i></a>
-                                <a href="#"><i data-feather="user-plus"></i></a>
+                                <a href="{{ route('SuperAdmin.participant.Detail',$item->id) }}">
+                                    <i data-feather="eye"></i>
+                                </a>
+                                
+                                <a href="{{route('SuperAdmin.participant.create',$item->id)}}"><i data-feather="user-plus"></i></a>
                             </td>
                             <td class="text-center">
                                 <!-- For Cost Breakdown, Access Cost Breakdown for this specific training item -->
@@ -96,37 +99,7 @@
     </div>
 </div>
 
-<!-- Modal for Training Tasks -->
-<div class="modal fade" id="trainingModal" tabindex="-1" aria-labelledby="trainingModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="trainingModalLabel">Complete Training Tasks</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="trainingForm">
-                    <input type="hidden" id="trainingId" name="training_id">
 
-                    @foreach (['Feedback Form', 'E-Report', 'Warm Clothes Allowance', 'Presentation'] as $index => $task)
-                        <div class="form-check">
-                            <label class="form-check-label" for="task{{ $index }}">{{ $task }}</label>
-                            <input class="form-check-input task-checkbox" type="checkbox" id="task{{ $index }}">
-                        </div>
-                    @endforeach
-
-                    <div class="form-check mt-3">
-                        <label class="form-check-label fw-bold" for="trainingCompleted">Training Completed</label>
-                        <input class="form-check-input" type="checkbox" id="trainingCompleted" disabled>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="saveTraining">Save</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- Modal for Cost Breakdown -->
 <div class="modal fade" id="costModal" tabindex="-1" aria-labelledby="costModalLabel" aria-hidden="true">
@@ -142,14 +115,14 @@
 
                     <div class="col-md-6">
                         <label for="cost_break_downs" class="form-label">Cost Type</label>
-                        <select name="cost_break_downs" id="cost_break_downs" class="form-select" required>
-                            <option value="1">Airfare</option>
-                            <option value="2">Subsistence Including Travel Day</option>
-                            <option value="3">Incidental Including Travel Day</option>
-                            <option value="4">Registration Fee</option>
-                            <option value="5">Visa Fee</option>
-                            <option value="6">Travel Insurance</option>
-                            <option value="7">Warm Clothes</option>
+                        <select name="cost_type" id="cost_break_downs" class="form-select" required>
+                            <option value="Airfare">Airfare</option>
+                            <option value="Subsistence Including Travel Day">Subsistence Including Travel Day</option>
+                            <option value="Incidental Including Travel Day">Incidental Including Travel Day</option>
+                            <option value="Registration Fee">Registration Fee</option>
+                            <option value="Visa Fee">Visa Fee</option>
+                            <option value="Travel Insurance">Travel Insurance</option>
+                            <option value="Warm Clothes">Warm Clothes</option>
                         </select>
                     </div>
 
@@ -170,79 +143,36 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-        let trainingModalElement = document.getElementById("trainingModal");
-        let trainingModal = new bootstrap.Modal(trainingModalElement);
+ 
 
-        let costModalElement = document.getElementById("costModal");
-        let costModal = new bootstrap.Modal(costModalElement);
+    let costModalElement = document.getElementById("costModal");
+    let costModal = new bootstrap.Modal(costModalElement);
 
-        // Open modal and set training ID for tasks
-        document.querySelectorAll(".open-modal").forEach(button => {
-            button.addEventListener("click", function () {
-                let trainingId = this.getAttribute("data-training-id");
-                document.getElementById("trainingId").value = trainingId;
-                trainingModal.show(); // Open the training tasks modal
-            });
-        });
 
-        // Open modal for cost breakdown when clicking dollar-sign
-        document.querySelectorAll(".open-cost-modal").forEach(button => {
-            button.addEventListener("click", function () {
-                let trainingId = this.getAttribute("data-training-id");
 
-                // Set the form action dynamically
-                let costForm = document.getElementById("costForm");
+    // Open cost breakdown modal and set form action dynamically
+    document.querySelectorAll(".open-cost-modal").forEach(button => {
+        button.addEventListener("click", function () {
+            let trainingId = this.getAttribute("data-training-id");
+            let costForm = document.getElementById("costForm");
+            if (costForm) {
                 costForm.action = `/SuperAdmin/training/cost-breakdown/store/${trainingId}`;
-
-                // Show the modal
-                let costModal = new bootstrap.Modal(document.getElementById('costModal'));
                 costModal.show();
-            });
-        });
-
-
-        // Enable 'Training Completed' checkbox only when all tasks are checked
-        document.querySelectorAll(".task-checkbox").forEach(checkbox => {
-            checkbox.addEventListener("change", function () {
-                let allChecked = [...document.querySelectorAll(".task-checkbox")].every(cb => cb.checked);
-                document.getElementById("trainingCompleted").disabled = !allChecked;
-            });
-        });
-
-        // For training tasks
-        document.getElementById("saveTraining").addEventListener("click", function () {
-            let trainingId = document.getElementById("trainingId").value;
-            let completed = document.getElementById("trainingCompleted").checked;
-
-            if (completed) {
-                // Change the "check-circle" icon to green
-                let checkIcon = document.querySelector(`.open-modal[data-training-id="${trainingId}"] i`);
-                if (checkIcon) {
-                    checkIcon.style.color = "green";  // Change color to green
-                }
             }
-
-            // Close the modal properly
-            trainingModal.hide();
-
-            // Fix backdrop issue
-            setTimeout(() => {
-                document.querySelector('.modal-backdrop')?.remove();
-                document.body.classList.remove('modal-open');
-            }, 500);
         });
-
-        // For cost breakdown
-        document.getElementById("saveCost").addEventListener("click", function () {
-            // Add functionality to save the cost details here
-            console.log("Cost details saved!");
-
-            // Close the modal
-            costModal.hide();
-        });
-
-        feather.replace(); // Initialize Feather icons
     });
+
+    // Save cost details and close modal
+    document.getElementById("saveCost").addEventListener("click", function () {
+        let costForm = document.getElementById("costForm");
+        if (costForm) {
+            console.log("Cost details saved!");
+            costModal.hide();
+        }
+    });
+
+    feather.replace(); // Initialize Feather icons
+});
 </script>
 
 @endsection

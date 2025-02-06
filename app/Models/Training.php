@@ -93,7 +93,7 @@ class Training extends Model
 
     public function costBrakedowns()
     {
-        return $this->hasMany(CostBreakDown::class);
+        return $this->hasMany(Costbreak::class);
     }
 
     public function participants()
