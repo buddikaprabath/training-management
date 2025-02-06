@@ -72,7 +72,9 @@
                                     <i data-feather="eye"></i>
                                 </a>&nbsp;&nbsp;
 
-                                <a href="{{route('SuperAdmin.participant.create',$item->id)}}"><i data-feather="user-plus"></i></a>
+                                <a href="{{route('SuperAdmin.participant.create',$item->id)}}">
+                                    <i data-feather="user-plus"></i>
+                                </a>
                             </td>
                             <td class="text-center">
                                 <!-- For Cost Breakdown, Access Cost Breakdown for this specific training item -->
