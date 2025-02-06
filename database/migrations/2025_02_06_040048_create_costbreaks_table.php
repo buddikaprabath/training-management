@@ -11,11 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('cost_break_downs', function (Blueprint $table) {
+        Schema::create('costbreaks', function (Blueprint $table) {
             $table->id();
             $table->string('cost_type');
             $table->decimal('amount', 10, 2);
-            $table->foreignId('training_id')->constrained()->onDelete('cascade');
+            $table->string('training_id'); // Change from foreignId() to string()
             $table->timestamps();
         });
     }
@@ -25,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('cost_break_downs');
+        Schema::dropIfExists('costbreaks');
     }
 };

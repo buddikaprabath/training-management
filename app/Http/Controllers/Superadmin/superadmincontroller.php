@@ -14,10 +14,10 @@ use App\Models\Trainer;
 use APP\Models\Division;
 use App\Models\Document;
 use App\Models\Training;
+use App\Models\Costbreak;
 use App\Models\Institute;
 use App\Models\Participant;
 use Illuminate\Http\Request;
-use App\Models\CostBreakDown;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -200,8 +200,6 @@ class superadmincontroller extends Controller
             'dead_line'             => 'required|date',
         ]);
 
-        \Log::info('Validated Data:', $validated);
-
         try {
             DB::beginTransaction();
 
@@ -255,7 +253,6 @@ class superadmincontroller extends Controller
             return redirect()->route('SuperAdmin.training.Detail')->with('success', 'Training created successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            \Log::error('Error occurred while saving training: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Error occurred while saving training: ' . $e->getMessage());
         }
     }
@@ -388,11 +385,11 @@ class superadmincontroller extends Controller
             DB::beginTransaction();
 
             // Ensure training exists
-            $training = Training::findOrFail($trainingId);
+            $training = Training::where('id', $trainingId)->firstOrFail();
 
             // Create a new cost breakdown entry
-            CostBreakdown::create([
-                'training_id' => $training->id,
+            Costbreak::create([
+                'training_id' => $training->id, // Use 'id' here
                 'cost_type'   => $validated['cost_type'],
                 'amount'      => $validated['amount'],
             ]);
@@ -462,7 +459,7 @@ class superadmincontroller extends Controller
             Remark::where('training_id', $training->id)->delete();
 
             // Delete related cost breakdown entries (if applicable)
-            CostBreakDown::where('training_id', $training->id)->delete();
+            Costbreak::where('training_id', $training->id)->delete();
 
             // Finally, delete the training record
             $training->delete();
@@ -481,7 +478,7 @@ class superadmincontroller extends Controller
     //participant handling
 
     //load the participant view blade
-    public function participantview($id)
+    public function participantview($trainingId)
     {
         // Find the training and load related data for participants
         $training = Training::with([
@@ -489,10 +486,14 @@ class superadmincontroller extends Controller
             'participants.remarks',
             'participants.grades',
             'participants.documents'
-        ])->findOrFail($id);
+        ])->findOrFail($trainingId);
 
-        return view('SuperAdmin.participant.Detail', compact('training'));
+        return view('SuperAdmin.participant.Detail', [
+            'training' => $training,
+            'participants' => $training->participants // Passing the participants for the view
+        ]);
     }
+
 
     //load the create participant blade
     public function createparticipant($trainingId)
@@ -500,7 +501,7 @@ class superadmincontroller extends Controller
         // Find the training to ensure it exists
         $training = Training::findOrFail($trainingId);
 
-        return view('participants.create', compact('training'));
+        return view('SuperAdmin.participant.create', compact('training'));
     }
 
     //store participant
