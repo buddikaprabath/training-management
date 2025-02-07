@@ -634,7 +634,7 @@ class superadmincontroller extends Controller
         }
     }
 
-    //load the edit blade 
+    //load the edit blade
     public function participantedit($id)
     {
         try {
@@ -767,6 +767,10 @@ class superadmincontroller extends Controller
     public function instituteview()
     {
         return view('SuperAdmin.institute.Detail');
+    }
+    public function createInstituteView()
+    {
+        return view('SuperAdmin.institute.create');
     }
 
     //Trainer handling
