@@ -70,9 +70,11 @@
                             <td class="text-center">
                                 <a href="{{ route('SuperAdmin.participant.Detail',$item->id) }}">
                                     <i data-feather="eye"></i>
+                                </a>&nbsp;&nbsp;
+
+                                <a href="{{route('SuperAdmin.participant.create',$item->id)}}">
+                                    <i data-feather="user-plus"></i>
                                 </a>
-                                
-                                <a href="{{route('SuperAdmin.participant.create',$item->id)}}"><i data-feather="user-plus"></i></a>
                             </td>
                             <td class="text-center">
                                 <!-- For Cost Breakdown, Access Cost Breakdown for this specific training item -->
@@ -91,11 +93,11 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination Links -->
         <div class="pagination">
             {{ $training->links() }}
-        </div>        
+        </div>
     </div>
 </div>
 
@@ -143,7 +145,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
- 
+
 
     let costModalElement = document.getElementById("costModal");
     let costModal = new bootstrap.Modal(costModalElement);
