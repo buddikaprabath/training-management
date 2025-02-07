@@ -50,15 +50,13 @@
                 <tr>
                     <th>Year</th>
                     <th>Type</th>
-                    <th>Category</th>
                     <th>Amount</th>
                     <th>Division</th>
                 </tr>
             </thead>
             <tbody>
                 <td>2025</td>
-                <td>Transfer</td>
-                <td>Foreign</td>
+                <td>Start Budget Allocation</td>
                 <td>35000000</td>
                 <td>HR</td>
             </tbody>

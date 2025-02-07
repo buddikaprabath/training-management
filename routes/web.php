@@ -63,8 +63,6 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
             //institute routes
             Route::prefix('institute')->name('institute.')->group(function () {
                 Route::get('Detail', 'instituteview')->name('Detail');
-                Route::get('create', 'createinstituteview')->name('create'); //load the institute create page
-                Route::post('store', 'createinstitute')->name('store'); // Store user (for create)
             });
 
             //trainers routes
