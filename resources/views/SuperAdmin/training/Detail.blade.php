@@ -49,6 +49,7 @@
                         <th class="text-center align-top">Training Status</th>
                         <th class="text-center align-top">Participant</th>
                         <th class="text-center align-top">Cost Breakdown</th>
+                        <th class="text-center align-top">Add Document</th>
                         <th class="text-center align-top">Action</th>
                     </tr>
                 </thead>
@@ -71,13 +72,21 @@
                                 <a href="{{ route('SuperAdmin.participant.Detail',$item->id) }}">
                                     <i data-feather="eye"></i>
                                 </a>
-                                
+
                                 <a href="{{route('SuperAdmin.participant.create',$item->id)}}"><i data-feather="user-plus"></i></a>
                             </td>
                             <td class="text-center">
                                 <!-- For Cost Breakdown, Access Cost Breakdown for this specific training item -->
                                 <a href="#" class="open-cost-modal" data-training-id="{{ $item->id }}">
                                     <i data-feather="dollar-sign"></i>
+                                </a>
+                                <a href="{{ route('SuperAdmin.training.edit', $item->id) }}">
+                                    <i data-feather="edit"></i>
+                                </a>
+                            </td>
+                            <td class="text-center">
+                                <a href="#">
+                                    <i data-feather="file-text"></i>
                                 </a>
                             </td>
                             <td class="text-center">
@@ -97,11 +106,11 @@
                 </tbody>
             </table>
         </div>
-        
+
         <!-- Pagination Links -->
         <div class="pagination">
             {{ $training->links() }}
-        </div>        
+        </div>
     </div>
 </div>
 
@@ -117,24 +126,73 @@
             </div>
             <div class="modal-body">
                 <form method="POST" id="costForm">
-                    @csrf <!-- CSRF token for security -->
+                    @csrf
 
-                    <div class="col-md-6">
-                        <label for="cost_break_downs" class="form-label">Cost Type</label>
-                        <select name="cost_type" id="cost_break_downs" class="form-select" required>
-                            <option value="Airfare">Airfare</option>
-                            <option value="Subsistence Including Travel Day">Subsistence Including Travel Day</option>
-                            <option value="Incidental Including Travel Day">Incidental Including Travel Day</option>
-                            <option value="Registration Fee">Registration Fee</option>
-                            <option value="Visa Fee">Visa Fee</option>
-                            <option value="Travel Insurance">Travel Insurance</option>
-                            <option value="Warm Clothes">Warm Clothes</option>
-                        </select>
-                    </div>
+                    <div class="container">
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-6 col-form-label">Airfare</label>
+                            <div class="col-md-6">
+                                <input name="airfare" type="number" class="form-control cost-input"
+                                    value="0.00" min="0">
+                            </div>
+                        </div>
 
-                    <div class="col-md-6">
-                        <label for="amount" class="form-label">Amount</label>
-                        <input name="amount" type="number" class="form-control" placeholder="0.00" required>
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-6 col-form-label">Subsistence Including Travel Day</label>
+                            <div class="col-md-6">
+                                <input name="subsistence" type="number" class="form-control cost-input"
+                                    value="0.00" min="0">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-6 col-form-label">Incidental Including Travel Day</label>
+                            <div class="col-md-6">
+                                <input name="incidental" type="number" class="form-control cost-input"
+                                    value="0.00" min="0">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-6 col-form-label">Registration Fee</label>
+                            <div class="col-md-6">
+                                <input name="registration" type="number" class="form-control cost-input"
+                                    value="0.00" min="0">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-6 col-form-label">Visa Fee</label>
+                            <div class="col-md-6">
+                                <input name="visa" type="number" class="form-control cost-input"
+                                    value="0.00" min="0">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-6 col-form-label">Travel Insurance</label>
+                            <div class="col-md-6">
+                                <input name="insurance" type="number" class="form-control cost-input"
+                                    value="0.00" min="0">
+                            </div>
+                        </div>
+
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-6 col-form-label">Warm Clothes</label>
+                            <div class="col-md-6">
+                                <input name="warm_clothes" type="number" class="form-control cost-input"
+                                    value="0.00" min="0">
+                            </div>
+                        </div>
+
+                        <!-- Total Amount (Read-Only) -->
+                        <div class="row mb-3 align-items-center">
+                            <label class="col-md-6 col-form-label"><strong>Total Amount</strong></label>
+                            <div class="col-md-6">
+                                <input name="total_amount" type="number" class="form-control"
+                                    value="0.00" readonly id="totalAmount">
+                            </div>
+                        </div>
                     </div>
 
                     <div class="modal-footer">
@@ -146,39 +204,55 @@
     </div>
 </div>
 
-
 <script>
     document.addEventListener("DOMContentLoaded", function () {
- 
 
-    let costModalElement = document.getElementById("costModal");
-    let costModal = new bootstrap.Modal(costModalElement);
+        let costModalElement = document.getElementById("costModal");
+        let costModal = new bootstrap.Modal(costModalElement);
+        const costInputs = document.querySelectorAll(".cost-input");
+        const totalAmountField = document.getElementById("totalAmount");
 
 
 
-    // Open cost breakdown modal and set form action dynamically
-    document.querySelectorAll(".open-cost-modal").forEach(button => {
-        button.addEventListener("click", function () {
-            let trainingId = this.getAttribute("data-training-id");
+        // Open cost breakdown modal and set form action dynamically
+        document.querySelectorAll(".open-cost-modal").forEach(button => {
+            button.addEventListener("click", function () {
+                let trainingId = this.getAttribute("data-training-id");
+                let costForm = document.getElementById("costForm");
+                if (costForm) {
+                    costForm.action = `/SuperAdmin/training/cost-breakdown/store/${trainingId}`;
+                    costModal.show();
+                }
+            });
+        });
+
+        // Save cost details and close modal
+        document.getElementById("saveCost").addEventListener("click", function () {
             let costForm = document.getElementById("costForm");
             if (costForm) {
-                costForm.action = `/SuperAdmin/training/cost-breakdown/store/${trainingId}`;
-                costModal.show();
+                console.log("Cost details saved!");
+                costModal.hide();
             }
         });
-    });
 
-    // Save cost details and close modal
-    document.getElementById("saveCost").addEventListener("click", function () {
-        let costForm = document.getElementById("costForm");
-        if (costForm) {
-            console.log("Cost details saved!");
-            costModal.hide();
-        }
-    });
+        feather.replace(); // Initialize Feather icons
 
-    feather.replace(); // Initialize Feather icons
-});
+        function calculateTotal() {
+                let total = 0;
+                costInputs.forEach(input => {
+                    total += parseFloat(input.value) || 0;
+                });
+                totalAmountField.value = total.toFixed(2); // Set total with 2 decimal places
+            }
+
+            // Attach event listeners to all cost inputs
+            costInputs.forEach(input => {
+                input.addEventListener("input", calculateTotal);
+            });
+
+            // Initial calculation in case default values are modified
+            calculateTotal();
+    });
 </script>
 
 @endsection
