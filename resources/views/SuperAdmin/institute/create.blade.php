@@ -43,10 +43,10 @@
                 <label for="type" class="form-label">Type</label>
                 <select name="type" id="type" class="form-select track-change @error('type') is-invalid @enderror" required>
                     <option selected disabled>Choose Type</option>
-                    <option value="1" {{ old('type', isset($institute) && $institute->type == 1 ? 'selected' : '') }}>AASL</option>
-                    <option value="2" {{ old('type', isset($institute) && $institute->type == 2 ? 'selected' : '') }}>Type 2</option>
-                    <option value="3" {{ old('type', isset($institute) && $institute->type == 3 ? 'selected' : '') }}>Type 3</option>
-                    <option value="4" {{ old('type', isset($institute) && $institute->type == 4 ? 'selected' : '') }}>Type 4</option>
+                    <option value="AASL" {{ old('type', isset($institute) && $institute->type == 1 ? 'selected' : '') }}>AASL</option>
+                    <option value="Type 2" {{ old('type', isset($institute) && $institute->type == 2 ? 'selected' : '') }}>Type 2</option>
+                    <option value="Type 3" {{ old('type', isset($institute) && $institute->type == 3 ? 'selected' : '') }}>Type 3</option>
+                    <option value="Type 4" {{ old('type', isset($institute) && $institute->type == 4 ? 'selected' : '') }}>Type 4</option>
                 </select>
                 @error('type')
                     <div class="invalid-feedback">{{ $message }}</div>

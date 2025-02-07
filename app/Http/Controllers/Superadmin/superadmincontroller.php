@@ -770,6 +770,29 @@ class superadmincontroller extends Controller
         return view('SuperAdmin.institute.Detail', compact('institutes'));
     }
 
+    public function instituteCreate()
+    {
+        return view('SuperAdmin.institute.create');
+    }
+
+    public function Institutestore(Request $request)
+    {
+        dd($request->all());
+
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string',
+        ]);
+
+        $institute = new Institute();
+        $institute->name = $request->name;
+        $institute->type = $request->type;
+        $institute->save();
+
+        return redirect()->back()->with('success', 'Institute created successfully.');
+    }
+
     //Trainer handling
     public function trainerview()
     {
