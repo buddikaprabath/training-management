@@ -10,7 +10,13 @@
             <input class="form-control me-2" type="search" name="query" placeholder="Enter institute name" value="{{ request('query') }}">
             <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
-
+        <a href="{{ url()->current() }}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-refresh-cw">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </a>
         <a href="{{ route('SuperAdmin.institute.create') }}" class="text-decoration-none">
             <button type="button" class="btn btn-primary d-flex align-items-center">
                 <svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" class="me-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -53,22 +59,26 @@
                         <td class="text-center">{{$institute->name}}</td>
                         <td class="text-center">{{$institute->type}}</td>
                         <td class="text-center">
-                            <a href="#"><i data-feather="eye"></i></a>
+                            <a href="{{route('SuperAdmin.trainer.Detail',$institute->id)}}"><i data-feather="eye"></i></a>
                         </td>
                         <td class="text-center">
-                            <a href="{{route('SuperAdmin.institute.edit',$institute->id)}}"><i data-feather="edit"></i></a>&nbsp;&nbsp;
-                            <a href="#"><i data-feather="trash-2"></i></a>
+                            <a href="{{route('SuperAdmin.institute.edit',$institute->id)}}" style="display: inline"><i data-feather="edit"></i></a>&nbsp;&nbsp;
+                            <form action="{{ route('SuperAdmin.institute.delete', $institute->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this institute?');" style="display: inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" style="border: none; background: none; padding: 0; cursor: pointer;">
+                                    <i data-feather="trash-2" class="align-middle me-2"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
-        <nav aria-label="Page navigation example">
-            <ul class="pagination d-flex align-items-end flex-column mb-3">
-                <!-- This will dynamically generate the pagination links -->
-
-            </ul>
-        </nav>
+            <!-- Pagination Links -->
+            <div class="pagination">
+                {{ $institutes->links() }}
+            </div>  
 
         </div>
     </div>

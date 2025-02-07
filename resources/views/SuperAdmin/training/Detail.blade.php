@@ -87,13 +87,14 @@
                                 </a>
                             </td>
                             <td class="text-center">
-                                <a href="{{ route('SuperAdmin.training.edit', $item->id) }}">
+                                <a href="{{ route('SuperAdmin.training.edit', $item->id) }}" style="display: inline-block; vertical-align: middle;">
                                     <i data-feather="edit"></i>
                                 </a>
-                                <form action="{{ route('SuperAdmin.training.Training.delete', $item->id) }}" method="POST" style="display:inline;">
+                                
+                                <form action="{{ route('SuperAdmin.training.Training.delete', $item->id) }}" method="POST" style="display: inline-block; vertical-align: middle; margin-left: 5px;">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" style="background: none; border: none;">
+                                    <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
                                         <i data-feather="trash-2"></i>
                                     </button>
                                 </form>

@@ -834,9 +834,12 @@ class superadmincontroller extends Controller
 
     //end institute handling
     //Trainer handling
-    public function trainerview()
+    public function trainerview($id)
     {
-        return view('SuperAdmin.trainer.Detail');
+
+        $trainer = Trainer::findOrFail($id);
+
+        return view('SuperAdmin.trainer.Detail', compact('trainer'));
     }
 
     // Approvel Handling

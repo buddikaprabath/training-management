@@ -68,11 +68,13 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::post('/store', 'Institutestore')->name('store');
                 Route::get('{id}/edit', 'instituteedit')->name('edit');
                 Route::put('/update/{id}', 'Instituteupdate')->name('update');
+                Route::delete('{id}/delete', 'instituteDelete')->name('delete');
+                Route::get('search', 'Institutesearch')->name('search');
             });
 
             //trainers routes
             Route::prefix('trainer')->name('trainer.')->group(function () {
-                Route::get('Detail', 'trainerview')->name('Detail'); //load the trainer details view
+                Route::get('{id}/Detail', 'trainerview')->name('Detail'); //load the trainer details view
             });
 
             //approvel routes
