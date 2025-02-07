@@ -766,7 +766,8 @@ class superadmincontroller extends Controller
     //Institute handling
     public function instituteview()
     {
-        return view('SuperAdmin.institute.Detail');
+        $institutes = Institute::paginate(10);
+        return view('SuperAdmin.institute.Detail', compact('institutes'));
     }
 
     //Trainer handling
