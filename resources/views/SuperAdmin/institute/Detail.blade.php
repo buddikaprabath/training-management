@@ -56,7 +56,7 @@
                             <a href="#"><i data-feather="eye"></i></a>
                         </td>
                         <td class="text-center">
-                            <a href="#"><i data-feather="edit"></i></a>&nbsp;&nbsp;
+                            <a href="{{route('SuperAdmin.institute.edit',$institute->id)}}"><i data-feather="edit"></i></a>&nbsp;&nbsp;
                             <a href="#"><i data-feather="trash-2"></i></a>
                         </td>
                     </tr>

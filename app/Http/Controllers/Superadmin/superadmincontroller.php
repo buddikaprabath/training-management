@@ -775,11 +775,9 @@ class superadmincontroller extends Controller
         return view('SuperAdmin.institute.create');
     }
 
+
     public function Institutestore(Request $request)
     {
-        dd($request->all());
-
-
         $request->validate([
             'name' => 'required|string|max:255',
             'type' => 'required|string',
@@ -792,7 +790,49 @@ class superadmincontroller extends Controller
 
         return redirect()->back()->with('success', 'Institute created successfully.');
     }
+    public function instituteedit($id)
+    {
+        try {
+            // Retrieve the institute by ID
+            $institute = Institute::findOrFail($id);
 
+            // Return the view with the correct variable
+            return view('SuperAdmin.institute.create', compact('institute'));
+        } catch (\Exception $e) {
+            // If an error occurs, redirect back with an error message
+            return back()->with('error', 'Error loading institute details: ' . $e->getMessage());
+        }
+    }
+
+    public function Instituteupdate(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'type' => 'required|string',
+        ]);
+
+        $institute = Institute::findOrFail($id);
+        $institute->name = $request->name;
+        $institute->type = $request->type;
+        $institute->save();
+
+        return redirect()->back()->with('success', 'Institute updated successfully.');
+    }
+
+    public function instituteDelete($id)
+    {
+        try {
+            $institute = Institute::findOrFail($id);
+            $institute->delete();
+
+            return redirect()->back()->with('success', 'Institute deleted successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error deleting institute: ' . $e->getMessage());
+        }
+    }
+
+
+    //end institute handling
     //Trainer handling
     public function trainerview()
     {
