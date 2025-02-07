@@ -30,31 +30,34 @@
         <!-- Left Section -->
         <div class="col-md-6" >
             <div class="card p-3" style="background-color: #A8BDDB;">
-                <p><strong>Unique Identifier:</strong> UI-001</p>
-                <p><strong>Training Code:</strong> TC-001</p>
-                <p><strong>Mode Of Delivery:</strong> In Person</p>
-                <p><strong>Training Period From:</strong> 2025-01-01</p>
-                <p><strong>Training Period To:</strong> 2026-01-01</p>
-                <p><strong>Total Training Hours:</strong> 08</p>
-                <p><strong>Total Program Cost:</strong> 50000</p>
-                <p><strong>Batch Size:</strong> 100</p>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Unique Identifier : UI-001</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Code : TC-001</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Mode Of Delivery : In Person</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Period From : 2025-01-01</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Period To : 2026-01-01</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Total Training Hours : 08</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Total Program Cost : 50000</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Batch Size : 100</span>
             </div>
         </div>
 
         <!-- Right Section -->
         <div class="col-md-6">
             <div class="card p-3" style="background-color: #A8BDDB;">
-                <p><strong>Awarding Institute:</strong> AASL</p>
-                <p><strong>Course Type:</strong> Local Out Side</p>
-                <p><strong>Country:</strong> Sri Lanka</p>
-                <p><strong>Training Structure:</strong> One Time</p>
-                <p><strong>Expiration Date:</strong> -</p>
-                <p><strong>Category:</strong> Seminar</p>
-                <p><strong>Other Comments:</strong> Good Student</p>
-                <p><strong>Training Custodian:</strong> AASL</p>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Awarding Institute : AASL</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Course Type : Local Out Side</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Country : Sri Lanka</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Structure : One Time</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Expiration Date :</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Category : Seminar</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Other Comments : Good Student</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Custodian : AASL</span>
             </div>
         </div>
     </div>
+
+
+
 
     <div class="card-header d-flex justify-content-between">
         <p class="fw-bold">{{ isset($training) ? 'Participant Details' : 'Participant Details' }}</p>
@@ -89,7 +92,7 @@
                             <td class="text-center">
 
                                 <a href="#">
-                                    <i data-feather="dollar-sign"></i>
+                                    <i data-feather="file-text"></i>
                                 </a>
                             </td>
                             <td class="text-center">
