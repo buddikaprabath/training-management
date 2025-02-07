@@ -37,10 +37,10 @@
                 <label for="training_code" class="form-label">Training Code</label>
                 <select name="training_code" id="training_code" class="form-select track-change @error('training_code') is-invalid @enderror">
                     <option disabled selected>Choose training Code</option>
-                    <option value="1" {{ old('training_code', isset($training) && $training->training_code == 1 ? 'selected' : '') }}>Code 1</option>
-                    <option value="2" {{ old('training_code', isset($training) && $training->training_code == 2 ? 'selected' : '') }}>Code 2</option>
-                    <option value="3" {{ old('training_code', isset($training) && $training->training_code == 3 ? 'selected' : '') }}>Code 3</option>
-                    <option value="4" {{ old('training_code', isset($training) && $training->training_code == 4 ? 'selected' : '') }}>Code 4</option>
+                    <option value="1" {{ old('training_code', isset($training) ? $training->training_code : '') == 1 ? 'selected' : '' }}>Code 1</option>
+                    <option value="2" {{ old('training_code', isset($training) ? $training->training_code : '') == 2 ? 'selected' : '' }}>Code 2</option>
+                    <option value="3" {{ old('training_code', isset($training) ? $training->training_code : '') == 3 ? 'selected' : '' }}>Code 3</option>
+                    <option value="4" {{ old('training_code', isset($training) ? $training->training_code : '') == 4 ? 'selected' : '' }}>Code 4</option>
                 </select>
                 @error('training_code')
                     <div class="invalid-feedback">{{ $message }}</div>

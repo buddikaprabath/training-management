@@ -84,7 +84,13 @@
                                 <a href="{{ route('SuperAdmin.training.edit', $item->id) }}">
                                     <i data-feather="edit"></i>
                                 </a>
-                                <a href="#"><i data-feather="trash-2"></i></a>
+                                <form action="{{ route('SuperAdmin.training.Training.delete', $item->id) }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" style="background: none; border: none;">
+                                        <i data-feather="trash-2"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     @endforeach

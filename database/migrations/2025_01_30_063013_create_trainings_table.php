@@ -34,7 +34,7 @@ return new class extends Migration
             $table->boolean('warm_clothe_allowance')->nullable();
             $table->boolean('presentation')->nullable();
             $table->foreignId('division_id')->constrained()->onDelete('cascade');
-            $table->unsignedBigInteger('section_id')->default(0);
+            $table->unsignedBigInteger('section_id')->nullable()->default(0);
             $table->foreignId('user_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
             $table->foreign('section_id')->references('id')->on('sections')->onDelete('cascade');

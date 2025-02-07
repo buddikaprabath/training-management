@@ -284,31 +284,30 @@ class superadmincontroller extends Controller
     {
         $validated = $request->validate([
             'training_name'         => 'required|string|max:255',
-            'training_code'         => 'required|string|max:10|unique:trainings,training_code,' . $id,
+            'training_code'         => 'required|string|max:10|unique:trainings,training_code',
             'mode_of_delivery'      => 'required|string|max:255',
             'training_period_from'  => 'required|date',
             'training_period_to'    => 'required|date|after_or_equal:training_period_from',
             'total_training_hours'  => 'required|integer|max:255',
-            'total_program_cost'    => 'required|numeric|max:9999999.99',
-            'country'               => 'nullable|string|max:255',
-            'training_structure'    => 'nullable|string|max:255',
-            'exp_date'              => 'nullable|date',
-            'batch_size'            => 'nullable|integer|max:255',
-            'training_custodian'    => 'nullable|string|max:255',
+            'total_program_cost'    => 'required|numeric|between:0,9999999.99',
             'course_type'           => 'required|string|max:255',
             'category'              => 'required|string|max:255',
-            'dead_line'             => 'required|date',
+            'training_custodian'    => 'nullable|string|max:255',
+            'batch_size'            => 'nullable|integer|min:1', // Added min validation for positive batch size
             'division_id'           => 'required|exists:divisions,id',
             'section_id'            => 'nullable|exists:sections,id',
+            'other_comments'        => 'nullable|string|max:255', // Added max length for comments
+            'training_structure'    => 'nullable|string|max:255',
+            'exp_date'              => 'nullable|date|after_or_equal:training_period_to', // Updated to ensure the expiration date is after the training end date
             'institutes'            => 'required|array',
             'institutes.*'          => 'exists:institutes,id',
             'trainers'              => 'required|array',
             'trainers.*'            => 'exists:trainers,id',
-            'remark'                => 'nullable|string',
+            'remark'                => 'nullable|string|max:255', // Added max length for remark
             'subject_type'          => 'nullable|string|max:255',
             'subject_name'          => 'nullable|string|max:255',
+            'dead_line'             => 'required|date',
         ]);
-
         try {
             DB::beginTransaction();
 
@@ -333,8 +332,9 @@ class superadmincontroller extends Controller
                 'category'              => $validated['category'],
                 'dead_line'             => $validated['dead_line'],
                 'division_id'           => $validated['division_id'],
-                'section_id'            => $validated['section_id'] ?? null,
+                'section_id'            => $validated['section_id'] ?? null,  // Make sure this is nullable if not provided
             ]);
+
 
             // Sync related institutes
             $training->institutes()->sync($validated['institutes']);

@@ -46,6 +46,7 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::put('{id}/update', 'updatetraining')->name('update'); // Update training details
                 Route::post('cost-breakdown/store/{trainingId}', 'storeCostBreakdown')->name('cost-breakdown.store');
                 Route::post('{id}/update-tasks', 'updateTasks')->name('updateTasks');
+                Route::delete('deleteTraining/{id}', 'trainingdestroy')->name('Training.delete'); // Delete user
             });
 
             //participant routes
