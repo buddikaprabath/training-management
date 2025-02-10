@@ -764,11 +764,19 @@ class superadmincontroller extends Controller
 
 
     //Institute handling
-    public function instituteview()
+    public function instituteview(Request $request)
     {
-        $institutes = Institute::paginate(10);
-        return view('SuperAdmin.institute.Detail', compact('institutes'));
+        $query = $request->input('query');
+
+        // Filter based on search query or show all records
+        $institutes = Institute::when($query, function ($q) use ($query) {
+            return $q->where('name', 'like', '%' . $query . '%');
+        })->paginate(10);
+
+        return view('SuperAdmin.institute.Detail', compact('institutes', 'query'));
     }
+
+
 
     public function instituteCreate()
     {

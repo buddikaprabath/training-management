@@ -6,7 +6,7 @@
         <p class="p-1 m-0 fw-bold">Institute Details</p>
 
         <!-- Search Form -->
-        <form class="d-flex" method="GET" action="#">
+        <form class="d-flex mb-3" method="GET" action="{{ route('SuperAdmin.institute.Detail') }}">
             <input class="form-control me-2" type="search" name="query" placeholder="Enter institute name" value="{{ request('query') }}">
             <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
