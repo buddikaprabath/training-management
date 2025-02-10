@@ -70,8 +70,8 @@
                             <td class="text-center">{{ $item->batch_size }}</td>
                             <td class="text-center">{{ $item->category }}</td>
                             <td class="text-center">
-                                <a href="#" class="open-modal" data-training-id="{{ $item->id }}">
-                                    <i data-feather="check-circle"></i>
+                                <a href="#" class="open-status-modal" data-training-id="{{ $item->id }}">
+                                    <i data-feather="check-circle" class="check-icon" id="check-icon-{{ $item->id }}"></i>
                                 </a>
                             </td>
                             <td class="text-center">
@@ -211,55 +211,131 @@
     </div>
 </div>
 
+<!-- Training Status Modal -->
+<div class="modal fade" id="trainingStatusModal" tabindex="-1" aria-labelledby="trainingStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Training Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="trainingStatusForm">
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label" for="feedback_form">Feedback Form</label>
+                        <input class="form-check-input status-switch" type="checkbox" id="feedback_form" name="feedback_form">
+                    </div>
+
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label" for="e_report">E-Report</label>
+                        <input class="form-check-input status-switch" type="checkbox" id="e_report" name="e_report">
+                    </div>
+
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label" for="warm_clothe_allowance">Warm Clothes Allowance</label>
+                        <input class="form-check-input status-switch" type="checkbox" id="warm_clothe_allowance" name="warm_clothe_allowance">
+                    </div>
+
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label" for="presentation">Presentation</label>
+                        <input class="form-check-input status-switch" type="checkbox" id="presentation" name="presentation">
+                    </div>
+
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label" for="training_status">Training Completed</label>
+                        <input class="form-check-input" type="checkbox" id="training_status" name="training_status" disabled>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="saveStatus">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-
-        let costModalElement = document.getElementById("costModal");
-        let costModal = new bootstrap.Modal(costModalElement);
+        const costModalElement = document.getElementById("costModal");
+        const trainingModalElement = document.getElementById("trainingStatusModal");
+        const costModal = new bootstrap.Modal(costModalElement);
+        const trainingModal = new bootstrap.Modal(trainingModalElement);
         const costInputs = document.querySelectorAll(".cost-input");
         const totalAmountField = document.getElementById("totalAmount");
+        const saveButton = document.getElementById("saveStatus");
+        const trainingCompletedSwitch = document.getElementById("training_status");
+        const switches = document.querySelectorAll(".status-switch");
 
-
-
-        // Open cost breakdown modal and set form action dynamically
-        document.querySelectorAll(".open-cost-modal").forEach(button => {
-            button.addEventListener("click", function () {
-                let trainingId = this.getAttribute("data-training-id");
-                let costForm = document.getElementById("costForm");
-                if (costForm) {
-                    costForm.action = `/SuperAdmin/training/cost-breakdown/store/${trainingId}`;
-                    costModal.show();
-                }
+        function initializeModals() {
+            document.querySelectorAll(".open-cost-modal").forEach(button => {
+                button.addEventListener("click", function () {
+                    const trainingId = this.dataset.trainingId;
+                    const costForm = document.getElementById("costForm");
+                    if (costForm) {
+                        costForm.action = `/SuperAdmin/training/cost-breakdown/store/${trainingId}`;
+                        costModal.show();
+                    }
+                });
             });
-        });
 
-        // Save cost details and close modal
-        document.getElementById("saveCost").addEventListener("click", function () {
-            let costForm = document.getElementById("costForm");
-            if (costForm) {
+            document.getElementById("saveCost").addEventListener("click", function () {
                 console.log("Cost details saved!");
                 costModal.hide();
-            }
-        });
-
-        feather.replace(); // Initialize Feather icons
-
-        function calculateTotal() {
-                let total = 0;
-                costInputs.forEach(input => {
-                    total += parseFloat(input.value) || 0;
-                });
-                totalAmountField.value = total.toFixed(2); // Set total with 2 decimal places
-            }
-
-            // Attach event listeners to all cost inputs
-            costInputs.forEach(input => {
-                input.addEventListener("input", calculateTotal);
             });
 
-            // Initial calculation in case default values are modified
-            calculateTotal();
+            document.querySelectorAll(".open-status-modal").forEach(button => {
+                button.addEventListener("click", function () {
+                    const trainingId = this.dataset.trainingId;
+                    trainingModalElement.setAttribute("data-training-id", trainingId);
+                    trainingModal.show();
+                });
+            });
+
+            saveButton.addEventListener("click", () => trainingModal.hide());
+        }
+
+        function calculateTotal() {
+            const total = [...costInputs].reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
+            totalAmountField.value = total.toFixed(2);
+        }
+
+        function attachCostCalculation() {
+            costInputs.forEach(input => input.addEventListener("input", calculateTotal));
+            calculateTotal(); // Initial calculation
+        }
+
+        function checkTrainingCompleted() {
+            const allOn = [...switches].every(sw => sw.checked);
+            trainingCompletedSwitch.disabled = !allOn;
+            saveButton.textContent = allOn && trainingCompletedSwitch.checked ? "Completed" : "Save";
+        }
+
+        function handleTrainingStatus() {
+            switches.forEach(sw => sw.addEventListener("change", checkTrainingCompleted));
+
+            trainingCompletedSwitch.addEventListener("change", function () {
+                const trainingId = trainingModalElement.getAttribute("data-training-id");
+                const icon = document.getElementById(`check-icon-${trainingId}`);
+                icon.style.color = this.checked ? "green" : "";
+            });
+        }
+
+        function initFeatherIcons() {
+            feather.replace();
+        }
+
+        // Initialize all functionalities
+        function init() {
+            initializeModals();
+            attachCostCalculation();
+            handleTrainingStatus();
+            initFeatherIcons();
+        }
+
+        init();
     });
 </script>
+
 
 @endsection
