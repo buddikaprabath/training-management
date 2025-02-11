@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('remarks', function (Blueprint $table) {
             $table->id();
             $table->text('remark')->nullable();
-            $table->foreignId('training_id')->nullable()->constrained()->onDelete('cascade');
-            $table->foreignId('participant_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('training_id');
+            $table->string('participant_id');
             $table->timestamps();
         });
     }

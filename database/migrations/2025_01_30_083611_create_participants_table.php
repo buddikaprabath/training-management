@@ -23,13 +23,13 @@ return new class extends Migration
             $table->date('bond_completion_date');
             $table->decimal('bond_value', 10, 2);
             $table->date('date_of_signing');
-            $table->decimal('age_as_at_commencement_date', 2, 2, 2);
+            $table->integer('age_as_at_commencement_date');
             $table->date('date_of_appointment');
             $table->date('date_of_appointment_to_the_present_post');
             $table->date('date_of_birth');
             $table->foreignId('division_id')->constrained()->onDelete('cascade');
-            $table->foreignId('training_id')->constrained()->onDelete('cascade');
-            $table->foreignId('section_id')->constrained()->onDelete('cascade');
+            $table->string('training_id');
+            $table->foreignId('section_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

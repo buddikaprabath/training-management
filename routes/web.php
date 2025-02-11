@@ -45,6 +45,8 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('{id}/edit', 'trainingedit')->name('edit');
                 Route::put('{id}/update', 'updatetraining')->name('update'); // Update training details
                 Route::post('cost-breakdown/store/{trainingId}', 'storeCostBreakdown')->name('cost-breakdown.store');
+                Route::get('cost-breakdown/{id}', 'getCostBreakdownData')->name('cost-breakdown.show');
+                Route::put('cost-breakdown/update/{id}', 'updateCostBreakdown')->name('cost-breakdown.update');
                 Route::post('{id}/update-tasks', 'updateTasks')->name('updateTasks');
                 Route::delete('deleteTraining/{id}', 'trainingdestroy')->name('Training.delete'); // Delete user
             });
@@ -53,6 +55,7 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
             Route::prefix('participant')->name('participant.')->group(function () {
                 Route::get('{id}/Detail', 'participantview')->name('Detail'); //load participant details view
                 Route::get('{id}/create', 'createparticipant')->name('create'); //load participant create view
+                Route::post('store', 'participantstore')->name('store');
             });
             //budget routes
             Route::prefix('budget')->name('budget.')->group(function () {

@@ -19,7 +19,9 @@ class Surety extends Model
         'designation',
         'participant_id'
     ];
-
+    protected $casts = [
+        'participant_id' => 'string', // Ensure training_id is handled as a string
+    ];
     // Define relationships
     public function participant()
     {

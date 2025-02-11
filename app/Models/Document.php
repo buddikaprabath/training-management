@@ -16,6 +16,9 @@ class Document extends Model
         'participant_id',
         'file_path' // Field to store the document
     ];
+    protected $casts = [
+        'training_id' => 'string', // Ensure training_id is handled as a string
+    ];
 
     // Define relationships
     public function training()

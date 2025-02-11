@@ -14,6 +14,10 @@ class Subject extends Model
         'subject_name',
         'training_id'
     ];
+    protected $casts = [
+        'training_id' => 'string', // Ensure training_id is handled as a string
+    ];
+
 
     // Define relationship with Training model
     public function training()

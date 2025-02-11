@@ -30,28 +30,34 @@
         <!-- Left Section -->
         <div class="col-md-6" >
             <div class="card p-3" style="background-color: #A8BDDB;">
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Unique Identifier : UI-001</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Code : TC-001</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Mode Of Delivery : In Person</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Period From : 2025-01-01</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Period To : 2026-01-01</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Total Training Hours : 08</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Total Program Cost : 50000</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Batch Size : 100</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Unique Identifier : {{$training->id}}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Code : {{$training->training_code}}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Mode Of Delivery : {{$training->mode_of_delivery}}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Period From : {{$training->training_period_from}}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Period To : {{$training->training_period_to}}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Total Training Hours : {{$training->total_training_hours}}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Total Program Cost : {{$training->total_program_cost}}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Batch Size : {{$training->batch_size}}</span>
             </div>
         </div>
 
         <!-- Right Section -->
         <div class="col-md-6">
             <div class="card p-3" style="background-color: #A8BDDB;">
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Awarding Institute : AASL</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Course Type : Local Out Side</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Country : Sri Lanka</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Structure : One Time</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Expiration Date :</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Category : Seminar</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Other Comments : Good Student</span>
-                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Custodian : AASL</span>
+                @foreach ($institutes as $institute)
+                    <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Institute Name: {{ $institute->name }}</span>
+                @endforeach
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Course Type : {{$training->course_type}}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Country : {{ $training->country }}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Structure : {{ $training->training_structure }}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Expiration Date : {{ $training->exp_date }}</span>
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Category : {{ $training->category }}</span>
+                @if($training)
+                    @foreach ($training->remarks as $remark)
+                        <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Other Comments: {{ $remark->remark }}</span>
+                    @endforeach
+                @endif
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Custodian : {{ $training->training_custodian }}</span>
             </div>
         </div>
     </div>

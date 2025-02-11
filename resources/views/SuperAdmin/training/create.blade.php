@@ -279,8 +279,8 @@
             <!-- Other Comments -->
             <div class="col-md-12">
                 <label for="other_comments" class="form-label">Other Comments</label>
-                <textarea name="other_comments" class="form-control track-change @error('other_comments') is-invalid @enderror" placeholder="Other Comments" rows="3">{{ old('other_comments', isset($training) ? $training->other_comments : '') }}</textarea>
-                @error('other_comments')
+                <textarea name="remark" class="form-control track-change @error('remark') is-invalid @enderror" placeholder="Other Comments" rows="3">{{ old('remark', isset($training) ? $training->remark : '') }}</textarea>
+                @error('remark')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>

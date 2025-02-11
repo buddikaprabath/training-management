@@ -12,8 +12,14 @@ class Costbreak extends Model
     protected $table = 'costbreaks';
 
     protected $fillable = [
-        'cost_type',
-        'amount',
+        'airfare',
+        'subsistence',
+        'incidental',
+        'registration',
+        'visa',
+        'insurance',
+        'warm_clothes',
+        'total_amount',
         'training_id',
     ];
 

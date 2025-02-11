@@ -13,8 +13,14 @@ return new class extends Migration
     {
         Schema::create('costbreaks', function (Blueprint $table) {
             $table->id();
-            $table->string('cost_type');
-            $table->decimal('amount', 10, 2);
+            $table->decimal('airfare', 10, 2);
+            $table->decimal('subsistence', 10, 2);
+            $table->decimal('incidental', 10, 2);
+            $table->decimal('registration', 10, 2);
+            $table->decimal('visa', 10, 2);
+            $table->decimal('insurance', 10, 2);
+            $table->decimal('warm_clothes', 10, 2);
+            $table->decimal('total_amount', 10, 2);
             $table->string('training_id'); // Change from foreignId() to string()
             $table->timestamps();
         });

@@ -33,6 +33,9 @@ class Participant extends Model
         'training_id',
         'section_id'
     ];
+    protected $casts = [
+        'training_id' => 'string', // Ensure training_id is handled as a string
+    ];
 
     protected static function booted()
     {

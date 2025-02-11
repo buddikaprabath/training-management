@@ -142,21 +142,30 @@ class superadmincontroller extends Controller
 
     //training handling
 
-    //training details view page
-    public function trainingview(Request $request)
+    // training detail view page 
+    public function trainingview(Request $request, $itemId = null)
     {
         $query = $request->input('query');
 
+        // Get the training data with filtering based on the query
         $training = Training::join('divisions', 'trainings.division_id', '=', 'divisions.id')
-            ->select('trainings.*', 'divisions.division_name') // Selecting required fields
+            ->select('trainings.*', 'divisions.division_name')
             ->when($query, function ($q) use ($query) {
                 $q->where('trainings.training_name', 'LIKE', "%{$query}%")
                     ->orWhere('trainings.training_code', 'LIKE', "%{$query}%")
-                    ->orWhere('divisions.division_name', 'LIKE', "%{$query}%"); // Search by division name
+                    ->orWhere('divisions.division_name', 'LIKE', "%{$query}%")
+                    ->orWhere('trainings.category', 'LIKE', "%{$query}%")
+                    ->orWhere('trainings.mode_of_delivery', 'LIKE', "%{$query}%");
             })
-            ->paginate(10);  // Ensure you're paginating here
+            ->paginate(10);
 
-        return view('SuperAdmin.training.Detail', compact('training', 'query'));
+        // Check if itemId is provided and fetch Costbreak data
+        $costBreak = null;
+        if ($itemId) {
+            $costBreak = Costbreak::where('item_id', $itemId)->first();
+        }
+
+        return view('SuperAdmin.training.Detail', compact('training', 'query', 'costBreak'));
     }
 
 
@@ -187,7 +196,6 @@ class superadmincontroller extends Controller
             'batch_size'            => 'nullable|integer|min:1', // Added min validation for positive batch size
             'division_id'           => 'required|exists:divisions,id',
             'section_id'            => 'nullable|exists:sections,id',
-            'other_comments'        => 'nullable|string|max:255', // Added max length for comments
             'training_structure'    => 'nullable|string|max:255',
             'exp_date'              => 'nullable|date|after_or_equal:training_period_to', // Updated to ensure the expiration date is after the training end date
             'institutes'            => 'required|array',
@@ -241,10 +249,10 @@ class superadmincontroller extends Controller
 
             // Store remark if provided
             if (!empty($validated['remark'])) {
-                Remark::create([
+                $remark = Remark::create([
                     'remark'        => $validated['remark'],
                     'training_id'   => $training->id,
-                    'participant_id' => null, // Change this if participant ID is available
+                    'participant_id' => null,
                 ]);
             }
 
@@ -377,10 +385,15 @@ class superadmincontroller extends Controller
     public function storeCostBreakdown(Request $request, $trainingId)
     {
         $validated = $request->validate([
-            'cost_type' => 'required|string|max:255',
-            'amount'    => 'required|numeric|min:0',
+            'airfare'    => 'required|numeric|min:0',
+            'subsistence'    => 'required|numeric|min:0',
+            'incidental'    => 'required|numeric|min:0',
+            'registration'    => 'required|numeric|min:0',
+            'visa'    => 'required|numeric|min:0',
+            'insurance'    => 'required|numeric|min:0',
+            'warm_clothes'    => 'required|numeric|min:0',
+            'total_amount'    => 'required|numeric|min:0',
         ]);
-
         try {
             DB::beginTransaction();
 
@@ -389,9 +402,15 @@ class superadmincontroller extends Controller
 
             // Create a new cost breakdown entry
             Costbreak::create([
-                'training_id' => $training->id, // Use 'id' here
-                'cost_type'   => $validated['cost_type'],
-                'amount'      => $validated['amount'],
+                'training_id'       => $training->id, // Use 'id' here
+                'airfare'           => $validated['airfare'],
+                'subsistence'       => $validated['subsistence'],
+                'incidental'        => $validated['incidental'],
+                'registration'      => $validated['registration'],
+                'visa'              => $validated['visa'],
+                'insurance'         => $validated['insurance'],
+                'warm_clothes'      => $validated['warm_clothes'],
+                'total_amount'      => $validated['total_amount']
             ]);
 
             DB::commit();
@@ -401,6 +420,52 @@ class superadmincontroller extends Controller
             return redirect()->back()->with('error', 'Error occurred while adding cost breakdown: ' . $e->getMessage());
         }
     }
+
+    // Controller Method for Update
+    public function updateCostBreakdown(Request $request, $itemId)
+    {
+        // Validate the incoming request data
+        $validatedData = $request->validate([
+            'airfare' => 'required|numeric|min:0',
+            'subsistence' => 'required|numeric|min:0',
+            'incidental' => 'required|numeric|min:0',
+            'registration' => 'required|numeric|min:0',
+            'visa' => 'required|numeric|min:0',
+            'insurance' => 'required|numeric|min:0',
+            'warm_clothes' => 'required|numeric|min:0',
+            'total_amount' => 'required|numeric|min:0',
+        ]);
+
+        // Find the existing Costbreak record for the given itemId
+        $costBreak = Costbreak::where('item_id', $itemId)->first();
+
+        if (!$costBreak) {
+            // If the cost breakdown doesn't exist, handle the error (optional)
+            return redirect()->back()->with('error', 'Cost Breakdown not found!');
+        }
+
+        // Update the existing Costbreak record with validated data
+        $costBreak->update([
+            'airfare' => $validatedData['airfare'],
+            'subsistence' => $validatedData['subsistence'],
+            'incidental' => $validatedData['incidental'],
+            'registration' => $validatedData['registration'],
+            'visa' => $validatedData['visa'],
+            'insurance' => $validatedData['insurance'],
+            'warm_clothes' => $validatedData['warm_clothes'],
+            'total_amount' => $validatedData['total_amount'],
+        ]);
+
+        // Redirect back with a success message
+        return redirect()->route('SuperAdmin.training.Detail', ['itemId' => $itemId])
+            ->with('success', 'Cost Breakdown updated successfully!');
+    }
+    public function getCostBreakdownData($id)
+    {
+        $costBreakdown = Costbreak::find($id);
+        return response()->json($costBreakdown);
+    }
+
 
     //store document for each training
     public function storeTrainingDocument(Request $request, $trainingId)
@@ -453,7 +518,7 @@ class superadmincontroller extends Controller
             $training->trainers()->detach();
 
             // Delete related subjects
-            $training->subject()->delete();
+            $training->subjects()->delete();
 
             // Delete related remarks
             Remark::where('training_id', $training->id)->delete();
@@ -480,20 +545,22 @@ class superadmincontroller extends Controller
     //load the participant view blade
     public function participantview($trainingId)
     {
-        // Find the training and load related data for participants
+        // Make sure the training exists before passing it to the view
         $training = Training::with([
-            'participants.surety',
-            'participants.remarks',
-            'participants.grades',
-            'participants.documents'
-        ])->findOrFail($trainingId);
+            'remarks',  // Correct the relationship name
+            'institutes',
+        ])->find($trainingId); // Use find() instead of findOrFail() for custom error handling
+
+        if (!$training) {
+            return redirect()->back()->with('error', 'Training not found.');
+        }
 
         return view('SuperAdmin.participant.Detail', [
             'training' => $training,
-            'participants' => $training->participants // Passing the participants for the view
+            'participants' => $training->participants,
+            'institutes' => $training->institutes,
         ]);
     }
-
 
     //load the create participant blade
     public function createparticipant($trainingId)
@@ -514,11 +581,11 @@ class superadmincontroller extends Controller
             'salary_scale'                 => 'nullable|string|max:255',
             'location'                     => 'nullable|string|max:255',
             'obligatory_period'            => 'nullable|string|max:255',
-            'cost_per_head'                => 'nullable|numeric',
+            'cost_per_head'                => 'nullable|numeric', // You can use 'decimal:10,2' if you expect decimals
             'bond_completion_date'         => 'nullable|date',
-            'bond_value'                   => 'nullable|numeric',
+            'bond_value'                   => 'nullable|numeric', // You can use 'decimal:12,2' for decimals
             'date_of_signing'              => 'nullable|date',
-            'age_as_at_commencement_date'  => 'nullable|integer',
+            'age_as_at_commencement_date'  => 'nullable|numeric', // Assuming it's a decimal with 2 places after decimal
             'date_of_appointment'          => 'nullable|date',
             'date_of_appointment_to_the_present_post' => 'nullable|date',
             'date_of_birth'                => 'nullable|date',
@@ -527,18 +594,19 @@ class superadmincontroller extends Controller
             'training_id'                  => 'required|exists:trainings,id',
 
             // Surety Validation (2 sureties)
-            'sureties'                    => 'nullable|array|max:2',
-            'sureties.*.name'             => 'required_with:sureties|string|max:255',
-            'sureties.*.nic'              => 'required_with:sureties|string|max:12',
-            'sureties.*.mobile'           => 'required_with:sureties|string|max:15',
-            'sureties.*.address'          => 'required_with:sureties|string|max:255',
-            'sureties.*.salary_scale'     => 'nullable|string|max:255',
-            'sureties.*.designation'      => 'nullable|string|max:255',
+            'sureties'                      => 'nullable|array|max:2',
+            'sureties.*.suretyname' => 'nullable|string|max:255',
+            'sureties.*.nic'        => 'nullable|string|max:12',
+            'sureties.*.mobile'     => 'nullable|string|max:15',
+            'sureties.*.address'    => 'nullable|string|max:255',
+            'sureties.*.salary_scale'       => 'nullable|string|max:255',
+            'sureties.*.suretydesignation'  => 'nullable|string|max:255',
 
             // Remarks Validation (Multiple remarks)
             'remarks'                     => 'nullable|array',
             'remarks.*'                   => 'nullable|string|max:500',
         ]);
+
 
         DB::beginTransaction();
         try {
@@ -567,12 +635,12 @@ class superadmincontroller extends Controller
             if ($request->sureties) {
                 foreach ($request->sureties as $suretyData) {
                     Surety::create([
-                        'name'         => $suretyData['name'],
-                        'nic'          => $suretyData['nic'],
-                        'mobile'       => $suretyData['mobile'],
-                        'address'      => $suretyData['address'],
-                        'salary_scale' => $suretyData['salary_scale'] ?? null,
-                        'designation'  => $suretyData['designation'] ?? null,
+                        'name'           => $suretyData['suretyname'],
+                        'nic'            => $suretyData['nic'],
+                        'mobile'         => $suretyData['mobile'],
+                        'address'        => $suretyData['address'],
+                        'salary_scale'   => $suretyData['salary_scale'] ?? null,
+                        'designation'    => $suretyData['suretydesignation'] ?? null,
                         'participant_id' => $participant->id,
                     ]);
                 }
@@ -591,7 +659,7 @@ class superadmincontroller extends Controller
 
             DB::commit();
 
-            return redirect()->route('participants.index')->with('success', 'Participant added successfully! You can now upload documents.');
+            return redirect()->route('SuperAdmin.training.Detail')->with('success', 'Participant added successfully! You can now upload documents.');
         } catch (\Exception $e) {
             DB::rollBack();
             return redirect()->back()->with('error', 'Failed to add participant: ' . $e->getMessage());

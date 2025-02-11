@@ -86,7 +86,7 @@
                                 <a href="#" class="open-cost-modal" data-training-id="{{ $item->id }}">
                                     <i data-feather="dollar-sign"></i>
                                 </a>
-                                <a href="{{ route('SuperAdmin.training.edit', $item->id) }}">
+                                <a href="#">
                                     <i data-feather="edit"></i>
                                 </a>
                             </td>

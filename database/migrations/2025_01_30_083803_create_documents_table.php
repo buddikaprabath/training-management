@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name')->nullable();
             $table->string('status')->nullable();
             $table->date('date_of_submitting')->nullable();
-            $table->foreignId('training_id')->nullable()->constrained()->onDelete('cascade');
+            $table->string('training_id');
             $table->foreignId('participant_id')->nullable()->constrained()->onDelete('cascade');
             $table->string('file_path')->nullable(); // New column for storing the document file path
             $table->timestamps();

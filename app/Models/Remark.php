@@ -15,10 +15,15 @@ class Remark extends Model
         'participant_id'
     ];
 
+    protected $casts = [
+        'training_id' => 'string', // Ensure training_id is handled as a string
+        'participant_id' => 'string', // Ensure participant_id is handled as a string
+    ];
+
     // Define relationships
     public function training()
     {
-        return $this->belongsTo(Training::class);
+        return $this->belongsTo(Training::class, 'training_id', 'training_id');
     }
 
     public function participant()
