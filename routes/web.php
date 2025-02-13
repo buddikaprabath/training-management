@@ -56,6 +56,8 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('{id}/Detail', 'participantview')->name('Detail'); //load participant details view
                 Route::get('{id}/create', 'createparticipant')->name('create'); //load participant create view
                 Route::post('store', 'participantstore')->name('store');
+                Route::get('{id}/edit', 'participantedit')->name('edit');
+                Route::put('update/{id}', 'updateparticipant')->name('update');
             });
             //budget routes
             Route::prefix('budget')->name('budget.')->group(function () {

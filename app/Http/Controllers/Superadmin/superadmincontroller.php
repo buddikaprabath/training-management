@@ -545,11 +545,8 @@ class superadmincontroller extends Controller
     //load the participant view blade
     public function participantview($trainingId)
     {
-        // Make sure the training exists before passing it to the view
-        $training = Training::with([
-            'remarks',  // Correct the relationship name
-            'institutes',
-        ])->find($trainingId); // Use find() instead of findOrFail() for custom error handling
+        $training = Training::with(['remarks', 'institutes', 'participants']) // Load participants
+            ->find($trainingId);
 
         if (!$training) {
             return redirect()->back()->with('error', 'Training not found.');
@@ -557,7 +554,7 @@ class superadmincontroller extends Controller
 
         return view('SuperAdmin.participant.Detail', [
             'training' => $training,
-            'participants' => $training->participants,
+            'participants' => $training->participants, // Ensure participants are passed
             'institutes' => $training->institutes,
         ]);
     }
@@ -595,12 +592,12 @@ class superadmincontroller extends Controller
 
             // Surety Validation (2 sureties)
             'sureties'                      => 'nullable|array|max:2',
-            'sureties.*.suretyname' => 'nullable|string|max:255',
-            'sureties.*.nic'        => 'nullable|string|max:12',
-            'sureties.*.mobile'     => 'nullable|string|max:15',
-            'sureties.*.address'    => 'nullable|string|max:255',
-            'sureties.*.salary_scale'       => 'nullable|string|max:255',
-            'sureties.*.suretydesignation'  => 'nullable|string|max:255',
+            'sureties.*.suretyname'          => 'nullable|string|max:255',
+            'sureties.*.nic'                 => 'nullable|string|max:12',
+            'sureties.*.mobile'              => 'nullable|string|max:15',
+            'sureties.*.address'             => 'nullable|string|max:255',
+            'sureties.*.salary_scale'        => 'nullable|numeric|max:999999999', // Validate as numeric and restrict max value
+            'sureties.*.suretydesignation'   => 'nullable|string|max:255',
 
             // Remarks Validation (Multiple remarks)
             'remarks'                     => 'nullable|array',
@@ -647,8 +644,10 @@ class superadmincontroller extends Controller
             }
 
             // Store Multiple Remarks
-            if ($request->remarks) {
-                foreach ($request->remarks as $remark) {
+            if ($request->has('remarks')) {
+                $remarks = is_array($request->remarks) ? $request->remarks : [$request->remarks];
+
+                foreach ($remarks as $remark) {
                     Remark::create([
                         'remark'        => $remark,
                         'training_id'   => $request->training_id,
@@ -709,13 +708,13 @@ class superadmincontroller extends Controller
             // Find the participant and load related data
             $participant = Participant::with(['remarks', 'sureties', 'training'])->findOrFail($id);
 
-            return view('participants.edit', compact('participant'));
+            return view('SuperAdmin.participant.create', compact('participant'));
         } catch (\Exception $e) {
             return back()->with('error', 'Error loading edit page: ' . $e->getMessage());
         }
     }
     //create participant store method
-    public function participantupdate(Request $request, $id)
+    public function updateparticipant(Request $request, $id)
     {
         try {
             // Validate the request data
@@ -774,7 +773,7 @@ class superadmincontroller extends Controller
                 }
             }
 
-            return redirect()->route('participants.index')->with('success', 'Participant updated successfully.');
+            return redirect()->route('SuperAdmin.participant.Detail', ['id' => $participant->training_id])->with('success', 'Participant updated successfully.');
         } catch (\Exception $e) {
             return back()->with('error', 'Error updating participant: ' . $e->getMessage());
         }

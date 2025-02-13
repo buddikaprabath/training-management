@@ -260,11 +260,16 @@
             <!-- Other Comments -->
             <div class="col-md-12">
                 <label for="other_comments" class="form-label">Other Comments</label>
-                <textarea name="remark" class="form-control track-change @error('remark') is-invalid @enderror" placeholder="Other Comments" rows="3">{{ old('remark', isset($participant) ? $participant->remark : '') }}</textarea>
-                @error('remark')
+                <textarea name="remarks[]" class="form-control track-change @error('remarks') is-invalid @enderror" 
+                        placeholder="Other Comments" rows="3">
+                    {{ old('remarks.0', isset($participant) && $participant->remarks->isNotEmpty() ? $participant->remarks->first()->remark : '') }}
+                </textarea>
+                @error('remarks')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
+
+
             <!--training ID-->
 
             <input type="hidden" name="training_id" value="{{ old('training_id', isset($participant) ? $participant->training_id : $training->id) }}">

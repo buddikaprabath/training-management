@@ -86,23 +86,22 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($training as $participant)
+                    @foreach($participants as $participant)
                         <tr>
-                            <td class="text-center">Ul-001</td>
-                            <td class="text-center">TC-001</td>
-                            <td class="text-center">John</td>
-                            <td class="text-center">HR</td>
-                            <td class="text-center">Local Outside</td>
-                            <td class="text-center">Engineer</td>
-                            <td class="text-center">Completed</td>
+                            <td class="text-center">{{ $participant->id }}</td>
+                            <td class="text-center">{{ $participant->epf_number }}</td>
+                            <td class="text-center">{{ $participant->name }}</td>
+                            <td class="text-center">{{ $participant->designation }}</td>
+                            <td class="text-center">{{ $participant->location }}</td>
+                            <td class="text-center">{{ $participant->salary_scale }}</td>
+                            <td class="text-center">{{ $participant->status ?? 'Pending' }}</td>
                             <td class="text-center">
-
                                 <a href="#">
                                     <i data-feather="file-text"></i>
                                 </a>
                             </td>
                             <td class="text-center">
-                                <a href="#">
+                                <a href="{{route('SuperAdmin.participant.edit',$participant->id)}}">
                                     <i data-feather="edit"></i>
                                 </a>
                                 <a href="#">
@@ -112,6 +111,7 @@
                         </tr>
                     @endforeach
                 </tbody>
+                
             </table>
         </div>
     </div>

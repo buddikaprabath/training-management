@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('remarks', function (Blueprint $table) {
             $table->id();
             $table->text('remark')->nullable();
-            $table->string('training_id');
-            $table->string('participant_id');
+            $table->string('training_id')->nullable();
+            $table->string('participant_id')->nullable();
             $table->timestamps();
         });
     }

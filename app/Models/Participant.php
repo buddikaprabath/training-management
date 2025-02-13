@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Participant extends Model
 {
@@ -37,15 +38,32 @@ class Participant extends Model
         'training_id' => 'string', // Ensure training_id is handled as a string
     ];
 
+
+
     protected static function booted()
     {
         static::creating(function ($participant) {
-            // Generate custom 'id' (e.g., PI-001, PI-002, etc.)
-            $latest = self::latest('created_at')->first();
-            $number = $latest ? (int) substr($latest->id, 2) + 1 : 1;
-            $participant->id = 'PI-' . str_pad($number, 3, '0', STR_PAD_LEFT);
+            // Lock the table to ensure no other rows can be inserted while generating the ID
+            DB::beginTransaction();
+
+            try {
+                // Get the latest participant and increment the ID
+                $latest = self::orderBy('created_at', 'desc')->first();
+                $number = $latest ? (int) substr($latest->id, 3) + 1 : 1;
+
+                // Generate the new ID, ensuring it's unique
+                $participant->id = 'PI-' . str_pad($number, 3, '0', STR_PAD_LEFT);
+
+                // Commit the transaction after the ID is generated
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                throw $e;
+            }
         });
     }
+
+
 
     // Relationships
     public function division()
@@ -61,5 +79,13 @@ class Participant extends Model
     public function section()
     {
         return $this->belongsTo(Section::class);
+    }
+    public function remarks()
+    {
+        return $this->hasMany(Remark::class, 'participant_id', 'id');
+    }
+    public function sureties()
+    {
+        return $this->hasMany(Surety::class, 'participant_id', 'id');
     }
 }
