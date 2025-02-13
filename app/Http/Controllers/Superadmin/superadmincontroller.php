@@ -19,6 +19,7 @@ use App\Models\Institute;
 use App\Models\Participant;
 use Illuminate\Http\Request;
 use App\Exports\ParticipantExport;
+use App\Imports\ParticipantImport;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
@@ -818,6 +819,21 @@ class superadmincontroller extends Controller
         // Export the column names as an Excel file
         return Excel::download(new ParticipantExport, 'participant_columns.xlsx');
     }
+
+    public function importParticipants(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,csv'
+        ]);
+
+        try {
+            Excel::import(new ParticipantImport, $request->file('file'));
+            return redirect()->back()->with('success', 'Participants imported successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error importing participants: ' . $e->getMessage());
+        }
+    }
+
 
 
 

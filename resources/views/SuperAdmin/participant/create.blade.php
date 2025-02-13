@@ -3,21 +3,6 @@
 <div class="card mt-2 ml-5 mr-5 mb-5 bg-gray-50 p-3 rounded-md shadow-lg">
     <div class="card-header d-flex justify-content-between">
         <p class="fw-bold">{{ isset($participant) ? 'Edit Participant' : 'Create Participant' }}</p>
-        <!-- Search Form -->
-        <form class="d-flex" method="GET" action="#">
-            <input class="form-control me-2" type="search" name="query" placeholder="Search here....." value="">
-            <button class="btn btn-outline-success" type="submit">Search</button>
-        </form>
-        <a href="{{ route('SuperAdmin.participant.export-participant-columns') }}" class="text-decoration-none">
-            <button type="button" class="btn btn-primary d-flex align-items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                </svg>
-                Download
-            </button>
-        </a>
         <button id="backButton" style="border: none; background: transparent; padding: 0;" type="button">
             <a href="{{ route('SuperAdmin.training.Detail') }}" class="text-white text-decoration-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left-circle w-75 h-75">
@@ -28,7 +13,40 @@
             </a>
         </button>
     </div>
-
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <!-- Search Form -->
+        <form class="d-flex" method="GET" action="#" style="max-width: 250px;">
+            <input class="form-control me-2" type="search" name="query" placeholder="Search here..." value="">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+    
+        <!-- Download Button -->
+        <a href="{{ route('SuperAdmin.participant.export-participant-columns') }}" class="btn btn-primary d-flex align-items-center px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download me-2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download Excel
+        </a>
+    
+        <!-- File Upload -->
+        <form action="{{ route('SuperAdmin.participant.import-participants') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center" id="importForm">
+            @csrf
+            <input class="form-control d-none" type="file" id="formFile" name="file" onchange="fileSelected()">
+            <button type="button" class="btn btn-primary d-flex align-items-center px-3" onclick="document.getElementById('formFile').click();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-upload me-2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Import Excel
+            </button>
+        </form>
+    </div>
+    
+    
+    
     <!-- Display success/error messages -->
     @if(session('success'))
         <div class="alert alert-success">
@@ -357,7 +375,16 @@
             suretyFields.style.display = 'none'; // Hide surety fields when division is not HR
         }
     });
+
+    // Function to handle file selection
+    function fileSelected() {
+        let fileInput = document.getElementById('formFile');
+        if (fileInput.files.length > 0) {
+            document.getElementById('importForm').submit();
+        }
+    }
 </script>
+
 
 
 @endsection

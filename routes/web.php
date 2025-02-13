@@ -59,6 +59,7 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('{id}/edit', 'participantedit')->name('edit');
                 Route::put('update/{id}', 'updateparticipant')->name('update');
                 Route::get('export-participant-columns', 'exportParticipantColumns')->name('export-participant-columns');
+                Route::post('import-participants', 'importParticipants')->name('import-participants');
             });
             //budget routes
             Route::prefix('budget')->name('budget.')->group(function () {
