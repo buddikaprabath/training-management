@@ -3,6 +3,7 @@
 <div class="card mt-2 ml-5 mr-5 mb-5 bg-gray-50 p-3 rounded-md shadow-lg">
     <div class="card-header d-flex justify-content-between">
         <p class="fw-bold">{{ isset($participant) ? 'Edit Participant' : 'Create Participant' }}</p>
+
         <button id="backButton" style="border: none; background: transparent; padding: 0;" type="button">
             <a href="{{ route('SuperAdmin.training.Detail') }}" class="text-white text-decoration-none">
                 <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#000000" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-arrow-left-circle w-75 h-75">
@@ -12,6 +13,23 @@
                 </svg>
             </a>
         </button>
+    </div>
+
+    <!-- Choose File -->
+    <div class="m-3 d-flex justify-content-between align-items-center">
+        <form class="d-flex" method="GET" action="#">
+            <input class="form-control me-2" type="file" id="formFile" style="width: 510px;">
+            <button class="btn btn-outline-success w-25 me-2" type="submit">Import Participant</button>
+            <button class="btn btn-outline-success" type="submit">Download</button>
+        </form>
+    </div>
+    
+    <!-- Search -->
+    <div class="m-3 mb-5 d-flex justify-content-between align-items-center">
+        <form class="d-flex" method="GET" action="#">
+            <input class="form-control me-2" type="search" name="query" placeholder="Enter Epf number here" value="{{ request('query') }}" style="width: 600px;">
+            <button class="btn btn-outline-success w-25" type="submit">Add From Database</button>
+        </form>
     </div>
 
     <!-- Display success/error messages -->
@@ -31,7 +49,7 @@
             @if(isset($participant))
                 @method('PUT') <!-- HTTP method spoofing for PUT request -->
             @endif
-            
+
             <!-- EPF Number -->
             <div class="col-md-6">
                 <label for="epf_number" class="form-label">EPF Number</label>
@@ -128,7 +146,7 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-            
+
 
             <!-- date_of_appointment -->
             <div class="col-md-6">
@@ -260,7 +278,7 @@
             <!-- Other Comments -->
             <div class="col-md-12">
                 <label for="other_comments" class="form-label">Other Comments</label>
-                <textarea name="remarks[]" class="form-control track-change @error('remarks') is-invalid @enderror" 
+                <textarea name="remarks[]" class="form-control track-change @error('remarks') is-invalid @enderror"
                         placeholder="Other Comments" rows="3">
                     {{ old('remarks.0', isset($participant) && $participant->remarks->isNotEmpty() ? $participant->remarks->first()->remark : '') }}
                 </textarea>
@@ -278,7 +296,7 @@
             <div class="col-12">
                 <button type="submit" class="btn btn-primary">{{ isset($participant) ? 'Update' : 'Create' }}</button>
             </div>
-            
+
         </form>
     </div>
 </div>
