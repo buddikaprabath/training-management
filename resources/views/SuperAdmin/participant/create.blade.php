@@ -205,10 +205,14 @@
             <!-- Surety Fields (Initially Hidden) -->
             <div id="suretyFields" style="display: none;">
                 @for($i = 0; $i < 2; $i++)
+                    @php
+                        $surety = isset($participant->sureties[$i]) ? $participant->sureties[$i] : null;
+                    @endphp
+
                     <div class="row">
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][suretyname]" class="form-label">Surety {{ $i + 1 }} Name</label>
-                            <input name="sureties[{{ $i }}][suretyname]" type="text" class="form-control @error('sureties.'.$i.'.suretyname') is-invalid @enderror" placeholder="Surety Name" value="{{ old('sureties.'.$i.'.suretyname') }}">
+                            <input name="sureties[{{ $i }}][suretyname]" type="text" class="form-control @error('sureties.'.$i.'.suretyname') is-invalid @enderror" placeholder="Surety Name" value="{{ old('sureties.'.$i.'.suretyname', $surety ? $surety->name : '') }}">
                             @error('sureties.'.$i.'.suretyname')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -216,7 +220,7 @@
 
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][nic]" class="form-label">NIC</label>
-                            <input name="sureties[{{ $i }}][nic]" type="text" class="form-control @error('sureties.'.$i.'.nic') is-invalid @enderror" placeholder="NIC" value="{{ old('sureties.'.$i.'.nic') }}" >
+                            <input name="sureties[{{ $i }}][nic]" type="text" class="form-control @error('sureties.'.$i.'.nic') is-invalid @enderror" placeholder="NIC" value="{{ old('sureties.'.$i.'.nic', $surety ? $surety->nic : '') }}">
                             @error('sureties.'.$i.'.nic')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -224,7 +228,7 @@
 
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][mobile]" class="form-label">Mobile</label>
-                            <input name="sureties[{{ $i }}][mobile]" type="number" class="form-control @error('sureties.'.$i.'.mobile') is-invalid @enderror" placeholder="Mobile" value="{{ old('sureties.'.$i.'.mobile') }}">
+                            <input name="sureties[{{ $i }}][mobile]" type="number" class="form-control @error('sureties.'.$i.'.mobile') is-invalid @enderror" placeholder="Mobile" value="{{ old('sureties.'.$i.'.mobile', $surety ? $surety->mobile : '') }}">
                             @error('sureties.'.$i.'.mobile')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -232,7 +236,7 @@
 
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][address]" class="form-label">Address</label>
-                            <input name="sureties[{{ $i }}][address]" type="text" class="form-control @error('sureties.'.$i.'.address') is-invalid @enderror" placeholder="Address" value="{{ old('sureties.'.$i.'.address') }}">
+                            <input name="sureties[{{ $i }}][address]" type="text" class="form-control @error('sureties.'.$i.'.address') is-invalid @enderror" placeholder="Address" value="{{ old('sureties.'.$i.'.address', $surety ? $surety->address : '') }}">
                             @error('sureties.'.$i.'.address')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -240,7 +244,7 @@
 
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][salary_scale]" class="form-label">Salary Scale</label>
-                            <input name="sureties[{{ $i }}][salary_scale]" type="text" class="form-control @error('sureties.'.$i.'.salary_scale') is-invalid @enderror" placeholder="Salary Scale" value="{{ old('sureties.'.$i.'.salary_scale') }}">
+                            <input name="sureties[{{ $i }}][salary_scale]" type="text" class="form-control @error('sureties.'.$i.'.salary_scale') is-invalid @enderror" placeholder="Salary Scale" value="{{ old('sureties.'.$i.'.salary_scale', $surety ? $surety->salary_scale : '') }}">
                             @error('sureties.'.$i.'.salary_scale')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -248,14 +252,25 @@
 
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][suretydesignation]" class="form-label">Designation</label>
-                            <input name="sureties[{{ $i }}][suretydesignation]" type="text" class="form-control @error('sureties.'.$i.'.suretydesignation') is-invalid @enderror" placeholder="Designation" value="{{ old('sureties.'.$i.'.suretydesignation') }}">
+                            <input name="sureties[{{ $i }}][suretydesignation]" type="text" class="form-control @error('sureties.'.$i.'.suretydesignation') is-invalid @enderror" placeholder="Designation" value="{{ old('sureties.'.$i.'.suretydesignation', $surety ? $surety->designation : '') }}">
                             @error('sureties.'.$i.'.suretydesignation')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- EPF Number -->
+                        <div class="col-md-6 mt-3">
+                            <label for="sureties[{{ $i }}][epf_number]" class="form-label">EPF Number</label>
+                            <input name="sureties[{{ $i }}][epf_number]" type="text" class="form-control @error('sureties.'.$i.'.epf_number') is-invalid @enderror" placeholder="EPF Number" value="{{ old('sureties.'.$i.'.epf_number', $surety ? $surety->epf_number : '') }}">
+                            @error('sureties.'.$i.'.epf_number')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
                 @endfor
             </div>
+
+
 
             <!-- Other Comments -->
             <div class="col-md-12">
