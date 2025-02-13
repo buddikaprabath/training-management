@@ -8,7 +8,7 @@
 
         <!-- Search Form -->
         <form class="d-flex" method="GET" action="#">
-            <input class="form-control me-2" type="search" name="query" placeholder="Enter training name" value="{{ request('query') }}">
+            <input class="form-control me-2" type="search" name="query" placeholder="Search here....." value="{{ request('query') }}">
             <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
         <a href="{{ url()->current() }}">

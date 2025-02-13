@@ -18,9 +18,12 @@ use App\Models\Costbreak;
 use App\Models\Institute;
 use App\Models\Participant;
 use Illuminate\Http\Request;
+use App\Exports\ParticipantExport;
+use App\Imports\ParticipantImport;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 
 class superadmincontroller extends Controller
 {
@@ -598,6 +601,7 @@ class superadmincontroller extends Controller
             'sureties.*.address'             => 'nullable|string|max:255',
             'sureties.*.salary_scale'        => 'nullable|numeric|max:999999999', // Validate as numeric and restrict max value
             'sureties.*.suretydesignation'   => 'nullable|string|max:255',
+            'sureties.*.epf_number'          => 'nullable|string|max:50',
 
             // Remarks Validation (Multiple remarks)
             'remarks'                     => 'nullable|array',
@@ -633,6 +637,7 @@ class superadmincontroller extends Controller
                 foreach ($request->sureties as $suretyData) {
                     Surety::create([
                         'name'           => $suretyData['suretyname'],
+                        'epf_number'     => $suretyData['epf_number'],
                         'nic'            => $suretyData['nic'],
                         'mobile'         => $suretyData['mobile'],
                         'address'        => $suretyData['address'],
@@ -713,71 +718,125 @@ class superadmincontroller extends Controller
             return back()->with('error', 'Error loading edit page: ' . $e->getMessage());
         }
     }
-    //create participant store method
+    //create participant update method
     public function updateparticipant(Request $request, $id)
     {
         try {
             // Validate the request data
             $request->validate([
-                'name'                                  => 'required|string|max:255',
-                'epf_number'                            => 'required|string|max:255',
-                'designation'                           => 'nullable|string|max:255',
-                'salary_scale'                          => 'nullable|string|max:255',
-                'location'                              => 'nullable|string|max:255',
-                'obligatory_period'                     => 'nullable|string|max:255',
-                'cost_per_head'                         => 'nullable|numeric',
-                'bond_completion_date'                  => 'nullable|date',
-                'bond_value'                            => 'nullable|numeric',
-                'date_of_signing'                       => 'nullable|date',
-                'age_as_at_commencement_date'           => 'nullable|integer',
-                'date_of_appointment'                   => 'nullable|date',
+                'name'                         => 'required|string|max:255',
+                'epf_number'                   => 'required|string|max:50',
+                'designation'                  => 'required|string|max:255',
+                'salary_scale'                 => 'nullable|string|max:255',
+                'location'                     => 'nullable|string|max:255',
+                'obligatory_period'            => 'nullable|string|max:255',
+                'cost_per_head'                => 'nullable|numeric',
+                'bond_completion_date'         => 'nullable|date',
+                'bond_value'                   => 'nullable|numeric',
+                'date_of_signing'              => 'nullable|date',
+                'age_as_at_commencement_date'  => 'nullable|numeric',
+                'date_of_appointment'          => 'nullable|date',
                 'date_of_appointment_to_the_present_post' => 'nullable|date',
-                'date_of_birth'                         => 'nullable|date',
-                'division_id'                           => 'nullable|exists:divisions,id',
-                'section_id'                            => 'nullable|exists:sections,id',
-                'remarks'                               => 'nullable|array',
-                'remarks.*'                             => 'nullable|string',
-                'sureties'                              => 'nullable|array',
-                'sureties.*.name'                       => 'nullable|string|max:255',
-                'sureties.*.epf_number'                 => 'nullable|string|max:255',
-                'sureties.*.address'                    => 'nullable|string|max:255',
-                'sureties.*.mobile'                     => 'nullable|string|max:20',
-                'sureties.*.nic'                        => 'nullable|string|max:12',
-                'sureties.*.salary_scale'               => 'nullable|string|max:255',
-                'sureties.*.designation'                => 'nullable|string|max:255',
+                'date_of_birth'                => 'nullable|date',
+                'division_id'                  => 'nullable|exists:divisions,id',
+                'section_id'                   => 'nullable|exists:sections,id',
+                'training_id'                  => 'required|exists:trainings,id',
+
+                // Surety Validation (2 sureties)
+                'sureties'                      => 'nullable|array|max:2',
+                'sureties.*.suretyname'          => 'nullable|string|max:255',
+                'sureties.*.nic'                 => 'nullable|string|max:12',
+                'sureties.*.mobile'              => 'nullable|string|max:15',
+                'sureties.*.address'             => 'nullable|string|max:255',
+                'sureties.*.salary_scale'        => 'nullable|numeric|max:999999999',
+                'sureties.*.suretydesignation'   => 'nullable|string|max:255',
+                'sureties.*.epf_number'          => 'nullable|string|max:50',
+
+                // Remarks Validation (Multiple remarks)
+                'remarks'                     => 'nullable|array',
+                'remarks.*'                   => 'nullable|string|max:500',
             ]);
 
             // Find the participant
             $participant = Participant::findOrFail($id);
 
-            // Update participant details
+            // Update participant details (excluding remarks and sureties)
             $participant->update($request->except(['remarks', 'sureties']));
 
             // Update or create remarks
             if ($request->has('remarks')) {
-                $participant->remarks()->delete(); // Remove old remarks before adding new ones
+                // Remove old remarks before adding new ones
+                $participant->remarks()->delete();
                 foreach ($request->remarks as $remarkText) {
                     if (!empty($remarkText)) {
-                        $participant->remarks()->create(['remark' => $remarkText, 'training_id' => $participant->training_id]);
+                        $participant->remarks()->create([
+                            'remark' => $remarkText,
+                            'training_id' => $participant->training_id
+                        ]);
                     }
                 }
             }
 
-            // Update or create sureties (Assuming a participant can have max 2 sureties)
+            // Update or create sureties
             if ($request->has('sureties')) {
-                $participant->sureties()->delete(); // Remove old sureties before adding new ones
-                foreach ($request->sureties as $suretyData) {
-                    if (!empty($suretyData['name'])) {
-                        $participant->sureties()->create($suretyData);
+                // Loop through the sureties and check if it's a new or existing one
+                foreach ($request->sureties as $index => $suretyData) {
+                    if (isset($participant->sureties[$index])) {
+                        // Update existing surety
+                        $participant->sureties[$index]->update([
+                            'name' => $suretyData['suretyname'],
+                            'nic' => $suretyData['nic'],
+                            'mobile' => $suretyData['mobile'],
+                            'address' => $suretyData['address'],
+                            'salary_scale' => $suretyData['salary_scale'],
+                            'designation' => $suretyData['suretydesignation'],
+                            'epf_number' => $suretyData['epf_number'],
+                        ]);
+                    } else {
+                        // Create new surety
+                        $participant->sureties()->create([
+                            'name' => $suretyData['suretyname'],
+                            'nic' => $suretyData['nic'],
+                            'mobile' => $suretyData['mobile'],
+                            'address' => $suretyData['address'],
+                            'salary_scale' => $suretyData['salary_scale'],
+                            'designation' => $suretyData['suretydesignation'],
+                            'epf_number' => $suretyData['epf_number'],
+                        ]);
                     }
                 }
             }
 
-            return redirect()->route('SuperAdmin.participant.Detail', ['id' => $participant->training_id])->with('success', 'Participant updated successfully.');
+            return redirect()->route('SuperAdmin.participant.Detail', ['id' => $participant->training_id])
+                ->with('success', 'Participant updated successfully.');
         } catch (\Exception $e) {
             return back()->with('error', 'Error updating participant: ' . $e->getMessage());
         }
     }
+
+    public function exportParticipantColumns()
+    {
+        // Export the column names as an Excel file
+        return Excel::download(new ParticipantExport, 'participant_columns.xlsx');
+    }
+
+    public function importParticipants(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,csv'
+        ]);
+
+        try {
+            Excel::import(new ParticipantImport, $request->file('file'));
+            return redirect()->back()->with('success', 'Participants imported successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error importing participants: ' . $e->getMessage());
+        }
+    }
+
+
+
+
 
     //delete participant
     public function destroyparticipant($id)

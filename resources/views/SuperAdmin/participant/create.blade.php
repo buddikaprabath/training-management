@@ -13,22 +13,35 @@
                 </svg>
             </a>
         </button>
-    </div>
-
-    <!-- Choose File -->
-    <div class="m-3 d-flex justify-content-between align-items-center">
-        <form class="d-flex" method="GET" action="#">
-            <input class="form-control me-2" type="file" id="formFile" style="width: 510px;">
-            <button class="btn btn-outline-success w-25 me-2" type="submit">Import Participant</button>
-            <button class="btn btn-outline-success" type="submit">Download</button>
+    <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+        <!-- Search Form -->
+        <form class="d-flex" method="GET" action="#" style="max-width: 250px;">
+            <input class="form-control me-2" type="search" name="query" placeholder="Search here..." value="">
+            <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
-    </div>
     
-    <!-- Search -->
-    <div class="m-3 mb-5 d-flex justify-content-between align-items-center">
-        <form class="d-flex" method="GET" action="#">
-            <input class="form-control me-2" type="search" name="query" placeholder="Enter Epf number here" value="{{ request('query') }}" style="width: 600px;">
-            <button class="btn btn-outline-success w-25" type="submit">Add From Database</button>
+        <!-- Download Button -->
+        <a href="{{ route('SuperAdmin.participant.export-participant-columns') }}" class="btn btn-primary d-flex align-items-center px-3">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download me-2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Download Excel
+        </a>
+    
+        <!-- File Upload -->
+        <form action="{{ route('SuperAdmin.participant.import-participants') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center" id="importForm">
+            @csrf
+            <input class="form-control d-none" type="file" id="formFile" name="file" onchange="fileSelected()">
+            <button type="button" class="btn btn-primary d-flex align-items-center px-3" onclick="document.getElementById('formFile').click();">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-upload me-2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                    <polyline points="17 8 12 3 7 8"></polyline>
+                    <line x1="12" y1="3" x2="12" y2="15"></line>
+                </svg>
+                Import Excel
+            </button>
         </form>
     </div>
 
@@ -223,10 +236,14 @@
             <!-- Surety Fields (Initially Hidden) -->
             <div id="suretyFields" style="display: none;">
                 @for($i = 0; $i < 2; $i++)
+                    @php
+                        $surety = isset($participant->sureties[$i]) ? $participant->sureties[$i] : null;
+                    @endphp
+
                     <div class="row">
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][suretyname]" class="form-label">Surety {{ $i + 1 }} Name</label>
-                            <input name="sureties[{{ $i }}][suretyname]" type="text" class="form-control @error('sureties.'.$i.'.suretyname') is-invalid @enderror" placeholder="Surety Name" value="{{ old('sureties.'.$i.'.suretyname') }}">
+                            <input name="sureties[{{ $i }}][suretyname]" type="text" class="form-control @error('sureties.'.$i.'.suretyname') is-invalid @enderror" placeholder="Surety Name" value="{{ old('sureties.'.$i.'.suretyname', $surety ? $surety->name : '') }}">
                             @error('sureties.'.$i.'.suretyname')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -234,7 +251,7 @@
 
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][nic]" class="form-label">NIC</label>
-                            <input name="sureties[{{ $i }}][nic]" type="text" class="form-control @error('sureties.'.$i.'.nic') is-invalid @enderror" placeholder="NIC" value="{{ old('sureties.'.$i.'.nic') }}" >
+                            <input name="sureties[{{ $i }}][nic]" type="text" class="form-control @error('sureties.'.$i.'.nic') is-invalid @enderror" placeholder="NIC" value="{{ old('sureties.'.$i.'.nic', $surety ? $surety->nic : '') }}">
                             @error('sureties.'.$i.'.nic')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -242,7 +259,7 @@
 
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][mobile]" class="form-label">Mobile</label>
-                            <input name="sureties[{{ $i }}][mobile]" type="number" class="form-control @error('sureties.'.$i.'.mobile') is-invalid @enderror" placeholder="Mobile" value="{{ old('sureties.'.$i.'.mobile') }}">
+                            <input name="sureties[{{ $i }}][mobile]" type="number" class="form-control @error('sureties.'.$i.'.mobile') is-invalid @enderror" placeholder="Mobile" value="{{ old('sureties.'.$i.'.mobile', $surety ? $surety->mobile : '') }}">
                             @error('sureties.'.$i.'.mobile')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -250,7 +267,7 @@
 
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][address]" class="form-label">Address</label>
-                            <input name="sureties[{{ $i }}][address]" type="text" class="form-control @error('sureties.'.$i.'.address') is-invalid @enderror" placeholder="Address" value="{{ old('sureties.'.$i.'.address') }}">
+                            <input name="sureties[{{ $i }}][address]" type="text" class="form-control @error('sureties.'.$i.'.address') is-invalid @enderror" placeholder="Address" value="{{ old('sureties.'.$i.'.address', $surety ? $surety->address : '') }}">
                             @error('sureties.'.$i.'.address')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -258,7 +275,7 @@
 
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][salary_scale]" class="form-label">Salary Scale</label>
-                            <input name="sureties[{{ $i }}][salary_scale]" type="text" class="form-control @error('sureties.'.$i.'.salary_scale') is-invalid @enderror" placeholder="Salary Scale" value="{{ old('sureties.'.$i.'.salary_scale') }}">
+                            <input name="sureties[{{ $i }}][salary_scale]" type="text" class="form-control @error('sureties.'.$i.'.salary_scale') is-invalid @enderror" placeholder="Salary Scale" value="{{ old('sureties.'.$i.'.salary_scale', $surety ? $surety->salary_scale : '') }}">
                             @error('sureties.'.$i.'.salary_scale')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
@@ -266,14 +283,25 @@
 
                         <div class="col-md-6 mt-3">
                             <label for="sureties[{{ $i }}][suretydesignation]" class="form-label">Designation</label>
-                            <input name="sureties[{{ $i }}][suretydesignation]" type="text" class="form-control @error('sureties.'.$i.'.suretydesignation') is-invalid @enderror" placeholder="Designation" value="{{ old('sureties.'.$i.'.suretydesignation') }}">
+                            <input name="sureties[{{ $i }}][suretydesignation]" type="text" class="form-control @error('sureties.'.$i.'.suretydesignation') is-invalid @enderror" placeholder="Designation" value="{{ old('sureties.'.$i.'.suretydesignation', $surety ? $surety->designation : '') }}">
                             @error('sureties.'.$i.'.suretydesignation')
+                                <div class="invalid-feedback">{{ $message }}</div>
+                            @enderror
+                        </div>
+
+                        <!-- EPF Number -->
+                        <div class="col-md-6 mt-3">
+                            <label for="sureties[{{ $i }}][epf_number]" class="form-label">EPF Number</label>
+                            <input name="sureties[{{ $i }}][epf_number]" type="text" class="form-control @error('sureties.'.$i.'.epf_number') is-invalid @enderror" placeholder="EPF Number" value="{{ old('sureties.'.$i.'.epf_number', $surety ? $surety->epf_number : '') }}">
+                            @error('sureties.'.$i.'.epf_number')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
                     </div>
                 @endfor
             </div>
+
+
 
             <!-- Other Comments -->
             <div class="col-md-12">
@@ -345,7 +373,14 @@
             suretyFields.style.display = 'none'; // Hide surety fields when division is not HR
         }
     });
-</script>
 
+    // Function to handle file selection
+    function fileSelected() {
+        let fileInput = document.getElementById('formFile');
+        if (fileInput.files.length > 0) {
+            document.getElementById('importForm').submit();
+        }
+    }
+</script>
 
 @endsection
