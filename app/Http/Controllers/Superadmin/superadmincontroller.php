@@ -18,9 +18,11 @@ use App\Models\Costbreak;
 use App\Models\Institute;
 use App\Models\Participant;
 use Illuminate\Http\Request;
+use App\Exports\ParticipantExport;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Maatwebsite\Excel\Facades\Excel;
 
 class superadmincontroller extends Controller
 {
@@ -811,6 +813,11 @@ class superadmincontroller extends Controller
         }
     }
 
+    public function exportParticipantColumns()
+    {
+        // Export the column names as an Excel file
+        return Excel::download(new ParticipantExport, 'participant_columns.xlsx');
+    }
 
 
 
