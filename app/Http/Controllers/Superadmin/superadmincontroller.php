@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
+use PhpParser\Node\Stmt\Return_;
 
 class superadmincontroller extends Controller
 {
@@ -473,14 +474,13 @@ class superadmincontroller extends Controller
     //store document for each training
     public function storeTrainingDocument(Request $request, $trainingId)
     {
-        $validated = $request->validate([
-            'name'               => 'required|string|max:255',
-            'status'             => 'nullable|string|max:50',
-            'date_of_submitting' => 'nullable|date',
-            'document_file'      => 'required|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Max 2MB
-        ]);
-
         try {
+            $validated = $request->validate([
+                'name'               => 'required|string|max:255',
+                'status'             => 'nullable|string|max:50',
+                'date_of_submitting' => 'nullable|date',
+                'document_file'      => 'required|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Max 2MB
+            ]);
             DB::beginTransaction();
 
             // Ensure the training exists
@@ -540,37 +540,54 @@ class superadmincontroller extends Controller
         }
     }
 
-
-
     //end training handling functions
     //participant handling
 
     //load the participant view blade
     public function participantview($trainingId)
     {
-        $training = Training::with(['remarks', 'institutes', 'participants']) // Load participants
-            ->find($trainingId);
+        try {
+            // Attempt to retrieve training and related data, including documents
+            $training = Training::with(['remarks', 'institutes', 'documents'])  // Load documents as well
+                ->find($trainingId);
 
-        if (!$training) {
-            return redirect()->back()->with('error', 'Training not found.');
+            if (!$training) {
+                return redirect()->back()->with('error', 'Training not found.');
+            }
+
+            // Retrieve the participants with pagination
+            $participants = $training->participants()->paginate(10); // Paginate participants
+
+            // Return the view with the data
+            return view('SuperAdmin.participant.Detail', [
+                'training' => $training,
+                'participants' => $participants, // Paginated participants
+                'institutes' => $training->institutes,
+                'documents' => $training->documents, // Pass the document details
+            ]);
+        } catch (\Exception $e) {
+            // Catch any exceptions and return an error response
+            return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
         }
-
-        return view('SuperAdmin.participant.Detail', [
-            'training' => $training,
-            'participants' => $training->participants, // Ensure participants are passed
-            'institutes' => $training->institutes,
-        ]);
     }
 
     //load the create participant blade
     public function createparticipant($trainingId)
     {
-        // Find the training to ensure it exists
-        $training = Training::findOrFail($trainingId);
+        try {
+            // Attempt to find the training
+            $training = Training::findOrFail($trainingId); // This will automatically throw a ModelNotFoundException if not found
 
-        return view('SuperAdmin.participant.create', compact('training'));
+            // Return the view with the training data
+            return view('SuperAdmin.participant.create', compact('training'));
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            // Catch the ModelNotFoundException and return an error if the training is not found
+            return redirect()->back()->with('error', 'Training not found.');
+        } catch (\Exception $e) {
+            // Catch any other exceptions and return a generic error message
+            return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
+        }
     }
-
     //store participant
     public function participantstore(Request $request)
     {
@@ -669,7 +686,6 @@ class superadmincontroller extends Controller
             return redirect()->back()->with('error', 'Failed to add participant: ' . $e->getMessage());
         }
     }
-
     public function viewcreatedocument($participantId)
     {
         // Find the participant to ensure they exist
@@ -677,32 +693,47 @@ class superadmincontroller extends Controller
 
         return view('documents.create', compact('participant'));
     }
-
-    //store participant document
+    // Store participant document
     public function storeParticipantDocument(Request $request, $participantId)
     {
-        $request->validate([
-            'documents'         => 'required|array',
-            'documents.*'       => 'file|mimes:pdf,doc,docx,jpg,png|max:2048',
-        ]);
-
-        DB::beginTransaction();
         try {
-            foreach ($request->file('documents') as $document) {
-                $path = $document->store('documents');
-                Document::create([
-                    'name'          => $document->getClientOriginalName(),
-                    'file_path'     => $path,
-                    'training_id'   => Participant::findOrFail($participantId)->training_id,
-                    'participant_id' => $participantId,
-                ]);
+            $validated = $request->validate([
+                'name'               => 'required|string|max:255',
+                'status'             => 'nullable|string|max:50',
+                'date_of_submitting' => 'nullable|date',
+                'document_file'      => 'required|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Max 2MB
+            ]);
+
+            DB::beginTransaction();
+
+            // Ensure the participant exists
+            $participant = Participant::findOrFail($participantId);
+
+            // Ensure the training ID is passed correctly
+            $trainingId = $request->input('training_id');  // Capture the training_id
+
+            if (!$trainingId) {
+                return redirect()->back()->with('error', 'Training ID is required.');
             }
 
+            // Store file in storage/app/public/documents
+            $filePath = $request->file('document_file')->store('documents', 'public');
+
+            // Create the document record, including training_id
+            Document::create([
+                'name'               => $validated['name'],
+                'status'             => $validated['status'] ?? null,
+                'date_of_submitting' => $validated['date_of_submitting'] ?? null,
+                'participant_id'     => $participant->id,
+                'training_id'        => $trainingId,  // Add the training_id to the document
+                'file_path'          => $filePath,
+            ]);
+
             DB::commit();
-            return redirect()->back()->with('success', 'Documents uploaded successfully!');
+            return redirect()->back()->with('success', 'Document uploaded successfully!');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Failed to upload documents: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error uploading document: ' . $e->getMessage());
         }
     }
 
@@ -816,8 +847,13 @@ class superadmincontroller extends Controller
 
     public function exportParticipantColumns()
     {
-        // Export the column names as an Excel file
-        return Excel::download(new ParticipantExport, 'participant_columns.xlsx');
+        try {
+            // Attempt to export the column names as an Excel file
+            return Excel::download(new ParticipantExport, 'participant_columns.xlsx');
+        } catch (\Exception $e) {
+            // Catch any exceptions and return a meaningful error message
+            return redirect()->back()->with('error', 'An error occurred while exporting: ' . $e->getMessage());
+        }
     }
 
     public function importParticipants(Request $request)
@@ -833,10 +869,6 @@ class superadmincontroller extends Controller
             return redirect()->back()->with('error', 'Error importing participants: ' . $e->getMessage());
         }
     }
-
-
-
-
 
     //delete participant
     public function destroyparticipant($id)
@@ -867,24 +899,54 @@ class superadmincontroller extends Controller
     //budget handling
     public function budgetview(Request $request)
     {
-        $query = $request->input('query');
+        try {
+            $query = $request->input('query');
 
-        // If search query exists, filter users
-        if ($query) {
-            $budget = Budget::where('name', 'LIKE', "%{$query}%")
-                ->orWhere('username', 'LIKE', "%{$query}%")
-                ->orWhere('email', 'LIKE', "%{$query}%")
-                ->paginate(10);
-        } else {
-            $budget = Budget::paginate(10); // Load all users if no search
+            // Retrieve budgets with optional query filter and pagination
+            $budgets = Budget::when($query, function ($queryBuilder) use ($query) {
+                return $queryBuilder->where('type', 'LIKE', "%{$query}%")
+                    ->orWhere('provide_type', 'LIKE', "%{$query}%")
+                    ->orWhere('amount', 'LIKE', "%{$query}%")
+                    ->orWhere('created_at', 'LIKE', "%{$query}%");
+            })->paginate(10); // Ensure paginate() is used
+
+            // Return the view with budgets and query
+            return view('SuperAdmin.budget.Detail', compact('budgets', 'query'));
+        } catch (\Exception $e) {
+            // Catch any exceptions and return an error message
+            return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
         }
-
-        return view('SuperAdmin.budget.Detail', compact('budget', 'query'));
     }
     //budget create page
     public function createbudgetview()
     {
-        return view('SuperAdmin.budget.Create');
+        try {
+            return view('SuperAdmin.budget.Create');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading budget create page: ' . $e->getMessage());
+        }
+    }
+
+    public function budgetstore(Request $request)
+    {
+        try {
+            $request->validate([
+                'type'              => 'string|required',
+                'provide_type'      => 'required|string',
+                'amount'            => 'numeric |max:999999999'
+            ]);
+
+            Budget::create([
+                'type' => $request->type,
+                'amount' => $request->amount,
+                'provide_type' => $request->provide_type,
+                'division_id' => 1
+            ]);
+
+            return redirect()->route('SuperAdmin.budget.Detail')->with('success', 'Budget created successfully!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error storing budget detail: ' . $e->getMessage());
+        }
     }
     //end budget handling functions
 
@@ -892,37 +954,49 @@ class superadmincontroller extends Controller
     //Institute handling
     public function instituteview(Request $request)
     {
-        $query = $request->input('query');
+        try {
+            $query = $request->input('query');
 
-        // Filter based on search query or show all records
-        $institutes = Institute::when($query, function ($q) use ($query) {
-            return $q->where('name', 'like', '%' . $query . '%');
-        })->paginate(10);
+            // Filter based on search query or show all records
+            $institutes = Institute::when($query, function ($q) use ($query) {
+                return $q->where('name', 'like', '%' . $query . '%');
+            })->paginate(10);
 
-        return view('SuperAdmin.institute.Detail', compact('institutes', 'query'));
+            return view('SuperAdmin.institute.Detail', compact('institutes', 'query'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading institute datail page : ' . $e->getMessage());
+        }
     }
 
 
 
     public function instituteCreate()
     {
-        return view('SuperAdmin.institute.create');
+        try {
+            return view('SuperAdmin.institute.create');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading institute create page: ' . $e->getMessage());
+        }
     }
 
 
     public function Institutestore(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'type' => 'required|string',
+            ]);
 
-        $institute = new Institute();
-        $institute->name = $request->name;
-        $institute->type = $request->type;
-        $institute->save();
+            $institute = new Institute();
+            $institute->name = $request->name;
+            $institute->type = $request->type;
+            $institute->save();
 
-        return redirect()->back()->with('success', 'Institute created successfully.');
+            return redirect()->back()->with('success', 'Institute created successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error storing institute: ' . $e->getMessage());
+        }
     }
     public function instituteedit($id)
     {
@@ -940,17 +1014,21 @@ class superadmincontroller extends Controller
 
     public function Instituteupdate(Request $request, $id)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'type' => 'required|string',
-        ]);
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'type' => 'required|string',
+            ]);
 
-        $institute = Institute::findOrFail($id);
-        $institute->name = $request->name;
-        $institute->type = $request->type;
-        $institute->save();
+            $institute = Institute::findOrFail($id);
+            $institute->name = $request->name;
+            $institute->type = $request->type;
+            $institute->save();
 
-        return redirect()->back()->with('success', 'Institute updated successfully.');
+            return redirect()->back()->with('success', 'Institute updated successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error updating institute:' . $e->getMessage());
+        }
     }
 
     public function instituteDelete($id)
@@ -967,14 +1045,32 @@ class superadmincontroller extends Controller
 
 
     //end institute handling
-    //Trainer handling
+    // Trainer handling
     public function trainerview($id)
     {
+        try {
+            $institute = Institute::with(['trainers'])->findOrFail($id);
 
-        $trainer = Trainer::findOrFail($id);
+            // ✅ Correct way: Use paginate(10) directly on trainers() relationship
+            $trainers = $institute->trainers()->paginate(10);
 
-        return view('SuperAdmin.trainer.Detail', compact('trainer'));
+            return view('SuperAdmin.trainer.Detail', [
+                'institute' => $institute,
+                'trainers' => $trainers, // ✅ Pass as 'trainers' not 'trainer'
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return redirect()->back()->with('error', 'Trainer not found.');
+        }
     }
+
+
+
+    public function trainerCreate($id)
+    {
+        return view('SuperAdmin.trainer.Create');
+    }
+
+    public function trainerStore(Request $request) {}
 
     // Approvel Handling
     public function approvelview()

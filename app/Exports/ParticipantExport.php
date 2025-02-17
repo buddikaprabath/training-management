@@ -16,6 +16,7 @@ class ParticipantExport implements FromArray
         // Return the column names of the Participant model
         return [
             [
+                'training_id',
                 'name',
                 'epf_number',
                 'designation',
@@ -30,8 +31,8 @@ class ParticipantExport implements FromArray
                 'date_of_appointment',
                 'date_of_appointment_to_the_present_post',
                 'date_of_birth',
-                'division_id',
-                'section_id',
+                'division_name',
+                'section_name',
                 'surety_1_name',
                 'surety_1_nic',
                 'surety_1_mobile',
@@ -39,7 +40,7 @@ class ParticipantExport implements FromArray
                 'surety_1_salary_scale',
                 'surety_1_designation',
                 'surety_1_epf_number',
-                'surety_2_name 2',
+                'surety_2_name',
                 'surety_2_nic',
                 'surety_2_mobile',
                 'surety_2_address',

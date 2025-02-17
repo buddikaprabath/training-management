@@ -4,10 +4,9 @@
 <div class="card">
     <div class="m-3 d-flex justify-content-between align-items-center">
         <p class="p-1 m-0 fw-bold">Institute Details</p>
-
         <!-- Search Form -->
-        <form class="d-flex mb-3" method="GET" action="{{ route('SuperAdmin.institute.Detail') }}">
-            <input class="form-control me-2" type="search" name="query" placeholder="Enter institute name" value="{{ request('query') }}">
+        <form class="d-flex" method="GET" action="#">
+            <input class="form-control me-2" type="search" name="query" placeholder="Search here....." value="{{ request('query') }}">
             <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
         <a href="{{ url()->current() }}">
@@ -60,6 +59,7 @@
                         <td class="text-center">{{$institute->type}}</td>
                         <td class="text-center">
                             <a href="{{route('SuperAdmin.trainer.Detail',$institute->id)}}"><i data-feather="eye"></i></a>
+                            <a href="{{route('SuperAdmin.trainer.Create',$institute->id)}}"><i data-feather="user-plus"></i></a>
                         </td>
                         <td class="text-center">
                             <a href="{{route('SuperAdmin.institute.edit',$institute->id)}}" style="display: inline"><i data-feather="edit"></i></a>&nbsp;&nbsp;

@@ -4,6 +4,18 @@
 <div class="card">
     <div class="m-3 d-flex justify-content-between align-items-center">
         <p class="p-1 m-0">Budget Details</p>
+        <!-- Search Form -->
+        <form class="d-flex" method="GET" action="#">
+            <input class="form-control me-2" type="search" name="query" placeholder="Search here....." value="{{ request('query') }}">
+            <button class="btn btn-outline-success" type="submit">Search</button>
+        </form>
+        <a href="{{ url()->current() }}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-refresh-cw">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </a>
         <a href="{{route('SuperAdmin.budget.Create')}}" style="text-decoration: none">
          <button type="button" class="btn btn-primary d-flex align-items-center">
             Create New Budget
@@ -20,56 +32,37 @@
             {{ session('error') }}
         </div>
     @endif
-    <div class="m-3 d-flex justify-content-between align-items-center">
-        <div class="col-md-6 ">
-            <label for="division_id" class="form-label">Division</label>
-            <div class="d-flex justify-content-between align-items-center w-50">
-            <select name="division_id" id="division" class=" form-select track-change @error('division_id') is-invalid @enderror" required>
-                <option selected disabled>Choose...</option>
-                <option value="1" {{ old('division_id', isset($training) && $training->division_id == 1 ? 'selected' : '') }}>HR</option>
-                <option value="2" {{ old('division_id', isset($training) && $training->division_id == 2 ? 'selected' : '') }}>CATC</option>
-                <option value="3" {{ old('division_id', isset($training) && $training->division_id == 3 ? 'selected' : '') }}>IT</option>
-                <option value="4" {{ old('division_id', isset($training) && $training->division_id == 4 ? 'selected' : '') }}>FINANCE</option>
-                <option value="5" {{ old('division_id', isset($training) && $training->division_id == 5 ? 'selected' : '') }}>SCM</option>
-                <option value="6" {{ old('division_id', isset($training) && $training->division_id == 6 ? 'selected' : '') }}>MARKETING</option>
-                <option value="7" {{ old('division_id', isset($training) && $training->division_id == 7 ? 'selected' : '') }}>SECURITY</option>
-            </select>
-            @error('division_id')
-                <div class="invalid-feedback">{{ $message }}</div>
-            @enderror
-            <button type="button" class="ms-3 btn btn-primary d-flex align-items-center">
-                Filter
-             </button>
-            </div>
-        </div>
-    </div>
     <div class="card p-2">
-        <div class="table-responsive">
-          <table class="table">
+    <div class="table-responsive">
+        <table class="table">
             <thead>
                 <tr>
-                    <th>Year</th>
-                    <th>Type</th>
-                    <th>Amount</th>
-                    <th>Division</th>
+                    <th class="text-center align-top">Year</th>
+                    <th class="text-center align-top">Type</th>
+                    <th class="text-center align-top">Category</th>
+                    <th class="text-center align-top">Amount</th>
                 </tr>
             </thead>
             <tbody>
-                <td>2025</td>
-                <td>Start Budget Allocation</td>
-                <td>35000000</td>
-                <td>HR</td>
+                @foreach ($budgets as $budget)
+                    <tr>
+                        <td class="text-center">{{ $budget->created_year }}</td>
+                        <td class="text-center">{{ $budget->type }}</td>
+                        <td class="text-center">{{ $budget->provide_type }}</td>
+                        <td class="text-center">{{ $budget->amount }}</td>
+                    </tr>
+                @endforeach
             </tbody>
         </table>
+        <!-- Pagination -->
         <nav aria-label="Page navigation example">
             <ul class="pagination d-flex align-items-end flex-column mb-3">
-                <!-- This will dynamically generate the pagination links -->
-
+                {{ $budgets->links('pagination::bootstrap-4') }}
             </ul>
         </nav>
-
-        </div>
     </div>
+</div>
+
 
 </div>
 

@@ -45,10 +45,9 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('{id}/edit', 'trainingedit')->name('edit');
                 Route::put('{id}/update', 'updatetraining')->name('update'); // Update training details
                 Route::post('cost-breakdown/store/{trainingId}', 'storeCostBreakdown')->name('cost-breakdown.store');
-                Route::get('cost-breakdown/{id}', 'getCostBreakdownData')->name('cost-breakdown.show');
-                Route::put('cost-breakdown/update/{id}', 'updateCostBreakdown')->name('cost-breakdown.update');
                 Route::post('{id}/update-tasks', 'updateTasks')->name('updateTasks');
                 Route::delete('deleteTraining/{id}', 'trainingdestroy')->name('Training.delete'); // Delete user
+                Route::post('documents/store/{id}', 'storeTrainingDocument')->name('documents.store');
             });
 
             //participant routes
@@ -60,12 +59,13 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::put('update/{id}', 'updateparticipant')->name('update');
                 Route::get('export-participant-columns', 'exportParticipantColumns')->name('export-participant-columns');
                 Route::post('import-participants', 'importParticipants')->name('import-participants');
+                Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
             });
             //budget routes
             Route::prefix('budget')->name('budget.')->group(function () {
                 Route::get('Detail', 'budgetview')->name('Detail'); //load budget details view
                 Route::get('Create', 'createBudgetView')->name('Create'); //load the create budget page
-                Route::post('store', 'create')->name('store'); // Store user (for create)
+                Route::post('store', 'budgetstore')->name('store'); // Store user (for create)
             });
 
             //institute routes
@@ -82,6 +82,9 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
             //trainers routes
             Route::prefix('trainer')->name('trainer.')->group(function () {
                 Route::get('{id}/Detail', 'trainerview')->name('Detail'); //load the trainer details view
+                Route::get('{id}/Create', 'trainerCreate')->name('Create');
+                Route::get('search', 'trainerSearch')->name('search');
+                Route::post('store', 'trainerStore')->name('store');
             });
 
             //approvel routes

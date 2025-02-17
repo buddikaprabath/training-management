@@ -18,6 +18,7 @@ class Document extends Model
     ];
     protected $casts = [
         'training_id' => 'string', // Ensure training_id is handled as a string
+        'participant_id' => 'string', //ensure participant_id is handled as a string
     ];
 
     // Define relationships

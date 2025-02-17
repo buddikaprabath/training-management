@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 class Budget extends Model
@@ -14,6 +15,10 @@ class Budget extends Model
         'division_id'
     ];
 
+    public function getCreatedYearAttribute()
+    {
+        return Carbon::parse($this->created_at)->format('Y');
+    }
     // Define the relationship with the Division model
     public function division()
     {

@@ -300,11 +300,13 @@
                             @enderror
                         </div>
                     </div>
+
+                    <!-- Divider between Surety 1 and Surety 2 -->
+                    @if ($i == 0)
+                        <hr class="my-4">
+                    @endif
                 @endfor
             </div>
-
-
-
             <!-- Other Comments -->
             <div class="col-md-12">
                 <label for="other_comments" class="form-label">Other Comments</label>
@@ -316,8 +318,6 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-
-
             <!--training ID-->
 
             <input type="hidden" name="training_id" value="{{ old('training_id', isset($participant) ? $participant->training_id : $training->id) }}">
@@ -330,7 +330,6 @@
         </form>
     </div>
 </div>
-
 <!-- Include jQuery and Select2 -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -384,7 +383,4 @@
         }
     }
 </script>
-
-
-
 @endsection

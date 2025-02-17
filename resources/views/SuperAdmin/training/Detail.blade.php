@@ -91,10 +91,10 @@
                                 </a>
                             </td>
                             <td class="text-center">
-                                <a href="#">
+                                <a href="#" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal" data-training-id="{{ $item->id }}">
                                     <i data-feather="file-text"></i>
                                 </a>
-                            </td>
+                            </td>                            
                             <td class="text-center">
                                 <a href="{{ route('SuperAdmin.training.edit', $item->id) }}" style="display: inline-block; vertical-align: middle;">
                                     <i data-feather="edit"></i>
@@ -255,10 +255,45 @@
     </div>
 </div>
 
+<!-- Modal for File Upload -->
+<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadDocumentModalLabel">Upload Document</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="documentUploadForm" action="{{ route('SuperAdmin.training.documents.store',$item->id) }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <input type="hidden" name="training_id" id="training_id" value="{{ $item->id }}">
+                    <div class="mb-3">
+                        <label for="document_name" class="form-label">Document Name</label>
+                        <input type="text" class="form-control" name="name" id="document_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="submit_date" class="form-label">Date of Submitting</label>
+                        <input type="date" class="form-control" name="date_of_submitting" id="date_of_submitting" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="document" class="form-label">Choose File</label>
+                        <input type="file" class="form-control" name="document_file" id="document" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const costModalElement = document.getElementById("costModal");
         const trainingModalElement = document.getElementById("trainingStatusModal");
+        const uploadModalElement = document.getElementById("uploadDocumentModal");
         const costModal = new bootstrap.Modal(costModalElement);
         const trainingModal = new bootstrap.Modal(trainingModalElement);
         const costInputs = document.querySelectorAll(".cost-input");
@@ -293,6 +328,13 @@
             });
 
             saveButton.addEventListener("click", () => trainingModal.hide());
+
+            // Handle document upload modal
+            uploadModalElement.addEventListener("show.bs.modal", function(event) {
+                const button = event.relatedTarget; // Button that triggered the modal
+                const participantId = button.getAttribute("data-training-id");
+                document.getElementById("training_id").value = trainingId;
+            });
         }
 
         function calculateTotal() {
@@ -336,6 +378,7 @@
         init();
     });
 </script>
+
 
 
 @endsection

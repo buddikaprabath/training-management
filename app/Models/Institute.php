@@ -18,4 +18,9 @@ class Institute extends Model
     {
         return $this->belongsToMany(Training::class, 'training_institutes');
     }
+
+    public function trainers()
+    {
+        return $this->hasMany(Trainer::class);
+    }
 }
