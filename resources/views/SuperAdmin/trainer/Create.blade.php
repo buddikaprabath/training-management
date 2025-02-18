@@ -30,25 +30,35 @@
                 @method('PUT') <!-- HTTP method spoofing for PUT request -->
             @endif
             <p class="fw-bold">{{ isset($trainer) ? 'Edit Trainer' : 'Trainer info' }}</p>
-            <!-- Institute Name -->
+            <!--training ID-->
+
+            <!-- Hidden institute_id field for both create and edit -->
+            @if(isset($trainer))
+                <input type="hidden" name="institute_id" value="{{ $trainer->institute->id }}">
+            @else
+                <input type="hidden" name="institute_id" value="{{ $institute->id }}">
+            @endif
+            <!-- Trainer Name -->
             <div class="col-md-6">
-                <label for="name" class="form-label">Institute Name</label>
-                <input name="name" type="text" class="form-control track-change @error('name') is-invalid @enderror" placeholder="Institute Name" value="{{ old('name', isset($trainer) ? $trainer->name : '') }}" required>
+                <label for="name" class="form-label">Trainer Name</label>
+                <input name="name" type="text" class="form-control track-change @error('name') is-invalid @enderror" placeholder="Trainer Name" value="{{ old('name', isset($trainer) ? $trainer->name : '') }}" required>
                 @error('name')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-            <!--Type selection-->
+            <!--email-->
             <div class="col-md-6">
-                <label for="type" class="form-label">Type</label>
-                <select name="type" id="type" class="form-select track-change @error('type') is-invalid @enderror" required>
-                    <option selected disabled>Choose Type</option>
-                    <option value="AASL" {{ old('type', isset($trainer) && $trainer>type == 1 ? 'selected' : '') }}>AASL</option>
-                    <option value="Type 2" {{ old('type', isset($trainer) && $trainer->type == 2 ? 'selected' : '') }}>Type 2</option>
-                    <option value="Type 3" {{ old('type', isset($trainer) && $trainer->type == 3 ? 'selected' : '') }}>Type 3</option>
-                    <option value="Type 4" {{ old('type', isset($trainer) && $trainer->type == 4 ? 'selected' : '') }}>Type 4</option>
-                </select>
-                @error('type')
+                <label for="email" class="form-label">Trainer Email</label>
+                <input name="email" type="email" class="form-control track-change @error('email') is-invalid @enderror" placeholder="Email" value="{{ old('email', isset($trainer) ? $trainer->email : '') }}" required>
+                @error('email')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+            <!--mobile-->
+            <div class="col-md-6">
+                <label for="mobile" class="form-label">mobile</label>
+                <input name="mobile" type="number" class="form-control track-change @error('mobile') is-invalid @enderror" placeholder="Mobile" value="{{ old('mobile', isset($trainer) ? $trainer->mobile : '') }}" required>
+                @error('mobile')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>

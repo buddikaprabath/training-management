@@ -3,11 +3,10 @@
 
 <div class="card">
     <div class="m-3 d-flex justify-content-between align-items-center">
-        <p class="p-1 m-0">User Details</p>
-
-        <!-- Search Form -->
-        <form class="d-flex" method="GET" action="{{ route('SuperAdmin.trainer.search') }}">
-            <input class="form-control me-2" type="search" name="query" placeholder="Search Here...." value="{{ request('query') }}">
+        <p class="p-1 m-0">Trainer Details</p>
+       <!-- Search Form -->
+       <form class="d-flex" method="GET" action="#">
+            <input class="form-control me-2" type="search" name="query" placeholder="Search here....." value="{{ request('query') }}">
             <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
         <a href="{{ url()->current() }}">
@@ -61,7 +60,16 @@
                             <td>{{ $trainer->mobile }}</td>
                             <td>{{ $trainer->institute->name ?? 'N/A' }}</td>
                             <td>{{ $trainer->institute->type ?? 'N/A' }}</td>
-                            <td></td>
+                            <td>
+                                <a href="{{route('SuperAdmin.trainer.edit',$trainer->id)}}" style="display: inline"><i data-feather="edit"></i></a>&nbsp;&nbsp;
+                                <form action="{{ route('SuperAdmin.trainer.delete', $trainer->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this Trainer?');" style="display: inline">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" style="border: none; background: none; padding: 0; cursor: pointer;">
+                                        <i data-feather="trash-2" class="align-middle me-2"></i>
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>

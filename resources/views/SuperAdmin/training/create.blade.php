@@ -334,7 +334,7 @@
 
         // Function to toggle the Country dropdown based on Course Type selection
         function toggleCountryDropdown() {
-            if (courseTypeSelect.value == '1') {  // '1' corresponds to 'Foreign'
+            if (courseTypeSelect.value == 'Foreign') {  // '1' corresponds to 'Foreign'
                 countryContainer.style.display = 'block'; // Show the Country dropdown
                 countrySelect.disabled = false; // Enable the Country dropdown
             } else {

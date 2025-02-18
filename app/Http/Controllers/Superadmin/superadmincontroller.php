@@ -18,13 +18,15 @@ use App\Models\Costbreak;
 use App\Models\Institute;
 use App\Models\Participant;
 use Illuminate\Http\Request;
+use PhpParser\Node\Stmt\Return_;
 use App\Exports\ParticipantExport;
 use App\Imports\ParticipantImport;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
-use PhpParser\Node\Stmt\Return_;
+
+use function Laravel\Prompts\table;
 
 class superadmincontroller extends Controller
 {
@@ -172,7 +174,7 @@ class superadmincontroller extends Controller
         return view('SuperAdmin.training.Detail', compact('training', 'query', 'costBreak'));
     }
 
-
+    //load the training create page
     public function createtrainingview()
     {
         $countries = DB::table('countries')->get();
@@ -183,7 +185,7 @@ class superadmincontroller extends Controller
     }
 
 
-
+    //store method for training data storing
     public function createtraining(Request $request)
     {
         $validated = $request->validate([
@@ -384,37 +386,78 @@ class superadmincontroller extends Controller
         }
     }
 
+    //update the training status
+
+    public function updateStatus(Request $request, $trainingId)
+    {
+        try {
+            $training = Training::findOrFail($trainingId);
+
+            // Update only the necessary fields
+            $training->update($request->only([
+                'feedback_form',
+                'e_report',
+                'warm_clothe_allowance',
+                'presentation',
+                'training_status'
+            ]));
+
+            // After saving, redirect back to the same page with session data to reflect the updated status
+            return redirect()->route('SuperAdmin.training.Detail', ['id' => $trainingId])
+                ->with([
+                    'statusUpdated' => true, // Indicating the status was updated
+                    'feedback_form' => $training->feedback_form,
+                    'e_report' => $training->e_report,
+                    'warm_clothe_allowance' => $training->warm_clothe_allowance,
+                    'presentation' => $training->presentation,
+                    'training_status' => $training->training_status
+                ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error saving training status: ' . $e->getMessage());
+        }
+    }
+
+
+
+
+
     //add cost break down amounts
 
     public function storeCostBreakdown(Request $request, $trainingId)
     {
         $validated = $request->validate([
-            'airfare'    => 'required|numeric|min:0',
-            'subsistence'    => 'required|numeric|min:0',
+            'airfare'       => 'required|numeric|min:0',
+            'subsistence'   => 'required|numeric|min:0',
             'incidental'    => 'required|numeric|min:0',
-            'registration'    => 'required|numeric|min:0',
-            'visa'    => 'required|numeric|min:0',
-            'insurance'    => 'required|numeric|min:0',
-            'warm_clothes'    => 'required|numeric|min:0',
-            'total_amount'    => 'required|numeric|min:0',
+            'registration'  => 'required|numeric|min:0',
+            'visa'         => 'required|numeric|min:0',
+            'insurance'     => 'required|numeric|min:0',
+            'warm_clothes'  => 'required|numeric|min:0',
+            'total_amount'  => 'required|numeric|min:0',
         ]);
+
         try {
             DB::beginTransaction();
 
             // Ensure training exists
             $training = Training::where('id', $trainingId)->firstOrFail();
 
+            // Check if a cost breakdown already exists for this training_id
+            if (Costbreak::where('training_id', $training->id)->exists()) {
+                return redirect()->back()->with('error', 'A cost breakdown already exists for this training.');
+            }
+
             // Create a new cost breakdown entry
             Costbreak::create([
-                'training_id'       => $training->id, // Use 'id' here
-                'airfare'           => $validated['airfare'],
-                'subsistence'       => $validated['subsistence'],
-                'incidental'        => $validated['incidental'],
-                'registration'      => $validated['registration'],
-                'visa'              => $validated['visa'],
-                'insurance'         => $validated['insurance'],
-                'warm_clothes'      => $validated['warm_clothes'],
-                'total_amount'      => $validated['total_amount']
+                'training_id'   => $training->id,
+                'airfare'       => $validated['airfare'],
+                'subsistence'   => $validated['subsistence'],
+                'incidental'    => $validated['incidental'],
+                'registration'  => $validated['registration'],
+                'visa'          => $validated['visa'],
+                'insurance'     => $validated['insurance'],
+                'warm_clothes'  => $validated['warm_clothes'],
+                'total_amount'  => $validated['total_amount']
             ]);
 
             DB::commit();
@@ -425,52 +468,101 @@ class superadmincontroller extends Controller
         }
     }
 
-    // Controller Method for Update
-    public function updateCostBreakdown(Request $request, $itemId)
+    //load the costbreak down detail page with data
+    public function viewCost($id)
     {
-        // Validate the incoming request data
-        $validatedData = $request->validate([
-            'airfare' => 'required|numeric|min:0',
-            'subsistence' => 'required|numeric|min:0',
-            'incidental' => 'required|numeric|min:0',
-            'registration' => 'required|numeric|min:0',
-            'visa' => 'required|numeric|min:0',
-            'insurance' => 'required|numeric|min:0',
-            'warm_clothes' => 'required|numeric|min:0',
-            'total_amount' => 'required|numeric|min:0',
-        ]);
+        try {
 
-        // Find the existing Costbreak record for the given itemId
-        $costBreak = Costbreak::where('item_id', $itemId)->first();
+            // Fetch cost breakdown using training_id
+            $costs = DB::table('costbreaks')->where('training_id', $id)->first();
 
-        if (!$costBreak) {
-            // If the cost breakdown doesn't exist, handle the error (optional)
-            return redirect()->back()->with('error', 'Cost Breakdown not found!');
+            return view('SuperAdmin.training.costDetail', compact('costs'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading cost breakdown details page: ' . $e->getMessage());
         }
-
-        // Update the existing Costbreak record with validated data
-        $costBreak->update([
-            'airfare' => $validatedData['airfare'],
-            'subsistence' => $validatedData['subsistence'],
-            'incidental' => $validatedData['incidental'],
-            'registration' => $validatedData['registration'],
-            'visa' => $validatedData['visa'],
-            'insurance' => $validatedData['insurance'],
-            'warm_clothes' => $validatedData['warm_clothes'],
-            'total_amount' => $validatedData['total_amount'],
-        ]);
-
-        // Redirect back with a success message
-        return redirect()->route('SuperAdmin.training.Detail', ['itemId' => $itemId])
-            ->with('success', 'Cost Breakdown updated successfully!');
     }
+
+    // Controller Method for Update
+    public function updateCostBreakdown(Request $request, $id)
+    {
+        try {
+            $validatedData = $request->validate([
+                'airfare' => 'required|numeric|min:0',
+                'subsistence' => 'required|numeric|min:0',
+                'incidental' => 'required|numeric|min:0',
+                'registration' => 'required|numeric|min:0',
+                'visa' => 'required|numeric|min:0',
+                'insurance' => 'required|numeric|min:0',
+                'warm_clothes' => 'required|numeric|min:0',
+                'training_id' => 'required|string'
+            ]);
+
+
+            // Find the existing Costbreak record for the given itemId
+            $costBreak = Costbreak::where('id', $id)->first();
+
+            if (!$costBreak) {
+                // If the cost breakdown doesn't exist, handle the error (optional)
+                return redirect()->back()->with('error', 'Cost Breakdown not found!');
+            }
+
+            $totalAmount = $validatedData['airfare'] + $validatedData['subsistence'] + $validatedData['incidental'] +
+                $validatedData['registration'] + $validatedData['visa'] + $validatedData['insurance'] +
+                $validatedData['warm_clothes'];
+
+
+            // Update the existing Costbreak record with validated data
+            $costBreak->update([
+                'airfare' => $validatedData['airfare'],
+                'subsistence' => $validatedData['subsistence'],
+                'incidental' => $validatedData['incidental'],
+                'registration' => $validatedData['registration'],
+                'visa' => $validatedData['visa'],
+                'insurance' => $validatedData['insurance'],
+                'warm_clothes' => $validatedData['warm_clothes'],
+                'total_amount' => $totalAmount,
+                'training_id' => $validatedData['training_id']
+            ]);
+
+            // Redirect back with a success message
+            return redirect()->route('SuperAdmin.training.costDetail', ['id' => $costBreak->training_id])
+                ->with('success', 'Cost Breakdown updated successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'error updating costbreakdown : ' . $e->getMessage());
+        }
+    }
+    //load the costbreak down edit page with data
     public function getCostBreakdownData($id)
     {
-        $costBreakdown = Costbreak::find($id);
-        return response()->json($costBreakdown);
+        try {
+            // Attempt to fetch the cost breakdown data
+            $costs = CostBreak::find($id);
+
+            // Check if the data exists before accessing properties
+            if (!$costs) {
+                return redirect()->back()->with('error', 'No cost breakdown data found for the given ID.');
+            }
+
+            return view('SuperAdmin.training.costbreak', compact('costs'));
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred while fetching the cost breakdown data. Please try again later: ' . $e->getMessage());
+        }
     }
 
-
+    //delete function for delete costbreakdown
+    public function costBreakDelete($id)
+    {
+        try {
+            DB::beginTransaction();
+            $costs = Costbreak::findOrFail($id);
+            $costs->delete();
+            DB::commit();
+            return redirect()->route('SuperAdmin.training.Detail')->with('success', 'Cost break down deleted successfully!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error deleting costbreak down : ' . $e->getMessage());
+        }
+    }
     //store document for each training
     public function storeTrainingDocument(Request $request, $trainingId)
     {
@@ -1046,17 +1138,28 @@ class superadmincontroller extends Controller
 
     //end institute handling
     // Trainer handling
-    public function trainerview($id)
+    public function trainerview(Request $request, $id)
     {
         try {
-            $institute = Institute::with(['trainers'])->findOrFail($id);
+            // Get the query parameter
+            $query = $request->input('query');
 
-            // ✅ Correct way: Use paginate(10) directly on trainers() relationship
-            $trainers = $institute->trainers()->paginate(10);
+            // Fetch the institute by ID
+            $institute = Institute::findOrFail($id);
+
+            // Apply the query to filter by trainer's name, email, or mobile
+            $trainers = $institute->trainers()
+                ->when($query, function ($q) use ($query) {
+                    return $q->where('name', 'LIKE', '%' . $query . '%')
+                        ->orWhere('email', 'LIKE', '%' . $query . '%')
+                        ->orWhere('mobile', 'LIKE', '%' . $query . '%');
+                })
+                ->paginate(10);
 
             return view('SuperAdmin.trainer.Detail', [
                 'institute' => $institute,
-                'trainers' => $trainers, // ✅ Pass as 'trainers' not 'trainer'
+                'trainers' => $trainers,
+                'query' => $query,
             ]);
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
             return redirect()->back()->with('error', 'Trainer not found.');
@@ -1065,12 +1168,104 @@ class superadmincontroller extends Controller
 
 
 
+    //load the trainer create page
     public function trainerCreate($id)
     {
-        return view('SuperAdmin.trainer.Create');
+        try {
+            // Fetch the institute data based on the $id
+            $institute = Institute::findOrFail($id);
+
+            // Pass the institute data to the view for creating a new trainer
+            return view('SuperAdmin.trainer.Create', compact('institute'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading Trainer create page: ' . $e->getMessage());
+        }
     }
 
-    public function trainerStore(Request $request) {}
+    //trainer details store function
+    public function trainerStore(Request $request)
+    {
+        try {
+            $validatedata = $request->validate([
+                'name'      => 'string|max:255|required',
+                'email'     => 'string|email|required',
+                'mobile'    => ['required', 'regex:/^(?:\+94|0)[7][0-9]{8}$/'],
+                'institute_id' => 'integer'
+            ]);
+
+            Trainer::create([
+                'name' => $validatedata['name'],
+                'email' => $validatedata['email'],
+                'mobile' => $validatedata['mobile'],
+                'institute_id' => $validatedata['institute_id']
+            ]);
+
+            return redirect()->route('SuperAdmin.institute.Detail')->with('success', 'Trainer Created Successfuly!');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error storing Trainer Details: ', $e->getMessage());
+        }
+    }
+
+    //load the trainer details edit page
+    public function trainerEdit($id)
+    {
+        try {
+            // Fetch the trainer along with its associated institute
+            $trainer = Trainer::with(['institute'])->findOrFail($id);
+
+            // Fetch the list of all institutes (optional, if you need to show a list of options in a dropdown)
+            $institutes = Institute::all();
+
+            // Pass both the trainer, institutes, and the institute of the trainer to the view
+            return view('SuperAdmin.trainer.Create', compact('trainer', 'institutes'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'error loading trainer edit page: ' . $e->getMessage());
+        }
+    }
+    //update the existing trainer details
+    public function trainerUpdate(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'name'         => 'string|max:255|required',
+                'email'        => 'string|email|required',
+                'mobile'       => 'required',
+                'institute_id' => 'integer|required'
+            ]);
+
+            $trainer = Trainer::findOrFail($id);
+            $trainer->name = $request->name;
+            $trainer->email = $request->email;
+            $trainer->mobile = $request->mobile;
+            $trainer->institute_id = $request->institute_id;
+            $trainer->save();
+
+            return redirect()->route('SuperAdmin.institute.Detail')->with('success', 'Trainer details updated successfully!');
+        } catch (\Exception $e) {
+            // Returning back with an error message
+            return back()->with('error', 'Error updating trainer details: ' . $e->getMessage());
+        }
+    }
+    //delete the trainer details
+    public function trainerDelete($id)
+    {
+        try {
+            // Find the trainer by ID
+            $trainer = Trainer::findOrFail($id);
+
+            // Delete the trainer record
+            $trainer->delete();
+
+            // Redirect back to the same page with a success message
+            return redirect()->back()->with('success', 'Trainer details successfully deleted!');
+        } catch (\Exception $e) {
+            // Redirect back with an error message
+            return redirect()->back()->with('error', 'Error deleting trainer details: ' . $e->getMessage());
+        }
+    }
+
+
+
 
     // Approvel Handling
     public function approvelview()

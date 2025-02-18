@@ -70,10 +70,21 @@
                             <td class="text-center">{{ $item->batch_size }}</td>
                             <td class="text-center">{{ $item->category }}</td>
                             <td class="text-center">
-                                <a href="#" class="open-status-modal" data-training-id="{{ $item->id }}">
-                                    <i data-feather="check-circle" class="check-icon" id="check-icon-{{ $item->id }}"></i>
+                                <a href="#" 
+                                   class="open-status-modal" 
+                                   data-training-id="{{ $item->id }}"
+                                   @if($item->training_status) 
+                                       style="pointer-events: none; color: green;" 
+                                   @endif
+                                >
+                                    @if($item->training_status)  <!-- Check if training_status is true -->
+                                        <span class="completed-status">Completed</span> <!-- Display "Completed" -->
+                                    @else
+                                        <i data-feather="check-circle" class="check-icon" id="check-icon-{{ $item->id }}"></i>
+                                    @endif
                                 </a>
                             </td>
+                            
                             <td class="text-center">
                                 <a href="{{ route('SuperAdmin.participant.Detail',$item->id) }}">
                                     <i data-feather="eye"></i>
@@ -86,8 +97,8 @@
                                 <a href="#" class="open-cost-modal" data-training-id="{{ $item->id }}">
                                     <i data-feather="dollar-sign"></i>
                                 </a>
-                                <a href="#">
-                                    <i data-feather="edit"></i>
+                                <a href="{{route('SuperAdmin.training.costDetail',$item->id)}}">
+                                    <i data-feather="eye"></i>
                                 </a>
                             </td>
                             <td class="text-center">
@@ -97,16 +108,19 @@
                             </td>                            
                             <td class="text-center">
                                 <a href="{{ route('SuperAdmin.training.edit', $item->id) }}" style="display: inline-block; vertical-align: middle;">
-                                    <i data-feather="edit"></i>
+                                    <i data-feather="edit" class="text-primary"></i>
                                 </a>
                                 
-                                <form action="{{ route('SuperAdmin.training.Training.delete', $item->id) }}" method="POST" style="display: inline-block; vertical-align: middle; margin-left: 5px;">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
-                                        <i data-feather="trash-2"></i>
-                                    </button>
-                                </form>
+                                <form action="{{ route('SuperAdmin.training.Training.delete', $item->id) }}" method="POST" 
+                                    style="display: inline-block; vertical-align: middle; margin-left: 5px;"
+                                    onsubmit="return confirm('Are you sure you want to delete this item?');">
+                                  @csrf
+                                  @method('DELETE')
+                                  <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
+                                      <i data-feather="trash-2" class="text-primary"></i>
+                                  </button>
+                              </form>
+                              
                             </td>
                         </tr>
                     @endforeach
@@ -140,7 +154,7 @@
                             <label class="col-md-6 col-form-label">Airfare</label>
                             <div class="col-md-6">
                                 <input name="airfare" type="number" class="form-control cost-input"
-                                    value="0.00" min="0">
+                                    value="0.00" min="0" required>
                             </div>
                         </div>
 
@@ -148,7 +162,7 @@
                             <label class="col-md-6 col-form-label">Subsistence Including Travel Day</label>
                             <div class="col-md-6">
                                 <input name="subsistence" type="number" class="form-control cost-input"
-                                    value="0.00" min="0">
+                                    value="0.00" min="0" required>
                             </div>
                         </div>
 
@@ -156,7 +170,7 @@
                             <label class="col-md-6 col-form-label">Incidental Including Travel Day</label>
                             <div class="col-md-6">
                                 <input name="incidental" type="number" class="form-control cost-input"
-                                    value="0.00" min="0">
+                                    value="0.00" min="0" required>
                             </div>
                         </div>
 
@@ -164,7 +178,7 @@
                             <label class="col-md-6 col-form-label">Registration Fee</label>
                             <div class="col-md-6">
                                 <input name="registration" type="number" class="form-control cost-input"
-                                    value="0.00" min="0">
+                                    value="0.00" min="0" required>
                             </div>
                         </div>
 
@@ -172,7 +186,7 @@
                             <label class="col-md-6 col-form-label">Visa Fee</label>
                             <div class="col-md-6">
                                 <input name="visa" type="number" class="form-control cost-input"
-                                    value="0.00" min="0">
+                                    value="0.00" min="0" required>
                             </div>
                         </div>
 
@@ -180,7 +194,7 @@
                             <label class="col-md-6 col-form-label">Travel Insurance</label>
                             <div class="col-md-6">
                                 <input name="insurance" type="number" class="form-control cost-input"
-                                    value="0.00" min="0">
+                                    value="0.00" min="0" required>
                             </div>
                         </div>
 
@@ -188,7 +202,7 @@
                             <label class="col-md-6 col-form-label">Warm Clothes</label>
                             <div class="col-md-6">
                                 <input name="warm_clothes" type="number" class="form-control cost-input"
-                                    value="0.00" min="0">
+                                    value="0.00" min="0" required>
                             </div>
                         </div>
 
@@ -220,40 +234,50 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="trainingStatusForm">
+                <form id="trainingStatusForm" method="POST" action="{{ route('SuperAdmin.training.update-status', $item->id) }}">
+                    @csrf
+                    @method('PUT')
+                
                     <div class="form-check form-switch d-flex justify-content-between align-items-center">
                         <label class="form-check-label" for="feedback_form">Feedback Form</label>
-                        <input class="form-check-input status-switch" type="checkbox" id="feedback_form" name="feedback_form">
+                        <input class="form-check-input status-switch" type="checkbox" id="feedback_form" name="feedback_form" 
+                            @if($item->feedback_form == 1) checked @endif>
                     </div>
-
+                
                     <div class="form-check form-switch d-flex justify-content-between align-items-center">
                         <label class="form-check-label" for="e_report">E-Report</label>
-                        <input class="form-check-input status-switch" type="checkbox" id="e_report" name="e_report">
+                        <input class="form-check-input status-switch" type="checkbox" id="e_report" name="e_report" 
+                            @if($item->e_report == 1) checked @endif>
                     </div>
-
+                
                     <div class="form-check form-switch d-flex justify-content-between align-items-center">
                         <label class="form-check-label" for="warm_clothe_allowance">Warm Clothes Allowance</label>
-                        <input class="form-check-input status-switch" type="checkbox" id="warm_clothe_allowance" name="warm_clothe_allowance">
+                        <input class="form-check-input status-switch" type="checkbox" id="warm_clothe_allowance" name="warm_clothe_allowance" 
+                            @if($item->warm_clothe_allowance == 1) checked @endif>
                     </div>
-
+                
                     <div class="form-check form-switch d-flex justify-content-between align-items-center">
                         <label class="form-check-label" for="presentation">Presentation</label>
-                        <input class="form-check-input status-switch" type="checkbox" id="presentation" name="presentation">
+                        <input class="form-check-input status-switch" type="checkbox" id="presentation" name="presentation" 
+                            @if($item->presentation == 1) checked @endif>
                     </div>
-
+                
                     <div class="form-check form-switch d-flex justify-content-between align-items-center">
                         <label class="form-check-label" for="training_status">Training Completed</label>
-                        <input class="form-check-input" type="checkbox" id="training_status" name="training_status" disabled>
+                        <input class="form-check-input" type="checkbox" id="training_status" name="training_status" 
+                            @if($item->training_status == 1) checked @endif>
                     </div>
-
+                
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary" id="saveStatus">Save</button>
+                        <button type="submit" class="btn btn-primary" id="saveStatus">Save</button>
                     </div>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+
 
 <!-- Modal for File Upload -->
 <div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
@@ -292,15 +316,11 @@
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const costModalElement = document.getElementById("costModal");
-        const trainingModalElement = document.getElementById("trainingStatusModal");
         const uploadModalElement = document.getElementById("uploadDocumentModal");
         const costModal = new bootstrap.Modal(costModalElement);
-        const trainingModal = new bootstrap.Modal(trainingModalElement);
+        const trainingStatusModal = new bootstrap.Modal(document.getElementById("trainingStatusModal"));
         const costInputs = document.querySelectorAll(".cost-input");
         const totalAmountField = document.getElementById("totalAmount");
-        const saveButton = document.getElementById("saveStatus");
-        const trainingCompletedSwitch = document.getElementById("training_status");
-        const switches = document.querySelectorAll(".status-switch");
 
         function initializeModals() {
             document.querySelectorAll(".open-cost-modal").forEach(button => {
@@ -314,25 +334,23 @@
                 });
             });
 
+            document.querySelectorAll(".open-status-modal").forEach(button => {
+                button.addEventListener("click", function () {
+                    const trainingId = this.dataset.trainingId;
+                    document.getElementById("trainingStatusForm").action = `/SuperAdmin/training/update-status/${trainingId}`;
+                    trainingStatusModal.show();
+                });
+            });
+
             document.getElementById("saveCost").addEventListener("click", function () {
                 console.log("Cost details saved!");
                 costModal.hide();
             });
 
-            document.querySelectorAll(".open-status-modal").forEach(button => {
-                button.addEventListener("click", function () {
-                    const trainingId = this.dataset.trainingId;
-                    trainingModalElement.setAttribute("data-training-id", trainingId);
-                    trainingModal.show();
-                });
-            });
-
-            saveButton.addEventListener("click", () => trainingModal.hide());
-
             // Handle document upload modal
             uploadModalElement.addEventListener("show.bs.modal", function(event) {
                 const button = event.relatedTarget; // Button that triggered the modal
-                const participantId = button.getAttribute("data-training-id");
+                const trainingId = button.getAttribute("data-training-id");
                 document.getElementById("training_id").value = trainingId;
             });
         }
@@ -347,32 +365,45 @@
             calculateTotal(); // Initial calculation
         }
 
-        function checkTrainingCompleted() {
-            const allOn = [...switches].every(sw => sw.checked);
-            trainingCompletedSwitch.disabled = !allOn;
-            saveButton.textContent = allOn && trainingCompletedSwitch.checked ? "Completed" : "Save";
-        }
-
-        function handleTrainingStatus() {
-            switches.forEach(sw => sw.addEventListener("change", checkTrainingCompleted));
-
-            trainingCompletedSwitch.addEventListener("change", function () {
-                const trainingId = trainingModalElement.getAttribute("data-training-id");
-                const icon = document.getElementById(`check-icon-${trainingId}`);
-                icon.style.color = this.checked ? "green" : "";
-            });
-        }
-
         function initFeatherIcons() {
             feather.replace();
+        }
+
+        function handleTrainingStatusForm() {
+            document.getElementById("saveStatus").addEventListener("click", function () {
+                let form = document.getElementById("trainingStatusForm");
+
+                // Check if all checkboxes are checked
+                const allChecked = [...document.querySelectorAll(".status-switch")].every(input => input.checked);
+
+                let trainingStatusField = document.getElementById("training_status");
+                if (allChecked) {
+                    trainingStatusField.checked = true;
+                    trainingStatusField.value = 1;
+                } else {
+                    trainingStatusField.checked = false;
+                    trainingStatusField.value = 0;
+                }
+
+                // Enable 'training_status' before submitting
+                trainingStatusField.disabled = false;
+
+                // Convert all checkbox values to 1 or 0 before submission
+                document.querySelectorAll(".status-switch").forEach(input => {
+                    input.value = input.checked ? 1 : 0;
+                });
+
+                // Submit the form
+                form.submit();
+            });
         }
 
         // Initialize all functionalities
         function init() {
             initializeModals();
             attachCostCalculation();
-            handleTrainingStatus();
             initFeatherIcons();
+            handleTrainingStatusForm();
         }
 
         init();

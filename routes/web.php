@@ -45,9 +45,13 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('{id}/edit', 'trainingedit')->name('edit');
                 Route::put('{id}/update', 'updatetraining')->name('update'); // Update training details
                 Route::post('cost-breakdown/store/{trainingId}', 'storeCostBreakdown')->name('cost-breakdown.store');
-                Route::post('{id}/update-tasks', 'updateTasks')->name('updateTasks');
                 Route::delete('deleteTraining/{id}', 'trainingdestroy')->name('Training.delete'); // Delete user
                 Route::post('documents/store/{id}', 'storeTrainingDocument')->name('documents.store');
+                Route::get('costDetail/{id}', 'viewCost')->name('costDetail');
+                Route::get('costbreak/{id}', 'getCostBreakdownData')->name('costbreak');
+                Route::delete('cost-breakdown/delete/{id}', 'costBreakDelete')->name('cost-breakdown.delete');
+                Route::put('{id}/cost-breakdown/update', 'updateCostBreakdown')->name('cost-breakdown.update');
+                Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
             });
 
             //participant routes
@@ -85,6 +89,9 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('{id}/Create', 'trainerCreate')->name('Create');
                 Route::get('search', 'trainerSearch')->name('search');
                 Route::post('store', 'trainerStore')->name('store');
+                Route::get('{id}/edit', 'trainerEdit')->name('edit');
+                Route::put('/update/{id}', 'trainerUpdate')->name('update');
+                Route::delete('{id}/delete', 'trainerDelete')->name('delete');
             });
 
             //approvel routes
