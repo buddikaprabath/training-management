@@ -24,7 +24,7 @@ class DatabaseSeeder extends Seeder
             CountryTableSeeder::class,
             InstituteSeeder::class,
             TrainerSeeder::class,
-            TrainingSeeder::class
+            TrainingSeeder::class,
         ]);
     }
 }

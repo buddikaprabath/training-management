@@ -1,8 +1,11 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Superadmin\superadmincontroller;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\User\Usercontroller;
+use App\Http\Controllers\Admin\HRAdmincontroller;
+use App\Http\Controllers\Admin\CATCAdmincontroller;
+use App\Http\Controllers\Superadmin\superadmincontroller;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -95,8 +98,10 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
             });
 
             //approvel routes
-            Route::prefix('approvel')->name('approvel.')->group(function () {
-                Route::get('Detail', 'approvelview')->name('Detail'); //load the apprvel view page
+            Route::prefix('approval')->name('approval.')->group(function () {
+                Route::get('Detail', 'approval')->name('Detail');
+                Route::post('{approval}/approve', 'approve')->name('approve');
+                Route::post('{approval}/reject', 'reject')->name('reject');
             });
 
             //reports routes
@@ -109,21 +114,161 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
 
 
 //hr admin routes
-Route::get('Admin/HRAdmin/index', function () {
-    return view('Admin.HRAdmin.index');
-})->middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->name('Admin.HRAdmin.index');
+Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(function () {
+    Route::controller(HRAdmincontroller::class)->group(function () {
+        Route::prefix('Admin')->name('Admin.')->group(function () {
+            Route::prefix('HRAdmin')->name('HRAdmin.')->group(function () {
+                //dashboard route
+                Route::prefix('page')->name('page.')->group(function () {
+                    Route::get('dashboard', 'viewDashboard')->name('dashboard');
+                });
+                //training Routes
+                Route::prefix('training')->name('training.')->group(function () {
+                    Route::get('Detail', 'trainingview')->name('Detail'); //load training details view
+                    Route::get('create', 'createtrainingview')->name('create'); //load the training create page
+                    Route::post('store', 'createtraining')->name('store'); // Store user (for create)
+                    Route::get('{id}/edit', 'trainingedit')->name('edit');
+                    Route::put('{id}/update', 'updatetraining')->name('update'); // Update training details
+                    Route::post('cost-breakdown/store/{trainingId}', 'storeCostBreakdown')->name('cost-breakdown.store');
+                    Route::delete('deleteTraining/{id}', 'trainingdestroy')->name('Training.delete'); // Delete user
+                    Route::post('documents/store/{id}', 'storeTrainingDocument')->name('documents.store');
+                    Route::get('costDetail/{id}', 'viewCost')->name('costDetail');
+                    Route::get('costbreak/{id}', 'getCostBreakdownData')->name('costbreak');
+                    Route::delete('cost-breakdown/delete/{id}', 'costBreakDelete')->name('cost-breakdown.delete');
+                    Route::put('{id}/cost-breakdown/update', 'updateCostBreakdown')->name('cost-breakdown.update');
+                    Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
+                });
+                //participant routes
+                Route::prefix('participant')->name('participant.')->group(function () {
+                    Route::get('{id}/Detail', 'participantview')->name('Detail'); //load participant details view
+                    Route::get('{id}/create', 'createparticipant')->name('create'); //load participant create view
+                    Route::post('store', 'participantstore')->name('store');
+                    Route::get('{id}/edit', 'participantedit')->name('edit');
+                    Route::put('update/{id}', 'updateparticipant')->name('update');
+                    Route::get('export-participant-columns', 'exportParticipantColumns')->name('export-participant-columns');
+                    Route::post('import-participants', 'importParticipants')->name('import-participants');
+                    Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
+                });
+                //budget routes
+                Route::prefix('budget')->name('budget.')->group(function () {
+                    Route::get('Detail', 'budgetview')->name('Detail'); //load budget details view
+                    Route::get('Create', 'createBudgetView')->name('Create'); //load the create budget page
+                    Route::post('store', 'budgetstore')->name('store'); // Store user (for create)
+                });
+                //institute routes
+                Route::prefix('institute')->name('institute.')->group(function () {
+                    Route::get('Detail', 'instituteview')->name('Detail');
+                    Route::get('create', 'instituteCreate')->name('create');
+                    Route::post('/store', 'Institutestore')->name('store');
+                    Route::get('{id}/edit', 'instituteedit')->name('edit');
+                    Route::put('/update/{id}', 'Instituteupdate')->name('update');
+                    Route::delete('{id}/delete', 'instituteDelete')->name('delete');
+                    Route::get('search', 'Institutesearch')->name('search');
+                });
+
+                //trainers routes
+                Route::prefix('trainer')->name('trainer.')->group(function () {
+                    Route::get('{id}/Detail', 'trainerview')->name('Detail'); //load the trainer details view
+                    Route::get('{id}/Create', 'trainerCreate')->name('Create');
+                    Route::get('search', 'trainerSearch')->name('search');
+                    Route::post('store', 'trainerStore')->name('store');
+                    Route::get('{id}/edit', 'trainerEdit')->name('edit');
+                    Route::put('/update/{id}', 'trainerUpdate')->name('update');
+                    Route::delete('{id}/delete', 'trainerDelete')->name('delete');
+                });
+                //reports routes
+                Route::prefix('report')->name('report.')->group(function () {
+                    Route::get('training', 'trainingsummaryView')->name('training'); // load the training summary view
+                });
+            });
+        });
+    });
+});
 
 //catc admin routes
-Route::get('Admin/CATCAdmin/index', function () {
-    return view('Admin.CATCAdmin.index');
-})->middleware(['auth', 'verified'])->name('Admin.CATCAdmin.index');
-
+Route::middleware(['auth', 'verified', 'roleManager:catcadmin, 2, 0'])->group(function () {
+    Route::controller(CATCAdmincontroller::class)->group(function () {
+        Route::prefix('Admin')->name('Admin.')->group(function () {
+            Route::prefix('CATCAdmin')->name('CATCAdmin.')->group(function () {
+                Route::prefix('page')->name('page.')->group(function () {
+                    Route::get('dashboard', 'viewDashboard')->name('dashboard');
+                });
+                //training Routes
+                Route::prefix('training')->name('training.')->group(function () {
+                    Route::get('Detail', 'trainingview')->name('Detail'); //load training details view
+                    Route::get('create', 'createtrainingview')->name('create'); //load the training create page
+                    Route::post('store', 'createtraining')->name('store'); // Store user (for create)
+                    Route::get('{id}/edit', 'trainingedit')->name('edit');
+                    Route::put('{id}/update', 'updatetraining')->name('update'); // Update training details
+                    Route::post('cost-breakdown/store/{trainingId}', 'storeCostBreakdown')->name('cost-breakdown.store');
+                    Route::delete('deleteTraining/{id}', 'trainingdestroy')->name('Training.delete'); // Delete user
+                    Route::post('documents/store/{id}', 'storeTrainingDocument')->name('documents.store');
+                    Route::get('costDetail/{id}', 'viewCost')->name('costDetail');
+                    Route::get('costbreak/{id}', 'getCostBreakdownData')->name('costbreak');
+                    Route::delete('cost-breakdown/delete/{id}', 'costBreakDelete')->name('cost-breakdown.delete');
+                    Route::put('{id}/cost-breakdown/update', 'updateCostBreakdown')->name('cost-breakdown.update');
+                    Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
+                });
+                //participant routes
+                Route::prefix('participant')->name('participant.')->group(function () {
+                    Route::get('{id}/Detail', 'participantview')->name('Detail'); //load participant details view
+                    Route::get('{id}/create', 'createparticipant')->name('create'); //load participant create view
+                    Route::post('store', 'participantstore')->name('store');
+                    Route::get('{id}/edit', 'participantedit')->name('edit');
+                    Route::put('update/{id}', 'updateparticipant')->name('update');
+                    Route::get('export-participant-columns', 'exportParticipantColumns')->name('export-participant-columns');
+                    Route::post('import-participants', 'importParticipants')->name('import-participants');
+                    Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
+                });
+                //reports routes
+                Route::prefix('report')->name('report.')->group(function () {
+                    Route::get('training', 'trainingsummaryView')->name('training'); // load the training summary view
+                });
+            });
+        });
+    });
+});
 //user routes
-Route::get('User/ITUser/index', function () {
-    return view('User.ITUser.index');
-})->middleware(['auth', 'verified'])->name('User.ITUser.index');
-
-
+Route::middleware(['auth', 'verified', 'roleManager:user'])->group(function () {
+    Route::controller(Usercontroller::class)->group(function () {
+        Route::prefix('User')->name('User.')->group(function () {
+            Route::prefix('page')->name('page.')->group(function () {
+                Route::get('dashboard', 'viewDashboard')->name('dashboard');
+            });
+            //training Routes
+            Route::prefix('training')->name('training.')->group(function () {
+                Route::get('Detail', 'trainingview')->name('Detail'); //load training details view
+                Route::get('create', 'createtrainingview')->name('create'); //load the training create page
+                Route::post('store', 'createtraining')->name('store'); // Store user (for create)
+                Route::get('{id}/edit', 'trainingedit')->name('edit');
+                Route::put('{id}/update', 'updatetraining')->name('update'); // Update training details
+                Route::post('cost-breakdown/store/{trainingId}', 'storeCostBreakdown')->name('cost-breakdown.store');
+                Route::delete('deleteTraining/{id}', 'trainingdestroy')->name('Training.delete'); // Delete user
+                Route::post('documents/store/{id}', 'storeTrainingDocument')->name('documents.store');
+                Route::get('costDetail/{id}', 'viewCost')->name('costDetail');
+                Route::get('costbreak/{id}', 'getCostBreakdownData')->name('costbreak');
+                Route::delete('cost-breakdown/delete/{id}', 'costBreakDelete')->name('cost-breakdown.delete');
+                Route::put('{id}/cost-breakdown/update', 'updateCostBreakdown')->name('cost-breakdown.update');
+                Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
+            });
+            //participant routes
+            Route::prefix('participant')->name('participant.')->group(function () {
+                Route::get('{id}/Detail', 'participantview')->name('Detail'); //load participant details view
+                Route::get('{id}/create', 'createparticipant')->name('create'); //load participant create view
+                Route::post('store', 'participantstore')->name('store');
+                Route::get('{id}/edit', 'participantedit')->name('edit');
+                Route::put('update/{id}', 'updateparticipant')->name('update');
+                Route::get('export-participant-columns', 'exportParticipantColumns')->name('export-participant-columns');
+                Route::post('import-participants', 'importParticipants')->name('import-participants');
+                Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
+            });
+            //reports routes
+            Route::prefix('report')->name('report.')->group(function () {
+                Route::get('training', 'trainingsummaryView')->name('training'); // load the training summary view
+            });
+        });
+    });
+});
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

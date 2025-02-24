@@ -11,6 +11,7 @@ use App\Models\Country;
 use APP\Models\Section;
 use App\Models\Subject;
 use App\Models\Trainer;
+use App\Models\Approval;
 use APP\Models\Division;
 use App\Models\Document;
 use App\Models\Training;
@@ -22,11 +23,11 @@ use PhpParser\Node\Stmt\Return_;
 use App\Exports\ParticipantExport;
 use App\Imports\ParticipantImport;
 use Illuminate\Support\Facades\DB;
+use function Laravel\Prompts\table;
 use App\Http\Controllers\Controller;
+
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
-
-use function Laravel\Prompts\table;
 
 class superadmincontroller extends Controller
 {
@@ -148,7 +149,6 @@ class superadmincontroller extends Controller
 
     //training handling
 
-    // training detail view page 
     public function trainingview(Request $request, $itemId = null)
     {
         $query = $request->input('query');
@@ -165,14 +165,19 @@ class superadmincontroller extends Controller
             })
             ->paginate(10);
 
+        // Pass whether training data is empty to the view
+        $trainingEmpty = $training->isEmpty();
+
         // Check if itemId is provided and fetch Costbreak data
         $costBreak = null;
         if ($itemId) {
             $costBreak = Costbreak::where('item_id', $itemId)->first();
         }
 
-        return view('SuperAdmin.training.Detail', compact('training', 'query', 'costBreak'));
+        return view('SuperAdmin.training.Detail', compact('training', 'query', 'costBreak', 'trainingEmpty'));
     }
+
+
 
     //load the training create page
     public function createtrainingview()
@@ -635,12 +640,11 @@ class superadmincontroller extends Controller
     //end training handling functions
     //participant handling
 
-    //load the participant view blade
     public function participantview($trainingId)
     {
         try {
-            // Attempt to retrieve training and related data, including documents
-            $training = Training::with(['remarks', 'institutes', 'documents'])  // Load documents as well
+            // Attempt to retrieve training and related data, including documents and remarks
+            $training = Training::with(['remarks', 'institutes', 'documents'])  // Load remarks and documents as well
                 ->find($trainingId);
 
             if (!$training) {
@@ -650,18 +654,23 @@ class superadmincontroller extends Controller
             // Retrieve the participants with pagination
             $participants = $training->participants()->paginate(10); // Paginate participants
 
+            // Prepare remarks data in a format suitable for the JavaScript on the front-end
+            $remarksData = $training->remarks->groupBy('training_id')->toArray(); // Group remarks by training_id
+
             // Return the view with the data
             return view('SuperAdmin.participant.Detail', [
                 'training' => $training,
                 'participants' => $participants, // Paginated participants
                 'institutes' => $training->institutes,
                 'documents' => $training->documents, // Pass the document details
+                'remarksData' => $remarksData, // Pass the remarks to the view
             ]);
         } catch (\Exception $e) {
             // Catch any exceptions and return an error response
             return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
         }
     }
+
 
     //load the create participant blade
     public function createparticipant($trainingId)
@@ -951,16 +960,23 @@ class superadmincontroller extends Controller
     public function importParticipants(Request $request)
     {
         $request->validate([
-            'file' => 'required|mimes:xlsx,csv'
+            'file' => 'required|mimes:xlsx,csv',
+            'training_id' => 'required|exists:trainings,id' // Make sure training_id is validated
         ]);
 
         try {
-            Excel::import(new ParticipantImport, $request->file('file'));
+            // Get the training_id from the request
+            $trainingId = $request->training_id;
+
+            // Pass the training_id to the import class
+            Excel::import(new ParticipantImport($trainingId), $request->file('file'));
+
             return redirect()->back()->with('success', 'Participants imported successfully!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'Error importing participants: ' . $e->getMessage());
         }
     }
+
 
     //delete participant
     public function destroyparticipant($id)
@@ -1277,5 +1293,104 @@ class superadmincontroller extends Controller
     public function trainingsummaryView()
     {
         return view('SuperAdmin.report.trainingSummary');
+    }
+
+    public function approval()
+    {
+        $approvals = Approval::where('status', 'pending')->get();
+        return view('SuperAdmin.approval.Detail', compact('approvals'));
+    }
+
+    public function approve(Approval $approval)
+    {
+        try {
+            // Ensure the approval is still pending
+            if ($approval->status !== 'pending') {
+                return redirect()->back()->with('warning', 'This request has already been processed or is not pending.');
+            }
+
+            // Find the model by its training code and model type
+            $model = $approval->model_type::where('training_code', $approval->model_id)->first();
+
+            // If model not found, return error
+            if (!$model) {
+                return redirect()->back()->with('error', 'Training record not found.');
+            }
+
+            // Process action (edit)
+            if ($approval->action === 'edit') {
+                // Decode the new data and update the model
+                $newData = json_decode($approval->new_data, true);
+                if ($newData) {
+                    $model->update($newData);
+                    return redirect()->back()->with('success', 'Training record updated successfully.');
+                }
+                return redirect()->back()->with('error', 'Invalid new data for update.');
+            }
+
+            // Process action (delete)
+            if ($approval->action === 'delete') {
+                // Begin a transaction to ensure consistency
+                DB::beginTransaction();
+
+                // Detach related models (institutes and trainers)
+                $model->institutes()->detach();
+                $model->trainers()->detach();
+
+                // Delete related records (subjects, remarks, and cost breakdowns)
+                $model->subjects()->delete();
+                Remark::where('training_id', $model->id)->delete();
+                Costbreak::where('training_id', $model->id)->delete();
+
+                // Finally, delete the training record
+                $model->delete();
+
+                // Commit the transaction
+                DB::commit();
+                return redirect()->back()->with('success', 'Training record deleted successfully.');
+            }
+
+            // If action is not recognized
+            return redirect()->back()->with('error', 'Invalid action for approval.');
+        } catch (\Exception $e) {
+            // Rollback any changes in case of error
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error occurred while approving the request: ' . $e->getMessage());
+        } finally {
+            // Mark approval as 'approved' regardless of action outcome
+            if ($approval->status === 'pending') {
+                $approval->update(['status' => 'approved']);
+            }
+
+            // Remove approval record from the table
+            $approval->delete();
+        }
+    }
+
+
+
+    public function reject(Approval $approval)
+    {
+        // Find the model by its training code and model type
+        $model = $approval->model_type::where('training_code', $approval->model_id)->first();
+
+        // If model not found, return error
+        if (!$model) {
+            return redirect()->back()->with('error', 'Model not found.');
+        }
+
+        // If action is 'delete', delete the model
+        if ($approval->action === 'delete') {
+            $model->delete();
+        }
+
+        // Mark approval as 'rejected'
+        $approval->update(['status' => 'rejected']);
+
+        // Remove approval record from the table
+        $approval->delete();
+
+        // Return rejection message
+        return redirect()->back()->with('warning', 'Request rejected and model deleted.');
     }
 }

@@ -35,41 +35,11 @@ class AuthenticatedSessionController extends Controller
         if ($authUserRole == 'superadmin' && $authUserDivision == '1') {
             return redirect()->intended(route('SuperAdmin.page.dashboard', absolute: false));
         } elseif ($authUserRole == 'hradmin' && $authUserDivision == '1') {
-            return redirect()->intended(route('Admin.HRAdmin.index', absolute: false));
+            return redirect()->intended(route('Admin.HRAdmin.page.dashboard', absolute: false));
         } elseif ($authUserRole == 'catcadmin' && $authUserDivision == '2') {
-            return redirect()->intended(route('Admin.CATCAdmin.index', absolute: false));
+            return redirect()->intended(route('Admin.CATCAdmin.page.dashboard', absolute: false));
         } elseif ($authUserRole == 'user') {
-            if ($authUserDivision == '3') {
-                return redirect()->intended(route('User.ITUser.index', absolute: false));
-            } elseif ($authUserDivision == '4') {
-                return redirect()->intended(route('User.FinanceUser.index', absolute: false));
-            } elseif ($authUserDivision == '5') {
-                return redirect()->intended(route('User.SCMUser.index', absolute: false));
-            } elseif ($authUserDivision == '6') {
-                return redirect()->intended(route('User.MarketingUser.index', absolute: false));
-            } elseif ($authUserDivision == '2') {
-                if ($authUserSection == '1') {
-                    return redirect()->intended(route('User.CATCUser.wing_1.index', absolute: false));
-                } elseif ($authUserSection == '2') {
-                    return redirect()->intended(route('User.CATCUser.wing_2.index', absolute: false));
-                } elseif ($authUserSection == '3') {
-                    return redirect()->intended(route('User.CATCUser.wing_3.index', absolute: false));
-                } elseif ($authUserSection == '4') {
-                    return redirect()->intended(route('User.CATCUser.wing_4.index', absolute: false));
-                } elseif ($authUserSection == '5') {
-                    return redirect()->intended(route('User.CATCUser.wing_5', absolute: false));
-                } elseif ($authUserSection == '6') {
-                    return redirect()->intended(route('User.CATCUser.wing_6.index', absolute: false));
-                } elseif ($authUserSection == '7') {
-                    return redirect()->intended(route('User.CATCUser.wing_7.index', absolute: false));
-                } elseif ($authUserSection == '8') {
-                    return redirect()->intended(route('User.CATCUser.wing_8.index', absolute: false));
-                } else {
-                    return redirect()->intended(route('login', absolute: false));
-                }
-            } else {
-                return redirect()->intended(route('login', absolute: false));
-            }
+            return redirect()->intended(route('User.page.dashboard', absolute: false));
         } else {
             return redirect()->intended(route('login', absolute: false));
         }

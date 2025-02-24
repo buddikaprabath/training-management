@@ -1,5 +1,7 @@
 <div class="sidebar-content js-simplebar">
-    <img src="{{asset('image/log.png')}}" alt="logo">
+    <img src="{{ asset('image/AA_LOGO_White.png') }}" alt="logo" style="width: 200px; height: auto; display: block; margin: auto;">
+
+
 
     <ul class="sidebar-nav">
         <li class="sidebar-header">
@@ -35,8 +37,8 @@
                 <i class="align-middle" data-feather="user"></i> <span class="align-middle">Manage Institute</span>
             </a>
         </li>
-        <li class="sidebar-item {{ request()->routeis('SuperAdmin.approvel.Detail')?'active':''}}">
-            <a class="sidebar-link" href="{{route('SuperAdmin.approvel.Detail')}}">
+        <li class="sidebar-item {{ request()->routeis('SuperAdmin.approval.Detail')?'active':''}}">
+            <a class="sidebar-link" href="{{route('SuperAdmin.approval.Detail')}}">
                 <i class="align-middle" data-feather="user"></i> <span class="align-middle">Manage Approvel</span>
             </a>
         </li>
@@ -46,7 +48,7 @@
 
         <li class="sidebar-item {{ request()->routeis('SuperAdmin.report.trainingSummary')?'active':''}}">
             <a class="sidebar-link" href="{{route('SuperAdmin.report.trainingSummary')}}">
-                <i class="align-middle" data-feather="user"></i> <span class="align-middle">Manage Approvel</span>
+                <i class="align-middle" data-feather="user"></i> <span class="align-middle">Manage Report</span>
             </a>
         </li>
     </ul>

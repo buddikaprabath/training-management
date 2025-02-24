@@ -51,19 +51,25 @@
         <!-- Right Section -->
         <div class="col-md-6">
             <div class="card p-3" style="background-color: #A8BDDB;">
-                @foreach ($institutes as $institute)
-                    <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Institute Name: {{ $institute->name }}</span>
-                @endforeach
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Institute Name: 
+                    <a href="#">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-graduation-cap">
+                            <path d="M22 12l-10-4-10 4 10 4 10-4zm-10 2V6M5 12h2m12 0h2"/>
+                        </svg>
+                    </a>
+                </span>                
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Course Type : {{$training->course_type}}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Country : {{ $training->country }}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Structure : {{ $training->training_structure }}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Expiration Date : {{ $training->exp_date }}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Category : {{ $training->category }}</span>
-                @if($training)
-                    @foreach ($training->remarks as $remark)
-                        <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Other Comments: {{ $remark->remark }}</span>
-                    @endforeach
-                @endif
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Other Comments:
+                    <a href="#" class="openModal" data-training-id="1">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-message-square">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                    </a>
+                </span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Custodian : {{ $training->training_custodian }}</span>
             </div>
         </div>
@@ -84,9 +90,9 @@
                         <th class="text-center align-top">Unique Identifier</th>
                         <th class="text-center align-top">EPF Number</th>
                         <th class="text-center align-top">Participant Name</th>
-                        <th class="text-center align-top">Training Division</th>
-                        <th class="text-center align-top">Course Type</th>
                         <th class="text-center align-top">Designation</th>
+                        <th class="text-center align-top">Loacation</th>
+                        <th class="text-center align-top">Salary Scale</th>
                         <th class="text-center align-top">Status</th>
                         <th class="text-center align-top">Add Document</th>
                         <th class="text-center align-top">Action</th>
@@ -192,10 +198,63 @@
         </div>
     </div>
 </div>
+<!-- Modal Structure -->
+<div id="myModal" class="modal fade" tabindex="-1" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModalLabel">Other Comments</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="remarksList"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("DOMContentLoaded", function () {
+        // Get the modal element
+        var modalElement = document.getElementById('myModal');
+        var modal = new bootstrap.Modal(modalElement);
+
+        // Get the button that opens the modal
+        var btns = document.querySelectorAll(".openModal");
+
+        // Assuming 'trainingRemarks' is passed from the backend as a JSON object
+        const trainingRemarks = @json($training->remarks->groupBy('training_id'));
+
+        // Handle modal open event
+        btns.forEach(btn => {
+            btn.onclick = function (event) {
+                event.preventDefault();
+                var trainingId = event.target.closest('a').getAttribute('data-training-id');
+                showRemarks(trainingId);
+            };
+        });
+
+        // Show remarks for selected training
+        function showRemarks(trainingId) {
+            const remarksList = document.getElementById("remarksList");
+            remarksList.innerHTML = ""; // Clear any previous remarks
+
+            if (trainingRemarks[trainingId]) {
+                trainingRemarks[trainingId].forEach(remark => {
+                    const remarkElement = document.createElement("div");
+                    remarkElement.classList.add("remark");
+                    remarkElement.innerText = remark.comment;  // Assuming 'comment' is the field in the remark
+                    remarksList.appendChild(remarkElement);
+                });
+            }
+
+            // Show the modal
+            modal.show();
+        }
+
+        // For uploading modal, dynamically set form action based on participant ID
         var uploadModal = document.getElementById("uploadDocumentModal");
-        uploadModal.addEventListener("show.bs.modal", function(event) {
+        uploadModal.addEventListener("show.bs.modal", function (event) {
             var button = event.relatedTarget; // Button that triggered the modal
             var participantId = button.getAttribute("data-participant-id");
 
@@ -206,9 +265,23 @@
 
             // Ensure the correct training ID is set in the hidden input field
             var trainingId = "{{ $training->id }}"; // Ensure this is available in your Blade template
-            document.getElementById("training_id").value = trainingId;  
+            document.getElementById("training_id").value = trainingId;
         });
-    });
 
+        // Ensure modal can be closed with the 'close' button
+        var closeButton = modalElement.getElementsByClassName("close")[0];
+        closeButton.onclick = function () {
+            modal.hide();
+        };
+
+        // If the user clicks anywhere outside the modal, close it
+        window.onclick = function (event) {
+            if (event.target == modalElement) {
+                modal.hide();
+            }
+        };
+    });
 </script>
+
+
 @endsection
