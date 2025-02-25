@@ -33,6 +33,7 @@
         <!-- File Upload -->
         <form action="{{ route('User.participant.import-participants') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center" id="importForm">
             @csrf
+            <input type="hidden" name="training_id" value="{{ $training->id ?? '' }}">
             <input class="form-control d-none" type="file" id="formFile" name="file" onchange="fileSelected()">
             <button type="button" class="btn btn-primary d-flex align-items-center px-3" onclick="document.getElementById('formFile').click();">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-upload me-2">

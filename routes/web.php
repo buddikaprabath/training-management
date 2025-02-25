@@ -261,6 +261,7 @@ Route::middleware(['auth', 'verified', 'roleManager:user'])->group(function () {
                 Route::get('export-participant-columns', 'exportParticipantColumns')->name('export-participant-columns');
                 Route::post('import-participants', 'importParticipants')->name('import-participants');
                 Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
+                Route::delete('delete/{id}', 'destroyparticipant')->name('delete');
             });
             //reports routes
             Route::prefix('report')->name('report.')->group(function () {

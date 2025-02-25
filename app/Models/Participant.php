@@ -88,4 +88,8 @@ class Participant extends Model
     {
         return $this->hasMany(Surety::class, 'participant_id', 'id');
     }
+    public function documents()
+    {
+        return $this->hasMany(Document::class);
+    }
 }

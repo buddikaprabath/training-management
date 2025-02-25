@@ -119,12 +119,12 @@
                                     <form action="{{ route('User.training.Training.delete', $item->id) }}" method="POST" 
                                         style="display: inline-block; vertical-align: middle; margin-left: 5px;"
                                         onsubmit="return confirm('Are you sure you want to delete this item?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
-                                        <i data-feather="trash-2" class="text-primary"></i>
-                                    </button>
-                                </form>
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
+                                            <i data-feather="trash-2" class="text-primary"></i>
+                                        </button>
+                                    </form>
                                 
                                 </td>
                             </tr>

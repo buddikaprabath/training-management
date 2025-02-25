@@ -13,6 +13,7 @@ use App\Models\Training;
 use App\Models\Costbreak;
 use App\Models\Institute;
 use App\Models\Participant;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Excel;
 use App\Exports\ParticipantExport;
@@ -23,6 +24,14 @@ use Illuminate\Support\Facades\Auth;
 
 class Usercontroller extends Controller
 {
+    public function getNotifications()
+    {
+        $notifications = Notification::where('user_id', Auth::user()->id)
+            ->where('status', 'pending')
+            ->get();
+
+        return view('User.index', compact('notifications'));
+    }
     public function viewDashboard()
     {
         return view('User.page.dashboard');
@@ -359,7 +368,6 @@ class Usercontroller extends Controller
                 'training_id' => 'required|string'
             ]);
 
-
             // Find the existing Costbreak record for the given itemId
             $costBreak = Costbreak::where('id', $id)->first();
 
@@ -368,31 +376,37 @@ class Usercontroller extends Controller
                 return redirect()->back()->with('error', 'Cost Breakdown not found!');
             }
 
-            $totalAmount = $validatedData['airfare'] + $validatedData['subsistence'] + $validatedData['incidental'] +
-                $validatedData['registration'] + $validatedData['visa'] + $validatedData['insurance'] +
-                $validatedData['warm_clothes'];
+            // Check if there is already an approval request pending for this update
+            $existingApproval = Approval::where('model_type', Costbreak::class)
+                ->where('model_id', (string) $costBreak->id) // Cast the id to string explicitly
+                ->where('action', 'update')
+                ->where('status', 'pending')
+                ->first();
 
+            // Prevent duplicate approval requests
+            if ($existingApproval) {
+                return redirect()->back()->with('info', 'An update request is already pending approval for this cost breakdown.');
+            }
 
-            // Update the existing Costbreak record with validated data
-            $costBreak->update([
-                'airfare' => $validatedData['airfare'],
-                'subsistence' => $validatedData['subsistence'],
-                'incidental' => $validatedData['incidental'],
-                'registration' => $validatedData['registration'],
-                'visa' => $validatedData['visa'],
-                'insurance' => $validatedData['insurance'],
-                'warm_clothes' => $validatedData['warm_clothes'],
-                'total_amount' => $totalAmount,
-                'training_id' => $validatedData['training_id']
+            // Create an approval request for the update action
+            $approvalRequest = Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Costbreak::class,
+                'model_id'   => (string) $costBreak->id,
+                'action'     => 'update',
+                'new_data'   => json_encode($validatedData), // Save the updated data as new_data
+                'status'     => 'pending',
+                'division_id' => Auth::user()->division_id,  // Pass the division_id
             ]);
 
             // Redirect back with a success message
             return redirect()->route('User.training.costDetail', ['id' => $costBreak->training_id])
-                ->with('success', 'Cost Breakdown updated successfully!');
+                ->with('success', 'Your update request has been sent for approval!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'error updating costbreakdown : ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error updating cost breakdown: ' . $e->getMessage());
         }
     }
+
     //load the costbreak down edit page with data
     public function getCostBreakdownData($id)
     {
@@ -416,15 +430,34 @@ class Usercontroller extends Controller
     {
         try {
             DB::beginTransaction();
+
+            // Find the Costbreak record
             $costs = Costbreak::findOrFail($id);
-            $costs->delete();
+
+            // Get the authenticated user ID
+            $userId = Auth::user()->id;
+
+            // Create an approval record for the deletion request
+            $approval = Approval::create([
+                'model_type' => Costbreak::class,
+                'model_id' => (string) $costs->id,  // Cast to string as ID is auto-increment
+                'action' => 'delete',                // Specify the action to be 'delete'
+                'status' => 'pending',               // Set status as 'pending'
+                'new_data' => null,                  // No new data for deletion
+                'user_id' => $userId,                // Add the user ID for tracking who requested the deletion
+            ]);
+
             DB::commit();
-            return redirect()->route('User.training.Detail')->with('success', 'Cost break down deleted successfully!');
+
+            // Return success message to inform the user that approval is pending
+            return redirect()->back()->with('success', 'Costbreak deletion request has been submitted for approval.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Error deleting costbreak down : ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error submitting deletion request: ' . $e->getMessage());
         }
     }
+
+
     //store document for each training
     public function storeTrainingDocument(Request $request, $trainingId)
     {
@@ -469,9 +502,12 @@ class Usercontroller extends Controller
             // Find the training by ID
             $training = Training::findOrFail($id);
 
+            // Ensure the training_code is in the correct format
+            $trainingCode = $training->id;
+
             // Check if an approval request already exists for this deletion
             $existingApproval = Approval::where('model_type', Training::class)
-                ->where('model_id', (string) $training->training_code)
+                ->where('model_id', $trainingCode)  // Use the formatted training_code
                 ->where('action', 'delete')
                 ->where('status', 'pending')
                 ->first();
@@ -485,7 +521,7 @@ class Usercontroller extends Controller
             $approvalRequest = Approval::create([
                 'user_id'    => Auth::id(),
                 'model_type' => Training::class,
-                'model_id'   => (string) $training->training_code,
+                'model_id'   => $trainingCode,  // Store formatted training_code
                 'action'     => 'delete',
                 'new_data'   => null,  // No new data as we are deleting the record
                 'status'     => 'pending',
@@ -717,6 +753,8 @@ class Usercontroller extends Controller
     public function updateparticipant(Request $request, $id)
     {
         try {
+            DB::beginTransaction();
+
             // Validate the request data
             $request->validate([
                 'name'                         => 'required|string|max:255',
@@ -734,6 +772,7 @@ class Usercontroller extends Controller
                 'date_of_appointment_to_the_present_post' => 'nullable|date',
                 'date_of_birth'                => 'nullable|date',
                 'division_id'                  => 'nullable|exists:divisions,id',
+                'training_id'                  => 'required|exists:trainings,id',
 
                 // Surety Validation (2 sureties)
                 'sureties'                      => 'nullable|array|max:2',
@@ -752,12 +791,14 @@ class Usercontroller extends Controller
 
             // Find the participant
             $participant = Participant::findOrFail($id);
+
             // Get logged-in user's division and section
             $user = Auth::user();
             $userDivision = $user->division_id;
             $userSection = $user->section_id;
-            // Update participant details (excluding remarks and sureties)
-            $participant->update([
+
+            // Prepare updated data
+            $updatedData = [
                 'name'                          => $request->name,
                 'epf_number'                    => $request->epf_number,
                 'designation'                   => $request->designation,
@@ -774,59 +815,41 @@ class Usercontroller extends Controller
                 'date_of_birth'                 => $request->date_of_birth,
                 'division_id'                   => $userDivision,
                 'section_id'                    => $userSection,
-                'training_id'                   => $request->training_id, // Passed from the clicked training
+                'training_id'                   => $request->training_id,
+            ];
+
+            // Check if an approval request already exists
+            $existingApproval = Approval::where('model_type', Participant::class)
+                ->where('model_id', (string) $participant->id)
+                ->where('action', 'update')
+                ->where('status', 'pending')
+                ->first();
+
+            if ($existingApproval) {
+                return redirect()->route('User.participant.Detail', ['id' => $participant->training_id])
+                    ->with('info', 'An update request for this participant is already pending approval.');
+            }
+
+            // Create an approval request for the update
+            Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Participant::class,
+                'model_id'   => (string) $participant->id,
+                'action'     => 'update',
+                'new_data'   => json_encode($updatedData), // Store the updated data as JSON
+                'status'     => 'pending',
+                'division_id' => $userDivision,
             ]);
 
-            // Update or create remarks
-            if ($request->has('remarks')) {
-                // Remove old remarks before adding new ones
-                $participant->remarks()->delete();
-                foreach ($request->remarks as $remarkText) {
-                    if (!empty($remarkText)) {
-                        $participant->remarks()->create([
-                            'remark' => $remarkText,
-                            'training_id' => $participant->training_id
-                        ]);
-                    }
-                }
-            }
-
-            // Update or create sureties
-            if ($request->has('sureties')) {
-                // Loop through the sureties and check if it's a new or existing one
-                foreach ($request->sureties as $index => $suretyData) {
-                    if (isset($participant->sureties[$index])) {
-                        // Update existing surety
-                        $participant->sureties[$index]->update([
-                            'name' => $suretyData['suretyname'],
-                            'nic' => $suretyData['nic'],
-                            'mobile' => $suretyData['mobile'],
-                            'address' => $suretyData['address'],
-                            'salary_scale' => $suretyData['salary_scale'],
-                            'designation' => $suretyData['suretydesignation'],
-                            'epf_number' => $suretyData['epf_number'],
-                        ]);
-                    } else {
-                        // Create new surety
-                        $participant->sureties()->create([
-                            'name' => $suretyData['suretyname'],
-                            'nic' => $suretyData['nic'],
-                            'mobile' => $suretyData['mobile'],
-                            'address' => $suretyData['address'],
-                            'salary_scale' => $suretyData['salary_scale'],
-                            'designation' => $suretyData['suretydesignation'],
-                            'epf_number' => $suretyData['epf_number'],
-                        ]);
-                    }
-                }
-            }
-
+            DB::commit();
             return redirect()->route('User.participant.Detail', ['id' => $participant->training_id])
-                ->with('success', 'Participant updated successfully.');
+                ->with('success', 'Your update request has been sent for approval.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Error updating participant: ' . $e->getMessage());
+            DB::rollBack();
+            return back()->with('error', 'Error occurred while sending update request: ' . $e->getMessage());
         }
     }
+
     protected $excel;
 
     public function __construct(Excel $excel)
@@ -852,7 +875,6 @@ class Usercontroller extends Controller
             'file' => 'required|mimes:xlsx,csv',
             'training_id' => 'required|exists:trainings,id' // Ensure the training_id exists in the trainings table
         ]);
-
         try {
             // Get the training ID from the request
             $trainingId = $request->training_id;
@@ -872,25 +894,42 @@ class Usercontroller extends Controller
     public function destroyparticipant($id)
     {
         try {
+            DB::beginTransaction();
+
+            // Find the participant by ID
             $participant = Participant::findOrFail($id);
 
-            // Delete related remarks
-            $participant->remarks()->delete();
+            // Check if an approval request already exists for this deletion
+            $existingApproval = Approval::where('model_type', Participant::class)
+                ->where('model_id', (string) $participant->id)
+                ->where('action', 'delete')
+                ->where('status', 'pending')
+                ->first();
 
-            // Delete related sureties
-            $participant->sureties()->delete();
+            // Prevent duplicate approval requests
+            if ($existingApproval) {
+                return redirect()->back()->with('info', 'A deletion request is already pending for this participant.');
+            }
 
-            // Delete related documents
-            $participant->documents()->delete();
+            // Create an approval request for deletion
+            $approvalRequest = Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Participant::class,
+                'model_id'   => (string) $participant->id,
+                'action'     => 'delete',
+                'new_data'   => null,  // No new data as we are deleting the record
+                'status'     => 'pending',
+                'division_id' => Auth::user()->division_id,  // Pass the division_id
+            ]);
 
-            // Finally, delete the participant
-            $participant->delete();
-
-            return redirect()->route('User.participants.index')->with('success', 'Participant deleted successfully.');
+            DB::commit();
+            return redirect()->back()->with('success', 'Your deletion request has been sent for approval.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Error deleting participant: ' . $e->getMessage());
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error occurred while sending deletion request: ' . $e->getMessage());
         }
     }
+
 
 
     //End Participant handling

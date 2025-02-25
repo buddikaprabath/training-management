@@ -60,70 +60,76 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($training as $item) <!-- Loop through each training item -->
-                        <tr>
-                            <td class="text-center">{{ $item->training_name }}</td>
-                            <td class="text-center">{{ $item->mode_of_delivery }}</td>
-                            <td class="text-center">{{ $item->total_training_hours }}</td>
-                            <td class="text-center">{{ $item->total_program_cost }}</td>
-                            <td class="text-center">{{ $item->division_name }}</td>
-                            <td class="text-center">{{ $item->batch_size }}</td>
-                            <td class="text-center">{{ $item->category }}</td>
-                            <td class="text-center">
-                                <a href="#" 
-                                   class="open-status-modal" 
-                                   data-training-id="{{ $item->id }}"
-                                   @if($item->training_status) 
-                                       style="pointer-events: none; color: green;" 
-                                   @endif
-                                >
-                                    @if($item->training_status)  <!-- Check if training_status is true -->
-                                        <span class="completed-status">Completed</span> <!-- Display "Completed" -->
-                                    @else
-                                        <i data-feather="check-circle" class="check-icon" id="check-icon-{{ $item->id }}"></i>
+                    @if(!empty($item))
+                        <div class="alert alert-warning">
+                            No training records found for your division and section.
+                        </div>
+                    @else
+                        @foreach($training as $item) <!-- Loop through each training item -->
+                            <tr>
+                                <td class="text-center">{{ $item->training_name }}</td>
+                                <td class="text-center">{{ $item->mode_of_delivery }}</td>
+                                <td class="text-center">{{ $item->total_training_hours }}</td>
+                                <td class="text-center">{{ $item->total_program_cost }}</td>
+                                <td class="text-center">{{ $item->division_name }}</td>
+                                <td class="text-center">{{ $item->batch_size }}</td>
+                                <td class="text-center">{{ $item->category }}</td>
+                                <td class="text-center">
+                                    <a href="#" 
+                                    class="open-status-modal" 
+                                    data-training-id="{{ $item->id }}"
+                                    @if($item->training_status) 
+                                        style="pointer-events: none; color: green;" 
                                     @endif
-                                </a>
-                            </td>
-                            
-                            <td class="text-center">
-                                <a href="{{ route('SuperAdmin.participant.Detail',$item->id) }}">
-                                    <i data-feather="eye"></i>
-                                </a>
-
-                                <a href="{{route('SuperAdmin.participant.create',$item->id)}}"><i data-feather="user-plus"></i></a>
-                            </td>
-                            <td class="text-center">
-                                <!-- For Cost Breakdown, Access Cost Breakdown for this specific training item -->
-                                <a href="#" class="open-cost-modal" data-training-id="{{ $item->id }}">
-                                    <i data-feather="dollar-sign"></i>
-                                </a>
-                                <a href="{{route('SuperAdmin.training.costDetail',$item->id)}}">
-                                    <i data-feather="eye"></i>
-                                </a>
-                            </td>
-                            <td class="text-center">
-                                <a href="#" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal" data-training-id="{{ $item->id }}">
-                                    <i data-feather="file-text"></i>
-                                </a>
-                            </td>                            
-                            <td class="text-center">
-                                <a href="{{ route('SuperAdmin.training.edit', $item->id) }}" style="display: inline-block; vertical-align: middle;">
-                                    <i data-feather="edit" class="text-primary"></i>
-                                </a>
+                                    >
+                                        @if($item->training_status)  <!-- Check if training_status is true -->
+                                            <span class="completed-status">Completed</span> <!-- Display "Completed" -->
+                                        @else
+                                            <i data-feather="check-circle" class="check-icon" id="check-icon-{{ $item->id }}"></i>
+                                        @endif
+                                    </a>
+                                </td>
                                 
-                                <form action="{{ route('SuperAdmin.training.Training.delete', $item->id) }}" method="POST" 
-                                    style="display: inline-block; vertical-align: middle; margin-left: 5px;"
-                                    onsubmit="return confirm('Are you sure you want to delete this item?');">
-                                  @csrf
-                                  @method('DELETE')
-                                  <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
-                                      <i data-feather="trash-2" class="text-primary"></i>
-                                  </button>
-                              </form>
-                              
-                            </td>
-                        </tr>
-                    @endforeach
+                                <td class="text-center">
+                                    <a href="{{ route('SuperAdmin.participant.Detail',$item->id) }}">
+                                        <i data-feather="eye"></i>
+                                    </a>
+
+                                    <a href="{{route('SuperAdmin.participant.create',$item->id)}}"><i data-feather="user-plus"></i></a>
+                                </td>
+                                <td class="text-center">
+                                    <!-- For Cost Breakdown, Access Cost Breakdown for this specific training item -->
+                                    <a href="#" class="open-cost-modal" data-training-id="{{ $item->id }}">
+                                        <i data-feather="dollar-sign"></i>
+                                    </a>
+                                    <a href="{{route('SuperAdmin.training.costDetail',$item->id)}}">
+                                        <i data-feather="eye"></i>
+                                    </a>
+                                </td>
+                                <td class="text-center">
+                                    <a href="#" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal" data-training-id="{{ $item->id }}">
+                                        <i data-feather="file-text"></i>
+                                    </a>
+                                </td>                            
+                                <td class="text-center">
+                                    <a href="{{ route('SuperAdmin.training.edit', $item->id) }}" style="display: inline-block; vertical-align: middle;">
+                                        <i data-feather="edit" class="text-primary"></i>
+                                    </a>
+                                    
+                                    <form action="{{ route('SuperAdmin.training.Training.delete', $item->id) }}" method="POST" 
+                                        style="display: inline-block; vertical-align: middle; margin-left: 5px;"
+                                        onsubmit="return confirm('Are you sure you want to delete this item?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
+                                        <i data-feather="trash-2" class="text-primary"></i>
+                                    </button>
+                                </form>
+                                
+                                </td>
+                            </tr>
+                        @endforeach
+                    @endif
                 </tbody>
             </table>
         </div>
@@ -234,42 +240,47 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="trainingStatusForm" method="POST" action="{{ route('SuperAdmin.training.update-status', $item->id) }}">
+                <form id="trainingStatusForm" method="POST" 
+                    @if (!empty($item))
+                        action="{{ route('SuperAdmin.training.update-status', $item->id) }}"
+                    @else
+                        action="#" 
+                    @endif>
                     @csrf
                     @method('PUT')
-                
                     <div class="form-check form-switch d-flex justify-content-between align-items-center">
                         <label class="form-check-label" for="feedback_form">Feedback Form</label>
                         <input class="form-check-input status-switch" type="checkbox" id="feedback_form" name="feedback_form" 
-                            @if($item->feedback_form == 1) checked @endif>
+                            @if(!empty($item) && $item->feedback_form == 1) checked @endif>
                     </div>
-                
+            
                     <div class="form-check form-switch d-flex justify-content-between align-items-center">
                         <label class="form-check-label" for="e_report">E-Report</label>
                         <input class="form-check-input status-switch" type="checkbox" id="e_report" name="e_report" 
-                            @if($item->e_report == 1) checked @endif>
+                            @if(!empty($item) && $item->e_report == 1) checked @endif>
                     </div>
-                
+            
                     <div class="form-check form-switch d-flex justify-content-between align-items-center">
                         <label class="form-check-label" for="warm_clothe_allowance">Warm Clothes Allowance</label>
                         <input class="form-check-input status-switch" type="checkbox" id="warm_clothe_allowance" name="warm_clothe_allowance" 
-                            @if($item->warm_clothe_allowance == 1) checked @endif>
+                            @if(!empty($item) && $item->warm_clothe_allowance == 1) checked @endif>
                     </div>
-                
+            
                     <div class="form-check form-switch d-flex justify-content-between align-items-center">
                         <label class="form-check-label" for="presentation">Presentation</label>
                         <input class="form-check-input status-switch" type="checkbox" id="presentation" name="presentation" 
-                            @if($item->presentation == 1) checked @endif>
+                            @if(!empty($item) && $item->presentation == 1) checked @endif>
                     </div>
-                
+            
                     <div class="form-check form-switch d-flex justify-content-between align-items-center">
                         <label class="form-check-label" for="training_status">Training Completed</label>
                         <input class="form-check-input" type="checkbox" id="training_status" name="training_status" 
-                            @if($item->training_status == 1) checked @endif>
+                            @if(!empty($item) && $item->training_status == 1) checked @endif>
                     </div>
-                
+            
                     <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary" id="saveStatus">Save</button>
+                        <button type="submit" class="btn btn-primary" id="saveStatus" 
+                            @if(empty($item)) disabled @endif>Save</button>
                     </div>
                 </form>
             </div>
@@ -287,10 +298,17 @@
                 <h5 class="modal-title" id="uploadDocumentModalLabel">Upload Document</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="documentUploadForm" action="{{ route('SuperAdmin.training.documents.store',$item->id) }}" method="POST" enctype="multipart/form-data">
+            <form id="documentUploadForm" 
+                @if(!empty($item))   
+                    action="{{ route('SuperAdmin.training.documents.store',$item->id) }}" 
+                @else 
+                    action="#" 
+                @endif 
+                method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
-                    <input type="hidden" name="training_id" id="training_id" value="{{ $item->id }}">
+                    <input type="hidden" name="training_id" id="training_id" 
+                        value="{{ !empty($item) ? $item->id : '' }}">
                     <div class="mb-3">
                         <label for="document_name" class="form-label">Document Name</label>
                         <input type="text" class="form-control" name="name" id="document_name" required>

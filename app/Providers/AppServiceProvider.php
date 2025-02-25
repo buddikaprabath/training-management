@@ -2,8 +2,11 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
+use App\Models\Notification;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +23,25 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Define all the navbar views for different roles
+        $navbars = [
+            'User.components.navbar',
+            'Admin.HRAdmin.component.navbar',
+            'Admin.CATCAdmin.component.navbar',
+            'SuperAdmin.component.navbar',
+        ];
+
+        View::composer($navbars, function ($view) {
+            if (Auth::check()) { // Ensure the user is authenticated
+                $notifications = Notification::where('user_id', Auth::id())
+                    ->where('status', 'pending')
+                    ->get();
+            } else {
+                $notifications = collect([]); // Return an empty collection if not logged in
+            }
+
+            $view->with('notifications', $notifications);
+        });
         Schema::defaultStringLength(191);
     }
 }

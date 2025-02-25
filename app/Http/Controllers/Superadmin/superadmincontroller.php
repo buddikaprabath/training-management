@@ -18,14 +18,16 @@ use App\Models\Training;
 use App\Models\Costbreak;
 use App\Models\Institute;
 use App\Models\Participant;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use PhpParser\Node\Stmt\Return_;
 use App\Exports\ParticipantExport;
 use App\Imports\ParticipantImport;
 use Illuminate\Support\Facades\DB;
 use function Laravel\Prompts\table;
-use App\Http\Controllers\Controller;
 
+use App\Http\Controllers\Controller;
+use Illuminate\Container\Attributes\Auth;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -1304,93 +1306,131 @@ class superadmincontroller extends Controller
     public function approve(Approval $approval)
     {
         try {
-            // Ensure the approval is still pending
+            DB::beginTransaction();
+
+            // Ensure the approval request is still pending
             if ($approval->status !== 'pending') {
                 return redirect()->back()->with('warning', 'This request has already been processed or is not pending.');
             }
 
-            // Find the model by its training code and model type
-            $model = $approval->model_type::where('training_code', $approval->model_id)->first();
+            // Find the model based on its type
+            $model = $approval->model_type::find($approval->model_id);
 
             // If model not found, return error
             if (!$model) {
-                return redirect()->back()->with('error', 'Training record not found.');
+                return redirect()->back()->with('error', 'Record not found.');
             }
 
-            // Process action (edit)
-            if ($approval->action === 'edit') {
-                // Decode the new data and update the model
+            // Process action (edit/update)
+            if ($approval->action === 'edit' || $approval->action === 'update') {
+                // Decode the new data
                 $newData = json_decode($approval->new_data, true);
-                if ($newData) {
-                    $model->update($newData);
-                    return redirect()->back()->with('success', 'Training record updated successfully.');
+
+                if (!$newData) {
+                    return redirect()->back()->with('error', 'Invalid new data for update.');
                 }
-                return redirect()->back()->with('error', 'Invalid new data for update.');
+
+                // Handle participant updates
+                if ($approval->model_type === Participant::class) {
+                    $model->update($newData);
+                    $message = 'Participant record updated successfully.';
+                } elseif ($approval->model_type === Costbreak::class) {
+                    // Update cost breakdown
+                    $model->update($newData);
+                    $message = 'Cost Breakdown updated successfully.';
+                } else {
+                    // Update training record
+                    $model->update($newData);
+                    $message = 'Training record updated successfully.';
+                }
+
+                // Create a notification
+                Notification::create([
+                    'user_id' => $approval->user_id, // assuming the current user is making the approval
+                    'message' => $message,
+                    'status' => 'pending'
+                ]);
+
+                DB::commit();
+                return redirect()->back()->with('success', $message);
             }
 
             // Process action (delete)
             if ($approval->action === 'delete') {
-                // Begin a transaction to ensure consistency
-                DB::beginTransaction();
+                if ($approval->model_type === Participant::class) {
+                    $model->delete();
+                    $message = 'Participant record deleted successfully.';
+                } elseif ($approval->model_type === Costbreak::class) {
+                    $model->delete();
+                    $message = 'Cost Breakdown deleted successfully.';
+                } else {
+                    $model->delete();
+                    $message = 'Training record deleted successfully.';
+                }
 
-                // Detach related models (institutes and trainers)
-                $model->institutes()->detach();
-                $model->trainers()->detach();
+                // Create a notification
+                Notification::create([
+                    'user_id' => $approval->user_id,
+                    'message' => $message,
+                    'status' => 'pending'
+                ]);
 
-                // Delete related records (subjects, remarks, and cost breakdowns)
-                $model->subjects()->delete();
-                Remark::where('training_id', $model->id)->delete();
-                Costbreak::where('training_id', $model->id)->delete();
-
-                // Finally, delete the training record
-                $model->delete();
-
-                // Commit the transaction
                 DB::commit();
-                return redirect()->back()->with('success', 'Training record deleted successfully.');
+                return redirect()->back()->with('success', $message);
             }
 
-            // If action is not recognized
             return redirect()->back()->with('error', 'Invalid action for approval.');
         } catch (\Exception $e) {
-            // Rollback any changes in case of error
             DB::rollBack();
             return redirect()->back()->with('error', 'Error occurred while approving the request: ' . $e->getMessage());
         } finally {
-            // Mark approval as 'approved' regardless of action outcome
+            // Mark approval as 'approved' and remove it
             if ($approval->status === 'pending') {
                 $approval->update(['status' => 'approved']);
+                $approval->update(['new_data' => null]); // Clear the new_data after approval
             }
-
-            // Remove approval record from the table
-            $approval->delete();
         }
     }
 
 
-
     public function reject(Approval $approval)
     {
-        // Find the model by its training code and model type
-        $model = $approval->model_type::where('training_code', $approval->model_id)->first();
+        try {
+            DB::beginTransaction();
 
-        // If model not found, return error
-        if (!$model) {
-            return redirect()->back()->with('error', 'Model not found.');
+            // Ensure the approval request is still pending
+            if ($approval->status !== 'pending') {
+                return redirect()->back()->with('warning', 'This request has already been processed or is not pending.');
+            }
+
+            // Check if model_type exists and is a valid class
+            if (!class_exists($approval->model_type)) {
+                return redirect()->back()->with('error', 'Invalid model type.');
+            }
+
+            // Find the model based on its type
+            $model = $approval->model_type::find($approval->model_id);
+
+            // If model not found, return error
+            if (!$model) {
+                return redirect()->back()->with('error', 'Model not found.');
+            }
+
+            // Mark approval as 'rejected'
+            $approval->update(['status' => 'rejected']);
+
+            // Create a rejection notification
+            Notification::create([
+                'user_id' => $approval->user_id, // assuming the current user is rejecting the request
+                'message' => 'Approval request has been rejected.',
+                'status' => 'pending'
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Rejected approval');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
         }
-
-        // If action is 'delete', delete the model
-        if ($approval->action === 'delete') {
-            $model->delete();
-        }
-
-        // Mark approval as 'rejected'
-        $approval->update(['status' => 'rejected']);
-
-        // Remove approval record from the table
-        $approval->delete();
-
-        // Return rejection message
-        return redirect()->back()->with('warning', 'Request rejected and model deleted.');
     }
 }
