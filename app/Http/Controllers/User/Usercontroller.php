@@ -16,6 +16,7 @@ use App\Models\Participant;
 use App\Models\Notification;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Excel;
+use Illuminate\Validation\Rule;
 use App\Exports\ParticipantExport;
 use App\Imports\ParticipantImport;
 use Illuminate\Support\Facades\DB;
@@ -26,12 +27,52 @@ class Usercontroller extends Controller
 {
     public function getNotifications()
     {
-        $notifications = Notification::where('user_id', Auth::user()->id)
-            ->where('status', 'pending')
-            ->get();
+        $userId = Auth::id();
 
-        return view('User.index', compact('notifications'));
+        // Fetch the latest 10 notifications, paginated, where status is either 'pending' or read within the last week
+        $notifications = Notification::where('user_id', $userId)
+            ->where(function ($query) {
+                $query->where('status', 'pending')
+                    ->orWhere(function ($query) {
+                        $query->where('status', 'read')
+                            ->where('read_at', '>=', now()->subWeek()); // Filter read notifications in the last week
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10); // Paginate with 10 items per page
+
+        // Count total pending notifications
+        $totalPending = Notification::where('user_id', $userId)
+            ->where('status', 'pending')
+            ->count();
+
+        return view('User.notifications.Detail', compact('notifications', 'totalPending'));
     }
+
+    public function statusupdate(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'in:pending,read', // Ensure the status is one of the allowed values
+        ]);
+
+        try {
+            $notification = Notification::findOrFail($id);
+
+            // Update the 'status' field with the value from the request
+            $notification->update([
+                'status' => $request->input('status'),
+                'read_at' => now(),
+            ]);
+
+            return redirect()->back();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error reading this message: ' . $e->getMessage());
+        }
+    }
+
+
+
+
     public function viewDashboard()
     {
         return view('User.page.dashboard');
@@ -245,14 +286,13 @@ class Usercontroller extends Controller
             $approvalRequest = Approval::create([
                 'user_id'    => Auth::id(),
                 'model_type' => Training::class,
-                'model_id'   => (string) $training->training_code,
+                'model_id'   => (string) $training->id,
                 'action'     => 'edit',
                 'new_data'   => json_encode($validated),
                 'status'     => 'pending',
                 'division_id' => $userDivision,  // Pass the division_id
                 'section_id' => $userSection,
             ]);
-
             DB::commit();
             return redirect()->route('User.training.Detail')->with('success', 'Your update request has been sent for approval.');
         } catch (\Exception $e) {
@@ -375,6 +415,12 @@ class Usercontroller extends Controller
                 // If the cost breakdown doesn't exist, handle the error (optional)
                 return redirect()->back()->with('error', 'Cost Breakdown not found!');
             }
+            $totalAmount = $validatedData['airfare'] + $validatedData['subsistence'] + $validatedData['incidental'] +
+                $validatedData['registration'] + $validatedData['visa'] + $validatedData['insurance'] +
+                $validatedData['warm_clothes'];
+
+            // Add totalAmount to the validated data for approval
+            $validatedData['total_amount'] = $totalAmount;
 
             // Check if there is already an approval request pending for this update
             $existingApproval = Approval::where('model_type', Costbreak::class)
@@ -592,24 +638,32 @@ class Usercontroller extends Controller
     {
         $request->validate([
             'name'                         => 'required|string|max:255',
-            'epf_number'                   => 'required|string|max:50|unique:participants,epf_number',
+            'epf_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('participants')->where(function ($query) use ($request) {
+                    return $query->where('training_id', $request->training_id);
+                }),
+            ],
             'designation'                  => 'required|string|max:255',
-            'salary_scale'                 => 'nullable|string|max:255',
+            'salary_scale'                  => 'nullable|numeric|min:0|max:9999999999',
             'location'                     => 'nullable|string|max:255',
-            'obligatory_period'            => 'nullable|string|max:255',
-            'cost_per_head'                => 'nullable|numeric', // You can use 'decimal:10,2' if you expect decimals
+            'obligatory_period'            => 'nullable|date',
+            'cost_per_head'                => 'nullable|numeric|min:0|max:9999999999', // You can use 'decimal:10,2' if you expect decimals
             'bond_completion_date'         => 'nullable|date',
-            'bond_value'                   => 'nullable|numeric', // You can use 'decimal:12,2' for decimals
+            'bond_value'                   => 'nullable|numeric|min:0|max:9999999999', // You can use 'decimal:12,2' for decimals
             'date_of_signing'              => 'nullable|date',
             'age_as_at_commencement_date'  => 'nullable|numeric', // Assuming it's a decimal with 2 places after decimal
             'date_of_appointment'          => 'nullable|date',
             'date_of_appointment_to_the_present_post' => 'nullable|date',
             'date_of_birth'                => 'nullable|date',
-            'division_id'                  => 'nullable|exists:divisions,id',
+            'division_id'                  => 'required|exists:divisions,id',
+            'section_id'                    => 'nullable|exists:sections,id',
 
             // Surety Validation (2 sureties)
             'sureties'                      => 'nullable|array|max:2',
-            'sureties.*.suretyname'          => 'nullable|string|max:255',
+            'sureties.*.name'               => 'nullable|string|max:255',
             'sureties.*.nic'                 => 'nullable|string|max:12',
             'sureties.*.mobile'              => 'nullable|string|max:15',
             'sureties.*.address'             => 'nullable|string|max:255',
@@ -622,10 +676,6 @@ class Usercontroller extends Controller
             'remarks.*'                   => 'nullable|string|max:500',
         ]);
 
-        // Get logged-in user's division and section
-        $user = Auth::user();
-        $userDivision = $user->division_id;
-        $userSection = $user->section_id;
         DB::beginTransaction();
         try {
             // Store Participant
@@ -644,23 +694,23 @@ class Usercontroller extends Controller
                 'date_of_appointment'           => $request->date_of_appointment,
                 'date_of_appointment_to_the_present_post' => $request->date_of_appointment_to_the_present_post,
                 'date_of_birth'                 => $request->date_of_birth,
-                'division_id'                   => $userDivision,
-                'section_id'                    => $userSection,
+                'division_id'                   => $request->division_id,
+                'section_id'                    => $request->section_id,
                 'training_id'                   => $request->training_id, // Passed from the clicked training
             ]);
-
+            $participantId = $participant->id;
             // Store Sureties (up to 2)
             if ($request->sureties) {
                 foreach ($request->sureties as $suretyData) {
                     Surety::create([
-                        'name'           => $suretyData['suretyname'],
+                        'name'           => $suretyData['name'],
                         'epf_number'     => $suretyData['epf_number'],
                         'nic'            => $suretyData['nic'],
                         'mobile'         => $suretyData['mobile'],
                         'address'        => $suretyData['address'],
                         'salary_scale'   => $suretyData['salary_scale'] ?? null,
                         'designation'    => $suretyData['suretydesignation'] ?? null,
-                        'participant_id' => $participant->id,
+                        'participant_id' => $participantId,
                     ]);
                 }
             }
@@ -760,23 +810,24 @@ class Usercontroller extends Controller
                 'name'                         => 'required|string|max:255',
                 'epf_number'                   => 'required|string|max:50',
                 'designation'                  => 'required|string|max:255',
-                'salary_scale'                 => 'nullable|string|max:255',
+                'salary_scale'                 => 'nullable|numeric|min:0|max:9999999999',
                 'location'                     => 'nullable|string|max:255',
-                'obligatory_period'            => 'nullable|string|max:255',
-                'cost_per_head'                => 'nullable|numeric',
+                'obligatory_period'            => 'nullable|date',
+                'cost_per_head'                => 'nullable|numeric|min:0|max:9999999999',
                 'bond_completion_date'         => 'nullable|date',
-                'bond_value'                   => 'nullable|numeric',
+                'bond_value'                   => 'nullable|numeric|min:0|max:9999999999',
                 'date_of_signing'              => 'nullable|date',
                 'age_as_at_commencement_date'  => 'nullable|numeric',
                 'date_of_appointment'          => 'nullable|date',
                 'date_of_appointment_to_the_present_post' => 'nullable|date',
                 'date_of_birth'                => 'nullable|date',
-                'division_id'                  => 'nullable|exists:divisions,id',
+                'division_id'                  => 'required|exists:divisions,id',
+                'section_id'                    => 'nullable|exists:sections,id',
                 'training_id'                  => 'required|exists:trainings,id',
 
                 // Surety Validation (2 sureties)
                 'sureties'                      => 'nullable|array|max:2',
-                'sureties.*.suretyname'          => 'nullable|string|max:255',
+                'sureties.*.name'               => 'nullable|string|max:255',
                 'sureties.*.nic'                 => 'nullable|string|max:12',
                 'sureties.*.mobile'              => 'nullable|string|max:15',
                 'sureties.*.address'             => 'nullable|string|max:255',
@@ -791,11 +842,6 @@ class Usercontroller extends Controller
 
             // Find the participant
             $participant = Participant::findOrFail($id);
-
-            // Get logged-in user's division and section
-            $user = Auth::user();
-            $userDivision = $user->division_id;
-            $userSection = $user->section_id;
 
             // Prepare updated data
             $updatedData = [
@@ -813,9 +859,11 @@ class Usercontroller extends Controller
                 'date_of_appointment'           => $request->date_of_appointment,
                 'date_of_appointment_to_the_present_post' => $request->date_of_appointment_to_the_present_post,
                 'date_of_birth'                 => $request->date_of_birth,
-                'division_id'                   => $userDivision,
-                'section_id'                    => $userSection,
+                'division_id'                   => $request->division_id,
+                'section_id'                    => $request->section_id,
                 'training_id'                   => $request->training_id,
+                'sureties'                      => $request->sureties,
+                'remarks'                       => $request->remarks,
             ];
 
             // Check if an approval request already exists
@@ -838,7 +886,7 @@ class Usercontroller extends Controller
                 'action'     => 'update',
                 'new_data'   => json_encode($updatedData), // Store the updated data as JSON
                 'status'     => 'pending',
-                'division_id' => $userDivision,
+                'division_id' => $request->division_id,  // Pass the division_id
             ]);
 
             DB::commit();

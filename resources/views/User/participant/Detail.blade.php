@@ -59,11 +59,11 @@
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Structure : {{ $training->training_structure }}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Expiration Date : {{ $training->exp_date }}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Category : {{ $training->category }}</span>
-                @if($training)
-                    @foreach ($training->remarks as $remark)
-                        <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Other Comments: {{ $remark->remark }}</span>
-                    @endforeach
-                @endif
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Other Comments: 
+                    <a href="#">
+                        <i data-feather="align-center"></i>
+                    </a>
+                </span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Custodian : {{ $training->training_custodian }}</span>
             </div>
         </div>
@@ -84,9 +84,10 @@
                         <th class="text-center align-top">Unique Identifier</th>
                         <th class="text-center align-top">EPF Number</th>
                         <th class="text-center align-top">Participant Name</th>
-                        <th class="text-center align-top">Training Division</th>
-                        <th class="text-center align-top">Course Type</th>
                         <th class="text-center align-top">Designation</th>
+                        <th class="text-center align-top">Loacation</th>
+                        <th class="text-center align-top">Remarks</th>
+                        <th class="text-center align-top">Salary Scale</th>
                         <th class="text-center align-top">Status</th>
                         <th class="text-center align-top">Add Document</th>
                         <th class="text-center align-top">Action</th>
@@ -100,6 +101,11 @@
                             <td class="text-center">{{ $participant->name }}</td>
                             <td class="text-center">{{ $participant->designation }}</td>
                             <td class="text-center">{{ $participant->location }}</td>
+                            <td class="text-center">
+                                <a href="#">
+                                    <i data-feather="align-center"></i>
+                                </a>
+                            </td>
                             <td class="text-center">{{ $participant->salary_scale }}</td>
                             <td class="text-center">{{ $participant->status ?? 'Pending' }}</td>
                             <td class="text-center">

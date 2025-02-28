@@ -63,16 +63,13 @@
                         </td>
                         <td class="text-center">
                             <a href="{{route('Admin.HRAdmin.institute.edit',$institute->id)}}" style="display: inline"><i data-feather="edit"></i></a>&nbsp;&nbsp;
-                            <td class="text-center">
-                                <a href="{{route('Admin.HRAdmin.institute.edit',$institute->id)}}" style="display: inline"><i data-feather="edit"></i></a>&nbsp;&nbsp;
-                                <form action="{{ route('Admin.HRAdmin.institute.delete', $institute->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this institute?');" style="display: inline">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" style="border: none; background: none; padding: 0; cursor: pointer;">
-                                        <i data-feather="trash-2" class="align-middle me-2 text-blue-500"></i>
-                                    </button>
-                                </form>
-                            </td>
+                            <form action="{{ route('Admin.HRAdmin.institute.delete', $institute->id) }}" method="POST" onsubmit="return confirm('Are you sure you want to delete this institute?');" style="display: inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" style="border: none; background: none; padding: 0; cursor: pointer;">
+                                    <i data-feather="trash-2" class="align-middle me-2 text-blue-500"></i>
+                                </button>
+                            </form>
                         </td>
                     </tr>
                 @endforeach

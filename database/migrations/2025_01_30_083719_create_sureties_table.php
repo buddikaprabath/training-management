@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('nic')->nullable();
             $table->decimal('salary_scale', 10, 2)->nullable();
             $table->string('designation')->nullable();
-            $table->string('participant_id');
+            $table->foreignId('participant_id')->nullable()->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

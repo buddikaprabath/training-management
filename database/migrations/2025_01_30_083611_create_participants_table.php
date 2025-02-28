@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('participants', function (Blueprint $table) {
-            $table->string('id')->primary();  // Primary key with custom format
+            $table->id();
             $table->string('name');
             $table->string('epf_number');
             $table->string('designation');

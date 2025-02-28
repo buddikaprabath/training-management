@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->text('remark')->nullable();
             $table->string('training_id')->nullable();
-            $table->string('participant_id')->nullable();
+            $table->foreignId('participant_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

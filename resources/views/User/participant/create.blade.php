@@ -190,6 +190,42 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
+             <!-- Division Selection -->
+             <div class="col-md-6">
+                <label for="division_id" class="form-label">Division</label>
+                <select name="division_id" id="division" class="form-select track-change @error('division_id') is-invalid @enderror" required>
+                    <option selected disabled>Choose...</option>
+                    <option value="1" {{ old('division_id', isset($participant) && $participant->division_id == 1 ? 'selected' : '') }}>HR</option>
+                    <option value="2" {{ old('division_id', isset($participant) && $participant->division_id == 2 ? 'selected' : '') }}>CATC</option>
+                    <option value="3" {{ old('division_id', isset($participant) && $participant->division_id == 3 ? 'selected' : '') }}>IT</option>
+                    <option value="4" {{ old('division_id', isset($participant) && $participant->division_id == 4 ? 'selected' : '') }}>FINANCE</option>
+                    <option value="5" {{ old('division_id', isset($participant) && $participant->division_id == 5 ? 'selected' : '') }}>SCM</option>
+                    <option value="6" {{ old('division_id', isset($participant) && $participant->division_id == 6 ? 'selected' : '') }}>MARKETING</option>
+                    <option value="7" {{ old('division_id', isset($participant) && $participant->division_id == 7 ? 'selected' : '') }}>SECURITY</option>
+                </select>
+                @error('division_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
+            <!-- Section Selection (Conditional) -->
+            <div class="col-md-6" id="sectionContainer" style="display: none;">
+                <label for="section_id" class="form-label">Sections</label>
+                <select name="section_id" id="section" class="form-select track-change @error('section_id') is-invalid @enderror" disabled>
+                    <option disabled selected>Choose...</option>
+                    <option value="1" {{ old('section_id', isset($participant) && $participant->section_id == 1 ? 'selected' : '') }}>WING 1</option>
+                    <option value="2" {{ old('section_id', isset($participant) && $participant->section_id == 2 ? 'selected' : '') }}>WING 2</option>
+                    <option value="3" {{ old('section_id', isset($participant) && $participant->section_id == 3 ? 'selected' : '') }}>WING 3</option>
+                    <option value="4" {{ old('section_id', isset($participant) && $participant->section_id == 4 ? 'selected' : '') }}>WING 4</option>
+                    <option value="5" {{ old('section_id', isset($participant) && $participant->section_id == 5 ? 'selected' : '') }}>WING 5</option>
+                    <option value="6" {{ old('section_id', isset($participant) && $participant->section_id == 6 ? 'selected' : '') }}>WING 6</option>
+                    <option value="7" {{ old('section_id', isset($participant) && $participant->section_id == 7 ? 'selected' : '') }}>WING 7</option>
+                    <option value="8" {{ old('section_id', isset($participant) && $participant->section_id == 8 ? 'selected' : '') }}>WING 8</option>
+                </select>
+                @error('section_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
 
             <!-- Add Surety Checkbox -->
             <div class="col-md-6 mt-4 d-flex align-items-center">
@@ -200,6 +236,7 @@
                     </label>
                 </div>
             </div>
+           
             <!-- Surety Fields (Initially Hidden) -->
             <div id="suretyFields" style="display: none;">
                 @for($i = 0; $i < 2; $i++)
@@ -209,9 +246,9 @@
 
                     <div class="row">
                         <div class="col-md-6 mt-3">
-                            <label for="sureties[{{ $i }}][suretyname]" class="form-label">Surety {{ $i + 1 }} Name</label>
-                            <input name="sureties[{{ $i }}][suretyname]" type="text" class="form-control @error('sureties.'.$i.'.suretyname') is-invalid @enderror" placeholder="Surety Name" value="{{ old('sureties.'.$i.'.suretyname', $surety ? $surety->name : '') }}">
-                            @error('sureties.'.$i.'.suretyname')
+                            <label for="sureties[{{ $i }}][name]" class="form-label">Surety {{ $i + 1 }} Name</label>
+                            <input name="sureties[{{ $i }}][name]" type="text" class="form-control @error('sureties.'.$i.'.name') is-invalid @enderror" placeholder="Surety Name" value="{{ old('sureties.'.$i.'.name', $surety ? $surety->name : '') }}">
+                            @error('sureties.'.$i.'.name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -277,7 +314,6 @@
                 <label for="other_comments" class="form-label">Other Comments</label>
                 <textarea name="remarks[]" class="form-control track-change @error('remarks') is-invalid @enderror" 
                         placeholder="Other Comments" rows="3">
-                    {{ old('remarks.0', isset($participant) && $participant->remarks->isNotEmpty() ? $participant->remarks->first()->remark : '') }}
                 </textarea>
                 @error('remarks')
                     <div class="invalid-feedback">{{ $message }}</div>

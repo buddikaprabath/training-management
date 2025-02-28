@@ -1,7 +1,26 @@
 @extends('SuperAdmin.index')
 @section('content')
 <div class="container">
-    <h2>Pending Approvals</h2>
+    <div class="m-3 d-flex justify-content-between align-items-center">
+        <h2>Pending Approvals</h2>
+        <a href="{{ url()->current() }}">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-refresh-cw">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+            </svg>
+        </a>
+    </div>
+    
+    @if(session('success'))
+        <div class="alert alert-success fw-bold text-success mx-3">
+            {{ session('success') }}
+        </div>
+    @elseif(session('error'))
+        <div class="alert alert-danger fw-bold text-danger mx-3">
+            {{ session('error') }}
+        </div>
+    @endif
     <table class="table">
         <thead>
             <tr>

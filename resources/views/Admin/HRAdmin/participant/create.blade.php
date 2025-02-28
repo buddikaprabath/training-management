@@ -33,6 +33,9 @@
         <!-- File Upload -->
         <form action="{{ route('Admin.HRAdmin.participant.import-participants') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center" id="importForm">
             @csrf
+            <!-- Hidden input to pass the training_id -->
+            <input type="hidden" name="training_id" value="{{ $training->id ?? '' }}"> <!-- Add training ID here -->
+
             <input class="form-control d-none" type="file" id="formFile" name="file" onchange="fileSelected()">
             <button type="button" class="btn btn-primary d-flex align-items-center px-3" onclick="document.getElementById('formFile').click();">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-upload me-2">
@@ -244,9 +247,9 @@
 
                     <div class="row">
                         <div class="col-md-6 mt-3">
-                            <label for="sureties[{{ $i }}][suretyname]" class="form-label">Surety {{ $i + 1 }} Name</label>
-                            <input name="sureties[{{ $i }}][suretyname]" type="text" class="form-control @error('sureties.'.$i.'.suretyname') is-invalid @enderror" placeholder="Surety Name" value="{{ old('sureties.'.$i.'.suretyname', $surety ? $surety->name : '') }}">
-                            @error('sureties.'.$i.'.suretyname')
+                            <label for="sureties[{{ $i }}][name]" class="form-label">Surety {{ $i + 1 }} Name</label>
+                            <input name="sureties[{{ $i }}][name]" type="text" class="form-control @error('sureties.'.$i.'.name') is-invalid @enderror" placeholder="Surety Name" value="{{ old('sureties.'.$i.'.name', $surety ? $surety->name : '') }}">
+                            @error('sureties.'.$i.'.name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -312,7 +315,6 @@
                 <label for="other_comments" class="form-label">Other Comments</label>
                 <textarea name="remarks[]" class="form-control track-change @error('remarks') is-invalid @enderror" 
                         placeholder="Other Comments" rows="3">
-                    {{ old('remarks.0', isset($participant) && $participant->remarks->isNotEmpty() ? $participant->remarks->first()->remark : '') }}
                 </textarea>
                 @error('remarks')
                     <div class="invalid-feedback">{{ $message }}</div>

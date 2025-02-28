@@ -34,7 +34,7 @@
         <form action="{{ route('Admin.CATCAdmin.participant.import-participants') }}" method="POST" enctype="multipart/form-data" class="d-flex align-items-center" id="importForm">
             @csrf
             <!-- Hidden input to pass the training_id -->
-            <input type="hidden" name="training_id" value="{{ $training->id }}"> <!-- Add training ID here -->
+            <input type="hidden" name="training_id" value="{{ $training->id ?? '' }}"> <!-- Add training ID here -->
 
             <input class="form-control d-none" type="file" id="formFile" name="file" onchange="fileSelected()">
             <button type="button" class="btn btn-primary d-flex align-items-center px-3" onclick="document.getElementById('formFile').click();">
@@ -192,10 +192,28 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
+            <!-- Division Selection -->
+            <div class="col-md-6">
+                <label for="division_id" class="form-label">Division</label>
+                <select name="division_id" id="division" class="form-select track-change @error('division_id') is-invalid @enderror" required>
+                    <option selected disabled>Choose...</option>
+                    <option value="1" {{ old('division_id', isset($participant) && $participant->division_id == 1 ? 'selected' : '') }}>HR</option>
+                    <option value="2" {{ old('division_id', isset($participant) && $participant->division_id == 2 ? 'selected' : '') }}>CATC</option>
+                    <option value="3" {{ old('division_id', isset($participant) && $participant->division_id == 3 ? 'selected' : '') }}>IT</option>
+                    <option value="4" {{ old('division_id', isset($participant) && $participant->division_id == 4 ? 'selected' : '') }}>FINANCE</option>
+                    <option value="5" {{ old('division_id', isset($participant) && $participant->division_id == 5 ? 'selected' : '') }}>SCM</option>
+                    <option value="6" {{ old('division_id', isset($participant) && $participant->division_id == 6 ? 'selected' : '') }}>MARKETING</option>
+                    <option value="7" {{ old('division_id', isset($participant) && $participant->division_id == 7 ? 'selected' : '') }}>SECURITY</option>
+                </select>
+                @error('division_id')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
             <!-- Section Selection (Conditional) -->
-            <div class="col-md-6" id="sectionContainer">
+            <div class="col-md-6" id="sectionContainer" style="display: none;">
                 <label for="section_id" class="form-label">Sections</label>
-                <select name="section_id" id="section" class="form-select track-change @error('section_id') is-invalid @enderror">
+                <select name="section_id" id="section" class="form-select track-change @error('section_id') is-invalid @enderror" disabled>
                     <option disabled selected>Choose...</option>
                     <option value="1" {{ old('section_id', isset($participant) && $participant->section_id == 1 ? 'selected' : '') }}>WING 1</option>
                     <option value="2" {{ old('section_id', isset($participant) && $participant->section_id == 2 ? 'selected' : '') }}>WING 2</option>
@@ -228,9 +246,9 @@
 
                     <div class="row">
                         <div class="col-md-6 mt-3">
-                            <label for="sureties[{{ $i }}][suretyname]" class="form-label">Surety {{ $i + 1 }} Name</label>
-                            <input name="sureties[{{ $i }}][suretyname]" type="text" class="form-control @error('sureties.'.$i.'.suretyname') is-invalid @enderror" placeholder="Surety Name" value="{{ old('sureties.'.$i.'.suretyname', $surety ? $surety->name : '') }}">
-                            @error('sureties.'.$i.'.suretyname')
+                            <label for="sureties[{{ $i }}][name]" class="form-label">Surety {{ $i + 1 }} Name</label>
+                            <input name="sureties[{{ $i }}][name]" type="text" class="form-control @error('sureties.'.$i.'.name') is-invalid @enderror" placeholder="Surety Name" value="{{ old('sureties.'.$i.'.name', $surety ? $surety->name : '') }}">
+                            @error('sureties.'.$i.'.name')
                                 <div class="invalid-feedback">{{ $message }}</div>
                             @enderror
                         </div>
@@ -296,7 +314,6 @@
                 <label for="other_comments" class="form-label">Other Comments</label>
                 <textarea name="remarks[]" class="form-control track-change @error('remarks') is-invalid @enderror" 
                         placeholder="Other Comments" rows="3">
-                    {{ old('remarks.0', isset($participant) && $participant->remarks->isNotEmpty() ? $participant->remarks->first()->remark : '') }}
                 </textarea>
                 @error('remarks')
                     <div class="invalid-feedback">{{ $message }}</div>

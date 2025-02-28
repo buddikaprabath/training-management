@@ -10,12 +10,7 @@ class Participant extends Model
 {
     use HasFactory;
 
-    protected $primaryKey = 'id'; // Custom primary key
-    public $incrementing = false; // Disable auto-incrementing for primary key
-    protected $keyType = 'string'; // Primary key is a string
-
     protected $fillable = [
-        'id',
         'name',
         'epf_number',
         'designation',
@@ -37,33 +32,6 @@ class Participant extends Model
     protected $casts = [
         'training_id' => 'string', // Ensure training_id is handled as a string
     ];
-
-
-
-    protected static function booted()
-    {
-        static::creating(function ($participant) {
-            // Lock the table to ensure no other rows can be inserted while generating the ID
-            DB::beginTransaction();
-
-            try {
-                // Get the latest participant and increment the ID
-                $latest = self::orderBy('created_at', 'desc')->first();
-                $number = $latest ? (int) substr($latest->id, 3) + 1 : 1;
-
-                // Generate the new ID, ensuring it's unique
-                $participant->id = 'PI-' . str_pad($number, 3, '0', STR_PAD_LEFT);
-
-                // Commit the transaction after the ID is generated
-                DB::commit();
-            } catch (\Exception $e) {
-                DB::rollBack();
-                throw $e;
-            }
-        });
-    }
-
-
 
     // Relationships
     public function division()

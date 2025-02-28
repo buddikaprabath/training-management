@@ -16,6 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id');
             $table->text('message');
             $table->enum('status', ['pending', 'read'])->default('pending');
+            $table->timestamp('read_at')->nullable();
             $table->timestamps();
 
             // Foreign key constraint

@@ -15,8 +15,10 @@ use App\Models\Training;
 use App\Models\Costbreak;
 use App\Models\Institute;
 use App\Models\Participant;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Excel;
+use Illuminate\Validation\Rule;
 use App\Exports\ParticipantExport;
 use App\Imports\ParticipantImport;
 use Illuminate\Support\Facades\DB;
@@ -25,6 +27,49 @@ use Illuminate\Support\Facades\Auth;
 
 class HRAdmincontroller extends Controller
 {
+    public function getNotifications()
+    {
+        $userId = Auth::id();
+
+        // Fetch the latest 10 notifications, paginated, where status is either 'pending' or read within the last week
+        $notifications = Notification::where('user_id', $userId)
+            ->where(function ($query) {
+                $query->where('status', 'pending')
+                    ->orWhere(function ($query) {
+                        $query->where('status', 'read')
+                            ->where('read_at', '>=', now()->subWeek()); // Filter read notifications in the last week
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10); // Paginate with 10 items per page
+
+        // Count total pending notifications
+        $totalPending = Notification::where('user_id', $userId)
+            ->where('status', 'pending')
+            ->count();
+
+        return view('Admin.HRAdmin.notifications.Detail', compact('notifications', 'totalPending'));
+    }
+    public function statusupdate(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'in:pending,read', // Ensure the status is one of the allowed values
+        ]);
+
+        try {
+            $notification = Notification::findOrFail($id);
+
+            // Update the 'status' field with the value from the request
+            $notification->update([
+                'status' => $request->input('status'),
+                'read_at' => now(),
+            ]);
+
+            return redirect()->back();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error reading this message: ' . $e->getMessage());
+        }
+    }
     public function viewDashboard()
     {
         return view('Admin.HRAdmin.page.dashboard');
@@ -209,7 +254,7 @@ class HRAdmincontroller extends Controller
             Approval::create([
                 'user_id'    => Auth::id(),
                 'model_type' => Training::class,
-                'model_id'   => (string) $training->training_code,
+                'model_id'   => (string) $training->id,
                 'action'     => 'edit',
                 'new_data'   => json_encode($validated),
                 'status'     => 'pending'
@@ -344,24 +389,35 @@ class HRAdmincontroller extends Controller
             $totalAmount = $validatedData['airfare'] + $validatedData['subsistence'] + $validatedData['incidental'] +
                 $validatedData['registration'] + $validatedData['visa'] + $validatedData['insurance'] +
                 $validatedData['warm_clothes'];
+            //add total amount to the validated data for approval
+            $validatedData['total_amount'] = $totalAmount;
 
 
-            // Update the existing Costbreak record with validated data
-            $costBreak->update([
-                'airfare' => $validatedData['airfare'],
-                'subsistence' => $validatedData['subsistence'],
-                'incidental' => $validatedData['incidental'],
-                'registration' => $validatedData['registration'],
-                'visa' => $validatedData['visa'],
-                'insurance' => $validatedData['insurance'],
-                'warm_clothes' => $validatedData['warm_clothes'],
-                'total_amount' => $totalAmount,
-                'training_id' => $validatedData['training_id']
+            // Check if there is already an approval request pending for this update
+            $existingApproval = Approval::where('model_type', Costbreak::class)
+                ->where('model_id', (string) $costBreak->id) // Cast the id to string explicitly
+                ->where('action', 'update')
+                ->where('status', 'pending')
+                ->first();
+
+            // Prevent duplicate approval requests
+            if ($existingApproval) {
+                return redirect()->back()->with('info', 'An update request is already pending approval for this cost breakdown.');
+            }
+
+            // Create an approval request for the update action
+            $approvalRequest = Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Costbreak::class,
+                'model_id'   => (string) $costBreak->id,
+                'action'     => 'update',
+                'new_data'   => json_encode($validatedData), // Save the updated data as new_data
+                'status'     => 'pending',
             ]);
 
             // Redirect back with a success message
             return redirect()->route('Admin.HRAdmin.training.costDetail', ['id' => $costBreak->training_id])
-                ->with('success', 'Cost Breakdown updated successfully!');
+                ->with('success', 'Your update request has been sent for approval!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'error updating costbreakdown : ' . $e->getMessage());
         }
@@ -389,13 +445,30 @@ class HRAdmincontroller extends Controller
     {
         try {
             DB::beginTransaction();
+
+            // Find the Costbreak record
             $costs = Costbreak::findOrFail($id);
-            $costs->delete();
+
+            // Get the authenticated user ID
+            $userId = Auth::user()->id;
+
+            // Create an approval record for the deletion request
+            $approval = Approval::create([
+                'model_type' => Costbreak::class,
+                'model_id' => (string) $costs->id,  // Cast to string as ID is auto-increment
+                'action' => 'delete',                // Specify the action to be 'delete'
+                'status' => 'pending',               // Set status as 'pending'
+                'new_data' => null,                  // No new data for deletion
+                'user_id' => $userId,                // Add the user ID for tracking who requested the deletion
+            ]);
+
             DB::commit();
-            return redirect()->route('Admin.HRAdmin.training.Detail')->with('success', 'Cost break down deleted successfully!');
+
+            // Return success message to inform the user that approval is pending
+            return redirect()->back()->with('success', 'Costbreak deletion request has been submitted for approval.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Error deleting costbreak down : ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error submitting deletion request: ' . $e->getMessage());
         }
     }
     //store document for each training
@@ -443,7 +516,7 @@ class HRAdmincontroller extends Controller
 
             // Check if an approval request already exists for this deletion
             $existingApproval = Approval::where('model_type', Training::class)
-                ->where('model_id', (string) $training->training_code)
+                ->where('model_id', (string) $training->id)
                 ->where('action', 'delete')
                 ->where('status', 'pending')
                 ->first();
@@ -457,7 +530,7 @@ class HRAdmincontroller extends Controller
             $approvalRequest = Approval::create([
                 'user_id'    => Auth::id(),
                 'model_type' => Training::class,
-                'model_id'   => (string) $training->training_code,
+                'model_id'   => (string) $training->id,
                 'action'     => 'delete',
                 'new_data'   => null,  // No new data as we are deleting the record
                 'status'     => 'pending',
@@ -526,14 +599,21 @@ class HRAdmincontroller extends Controller
     {
         $request->validate([
             'name'                         => 'required|string|max:255',
-            'epf_number'                   => 'required|string|max:50|unique:participants,epf_number',
+            'epf_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('participants')->where(function ($query) use ($request) {
+                    return $query->where('training_id', $request->training_id);
+                }),
+            ],
             'designation'                  => 'required|string|max:255',
-            'salary_scale'                 => 'nullable|string|max:255',
+            'salary_scale'                 => 'nullable|numeric|min:0|max:9999999999',
             'location'                     => 'nullable|string|max:255',
-            'obligatory_period'            => 'nullable|string|max:255',
-            'cost_per_head'                => 'nullable|numeric', // You can use 'decimal:10,2' if you expect decimals
+            'obligatory_period'            => 'nullable|date',
+            'cost_per_head'                => 'nullable|numeric|min:0|max:9999999999', // You can use 'decimal:10,2' if you expect decimals
             'bond_completion_date'         => 'nullable|date',
-            'bond_value'                   => 'nullable|numeric', // You can use 'decimal:12,2' for decimals
+            'bond_value'                   => 'nullable|numeric|min:0|max:9999999999', // You can use 'decimal:12,2' for decimals
             'date_of_signing'              => 'nullable|date',
             'age_as_at_commencement_date'  => 'nullable|numeric', // Assuming it's a decimal with 2 places after decimal
             'date_of_appointment'          => 'nullable|date',
@@ -545,7 +625,7 @@ class HRAdmincontroller extends Controller
 
             // Surety Validation (2 sureties)
             'sureties'                      => 'nullable|array|max:2',
-            'sureties.*.suretyname'          => 'nullable|string|max:255',
+            'sureties.*.name'               => 'nullable|string|max:255',
             'sureties.*.nic'                 => 'nullable|string|max:12',
             'sureties.*.mobile'              => 'nullable|string|max:15',
             'sureties.*.address'             => 'nullable|string|max:255',
@@ -586,7 +666,7 @@ class HRAdmincontroller extends Controller
             if ($request->sureties) {
                 foreach ($request->sureties as $suretyData) {
                     Surety::create([
-                        'name'           => $suretyData['suretyname'],
+                        'name'           => $suretyData['name'],
                         'epf_number'     => $suretyData['epf_number'],
                         'nic'            => $suretyData['nic'],
                         'mobile'         => $suretyData['mobile'],
@@ -691,12 +771,12 @@ class HRAdmincontroller extends Controller
                 'name'                         => 'required|string|max:255',
                 'epf_number'                   => 'required|string|max:50',
                 'designation'                  => 'required|string|max:255',
-                'salary_scale'                 => 'nullable|string|max:255',
+                'salary_scale'                 => 'nullable|numeric|min:0|max:9999999999',
                 'location'                     => 'nullable|string|max:255',
-                'obligatory_period'            => 'nullable|string|max:255',
-                'cost_per_head'                => 'nullable|numeric',
+                'obligatory_period'            => 'nullable|date',
+                'cost_per_head'                => 'nullable|numeric|min:0|max:9999999999',
                 'bond_completion_date'         => 'nullable|date',
-                'bond_value'                   => 'nullable|numeric',
+                'bond_value'                   => 'nullable|numeric|min:0|max:9999999999',
                 'date_of_signing'              => 'nullable|date',
                 'age_as_at_commencement_date'  => 'nullable|numeric',
                 'date_of_appointment'          => 'nullable|date',
@@ -708,7 +788,7 @@ class HRAdmincontroller extends Controller
 
                 // Surety Validation (2 sureties)
                 'sureties'                      => 'nullable|array|max:2',
-                'sureties.*.suretyname'          => 'nullable|string|max:255',
+                'sureties.*.name'               => 'nullable|string|max:255',
                 'sureties.*.nic'                 => 'nullable|string|max:12',
                 'sureties.*.mobile'              => 'nullable|string|max:15',
                 'sureties.*.address'             => 'nullable|string|max:255',
@@ -724,57 +804,58 @@ class HRAdmincontroller extends Controller
             // Find the participant
             $participant = Participant::findOrFail($id);
 
-            // Update participant details (excluding remarks and sureties)
-            $participant->update($request->except(['remarks', 'sureties']));
+            // Prepare updated data
+            $updatedData = [
+                'name'                          => $request->name,
+                'epf_number'                    => $request->epf_number,
+                'designation'                   => $request->designation,
+                'salary_scale'                  => $request->salary_scale,
+                'location'                      => $request->location,
+                'obligatory_period'             => $request->obligatory_period,
+                'cost_per_head'                 => $request->cost_per_head,
+                'bond_completion_date'          => $request->bond_completion_date,
+                'bond_value'                    => $request->bond_value,
+                'date_of_signing'               => $request->date_of_signing,
+                'age_as_at_commencement_date'   => $request->age_as_at_commencement_date,
+                'date_of_appointment'           => $request->date_of_appointment,
+                'date_of_appointment_to_the_present_post' => $request->date_of_appointment_to_the_present_post,
+                'date_of_birth'                 => $request->date_of_birth,
+                'division_id'                   => $request->division_id,
+                'section_id'                    => $request->section_id,
+                'training_id'                   => $request->training_id,
+                // Add Sureties and Remarks to updated data
+                'sureties'                      => $request->sureties,
+                'remarks'                       => $request->remarks,
+            ];
 
-            // Update or create remarks
-            if ($request->has('remarks')) {
-                // Remove old remarks before adding new ones
-                $participant->remarks()->delete();
-                foreach ($request->remarks as $remarkText) {
-                    if (!empty($remarkText)) {
-                        $participant->remarks()->create([
-                            'remark' => $remarkText,
-                            'training_id' => $participant->training_id
-                        ]);
-                    }
-                }
+            // Check if an approval request already exists
+            $existingApproval = Approval::where('model_type', Participant::class)
+                ->where('model_id', (string) $participant->id)
+                ->where('action', 'update')
+                ->where('status', 'pending')
+                ->first();
+
+            if ($existingApproval) {
+                return redirect()->route('Admin.HRAdmin.participant.Detail', ['id' => $participant->training_id])
+                    ->with('error', 'An update request for this participant is already pending approval.');
             }
 
-            // Update or create sureties
-            if ($request->has('sureties')) {
-                // Loop through the sureties and check if it's a new or existing one
-                foreach ($request->sureties as $index => $suretyData) {
-                    if (isset($participant->sureties[$index])) {
-                        // Update existing surety
-                        $participant->sureties[$index]->update([
-                            'name' => $suretyData['suretyname'],
-                            'nic' => $suretyData['nic'],
-                            'mobile' => $suretyData['mobile'],
-                            'address' => $suretyData['address'],
-                            'salary_scale' => $suretyData['salary_scale'],
-                            'designation' => $suretyData['suretydesignation'],
-                            'epf_number' => $suretyData['epf_number'],
-                        ]);
-                    } else {
-                        // Create new surety
-                        $participant->sureties()->create([
-                            'name' => $suretyData['suretyname'],
-                            'nic' => $suretyData['nic'],
-                            'mobile' => $suretyData['mobile'],
-                            'address' => $suretyData['address'],
-                            'salary_scale' => $suretyData['salary_scale'],
-                            'designation' => $suretyData['suretydesignation'],
-                            'epf_number' => $suretyData['epf_number'],
-                        ]);
-                    }
-                }
-            }
+            // Create an approval request for the update
+            Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Participant::class,
+                'model_id'   => (string) $participant->id,
+                'action'     => 'update',
+                'new_data'   => json_encode($updatedData), // Store the updated data, including sureties and remarks
+                'status'     => 'pending',
+            ]);
 
+            DB::commit();
             return redirect()->route('Admin.HRAdmin.participant.Detail', ['id' => $participant->training_id])
-                ->with('success', 'Participant updated successfully.');
+                ->with('success', 'Your update request has been sent for approval.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Error updating participant: ' . $e->getMessage());
+            DB::rollBack();
+            return back()->with('error', 'Error occurred while sending update request: ' . $e->getMessage());
         }
     }
     protected $excel;
@@ -785,23 +866,13 @@ class HRAdmincontroller extends Controller
     public function exportParticipantColumns()
     {
         try {
-            // Check if the user is authenticated
-            if (!Auth::check()) {
-                return redirect()->route('login')->with('error', 'You must be logged in to download the file.');
-            }
-
-            // Attempt to export the column names as an Excel file
+            // Attempt to export the column names as an Excel file using the injected Excel instance
             return $this->excel->download(new ParticipantExport, 'participant_columns.xlsx');
         } catch (\Exception $e) {
             // Catch any exceptions and return a meaningful error message
             return redirect()->back()->with('error', 'An error occurred while exporting: ' . $e->getMessage());
         }
     }
-
-
-
-
-
     public function importParticipants(Request $request)
     {
         // Validate the file and training_id fields
@@ -831,21 +902,34 @@ class HRAdmincontroller extends Controller
         try {
             $participant = Participant::findOrFail($id);
 
-            // Delete related remarks
-            $participant->remarks()->delete();
+            // Check if an approval request already exists for this deletion
+            $existingApproval = Approval::where('model_type', Participant::class)
+                ->where('model_id', (string) $participant->id)
+                ->where('action', 'delete')
+                ->where('status', 'pending')
+                ->first();
 
-            // Delete related sureties
-            $participant->sureties()->delete();
+            // Prevent duplicate approval requests
+            if ($existingApproval) {
+                return redirect()->back()->with('info', 'A deletion request is already pending for this participant.');
+            }
 
-            // Delete related documents
-            $participant->documents()->delete();
+            // Create an approval request for deletion
+            $approvalRequest = Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Participant::class,
+                'model_id'   => (string) $participant->id,
+                'action'     => 'delete',
+                'new_data'   => null,  // No new data as we are deleting the record
+                'status'     => 'pending',
+                'division_id' => Auth::user()->division_id,  // Pass the division_id
+            ]);
 
-            // Finally, delete the participant
-            $participant->delete();
-
-            return redirect()->route('Admin.HRAdmin.participants.index')->with('success', 'Participant deleted successfully.');
+            DB::commit();
+            return redirect()->back()->with('success', 'Your deletion request has been sent for approval.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Error deleting participant: ' . $e->getMessage());
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error occurred while sending deletion request: ' . $e->getMessage());
         }
     }
 
@@ -970,19 +1054,40 @@ class HRAdmincontroller extends Controller
     public function Instituteupdate(Request $request, $id)
     {
         try {
-            $request->validate([
+            $updatedData = $request->validate([
                 'name' => 'required|string|max:255',
                 'type' => 'required|string',
             ]);
 
             $institute = Institute::findOrFail($id);
-            $institute->name = $request->name;
-            $institute->type = $request->type;
-            $institute->save();
+            // Check if an approval request already exists
+            $existingApproval = Approval::where('model_type', Institute::class)
+                ->where('model_id', (string) $institute->id)
+                ->where('action', 'update')
+                ->where('status', 'pending')
+                ->first();
 
-            return redirect()->back()->with('success', 'Institute updated successfully.');
+            if ($existingApproval) {
+                return redirect()->route('Admin.HRAdmin.institute.Detail')
+                    ->with('error', 'An update request for this institute is already pending approval.');
+            }
+
+            // Create an approval request for the update
+            Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Institute::class,
+                'model_id'   => (string) $institute->id,
+                'action'     => 'update',
+                'new_data'   => json_encode($updatedData), // Store the updated data, including sureties and remarks
+                'status'     => 'pending',
+            ]);
+
+            DB::commit();
+            return redirect()->route('Admin.HRAdmin.institute.Detail')
+                ->with('success', 'Your update request has been sent for approval.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Error updating institute:' . $e->getMessage());
+            DB::rollBack();
+            return back()->with('error', 'Error occurred while sending update request: ' . $e->getMessage());
         }
     }
 
@@ -990,11 +1095,32 @@ class HRAdmincontroller extends Controller
     {
         try {
             $institute = Institute::findOrFail($id);
-            $institute->delete();
+            // Check if an approval request already exists for this deletion
+            $existingApproval = Approval::where('model_type', Institute::class)
+                ->where('model_id', (string) $institute->id)
+                ->where('action', 'delete')
+                ->where('status', 'pending')
+                ->first();
+            // Prevent duplicate approval requests
+            if ($existingApproval) {
+                return redirect()->back()->with('info', 'A deletion request is already pending for this Institute.');
+            }
 
-            return redirect()->back()->with('success', 'Institute deleted successfully.');
+            // Create an approval request for deletion
+            $approvalRequest = Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Institute::class,
+                'model_id'   => (string) $institute->id,
+                'action'     => 'delete',
+                'new_data'   => null,  // No new data as we are deleting the record
+                'status'     => 'pending',
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Your deletion request has been sent for approval.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Error deleting institute: ' . $e->getMessage());
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error occurred while sending deletion request: ' . $e->getMessage());
         }
     }
 
@@ -1089,7 +1215,7 @@ class HRAdmincontroller extends Controller
     public function trainerUpdate(Request $request, $id)
     {
         try {
-            $request->validate([
+            $updatedData = $request->validate([
                 'name'         => 'string|max:255|required',
                 'email'        => 'string|email|required',
                 'mobile'       => 'required',
@@ -1097,16 +1223,34 @@ class HRAdmincontroller extends Controller
             ]);
 
             $trainer = Trainer::findOrFail($id);
-            $trainer->name = $request->name;
-            $trainer->email = $request->email;
-            $trainer->mobile = $request->mobile;
-            $trainer->institute_id = $request->institute_id;
-            $trainer->save();
+            // Check if an approval request already exists
+            $existingApproval = Approval::where('model_type', Trainer::class)
+                ->where('model_id', (string) $trainer->id)
+                ->where('action', 'update')
+                ->where('status', 'pending')
+                ->first();
 
-            return redirect()->route('Admin.HRAdmin.institute.Detail')->with('success', 'Trainer details updated successfully!');
+            if ($existingApproval) {
+                return redirect()->route('Admin.HRAdmin.trainer.Detail', ['id' => $trainer->institute_id])
+                    ->with('error', 'An update request for this trainer is already pending approval.');
+            }
+
+            // Create an approval request for the update
+            Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Trainer::class,
+                'model_id'   => (string) $trainer->id,
+                'action'     => 'update',
+                'new_data'   => json_encode($updatedData), // Store the updated data, including sureties and remarks
+                'status'     => 'pending',
+            ]);
+
+            DB::commit();
+            return redirect()->route('Admin.HRAdmin.trainer.Detail', ['id' => $trainer->institute_id])
+                ->with('success', 'Your update request has been sent for approval.');
         } catch (\Exception $e) {
-            // Returning back with an error message
-            return back()->with('error', 'Error updating trainer details: ' . $e->getMessage());
+            DB::rollBack();
+            return back()->with('error', 'Error occurred while sending update request: ' . $e->getMessage());
         }
     }
     //delete the trainer details
@@ -1116,14 +1260,33 @@ class HRAdmincontroller extends Controller
             // Find the trainer by ID
             $trainer = Trainer::findOrFail($id);
 
-            // Delete the trainer record
-            $trainer->delete();
+            // Check if an approval request already exists for this deletion
+            $existingApproval = Approval::where('model_type', Trainer::class)
+                ->where('model_id', (string) $trainer->id)
+                ->where('action', 'delete')
+                ->where('status', 'pending')
+                ->first();
 
-            // Redirect back to the same page with a success message
-            return redirect()->back()->with('success', 'Trainer details successfully deleted!');
+            // Prevent duplicate approval requests
+            if ($existingApproval) {
+                return redirect()->back()->with('info', 'A deletion request is already pending for this trainer.');
+            }
+
+            // Create an approval request for deletion
+            $approvalRequest = Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Trainer::class,
+                'model_id'   => (string) $trainer->id,
+                'action'     => 'delete',
+                'new_data'   => null,  // No new data as we are deleting the record
+                'status'     => 'pending',
+            ]);
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Your deletion request has been sent for approval.');
         } catch (\Exception $e) {
-            // Redirect back with an error message
-            return redirect()->back()->with('error', 'Error deleting trainer details: ' . $e->getMessage());
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error occurred while sending deletion request: ' . $e->getMessage());
         }
     }
     //training handling

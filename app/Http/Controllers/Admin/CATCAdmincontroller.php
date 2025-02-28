@@ -13,8 +13,10 @@ use App\Models\Training;
 use App\Models\Costbreak;
 use App\Models\Institute;
 use App\Models\Participant;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Excel;
+use Illuminate\Validation\Rule;
 use App\Exports\ParticipantExport;
 use App\Imports\ParticipantImport;
 use Illuminate\Support\Facades\DB;
@@ -23,6 +25,50 @@ use Illuminate\Support\Facades\Auth;
 
 class CATCAdmincontroller extends Controller
 {
+    public function getNotifications()
+    {
+        $userId = Auth::id();
+
+        // Fetch the latest 10 notifications, paginated, where status is either 'pending' or read within the last week
+        $notifications = Notification::where('user_id', $userId)
+            ->where(function ($query) {
+                $query->where('status', 'pending')
+                    ->orWhere(function ($query) {
+                        $query->where('status', 'read')
+                            ->where('read_at', '>=', now()->subWeek()); // Filter read notifications in the last week
+                    });
+            })
+            ->orderBy('created_at', 'desc')
+            ->paginate(10); // Paginate with 10 items per page
+
+        // Count total pending notifications
+        $totalPending = Notification::where('user_id', $userId)
+            ->where('status', 'pending')
+            ->count();
+
+        return view('Admin.CATCAdmin.notifications.Detail', compact('notifications', 'totalPending'));
+    }
+
+    public function statusupdate(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'in:pending,read', // Ensure the status is one of the allowed values
+        ]);
+
+        try {
+            $notification = Notification::findOrFail($id);
+
+            // Update the 'status' field with the value from the request
+            $notification->update([
+                'status' => $request->input('status'),
+                'read_at' => now(),
+            ]);
+
+            return redirect()->back();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error reading this message: ' . $e->getMessage());
+        }
+    }
     public function viewDashboard()
     {
         return view('Admin.CATCAdmin.page.dashboard');
@@ -52,16 +98,13 @@ class CATCAdmincontroller extends Controller
             // Check if training results are empty
             $trainingEmpty = $training->isEmpty();
 
-            // If no training is found, pass the message to the view instead of redirecting
-            if ($trainingEmpty) {
-                $errorMessage = 'No training found in CATC Division matching your search query.';
-            }
 
             // Check if itemId is provided and fetch Costbreak data
             $costBreak = $itemId ? Costbreak::where('item_id', $itemId)->first() : null;
 
             // Return the view with training data and error message if applicable
-            return view('Admin.CATCAdmin.training.Detail', compact('training', 'query', 'costBreak', 'user', 'trainingEmpty', 'errorMessage'));
+            return view('Admin.CATCAdmin.training.Detail', compact('training', 'query', 'costBreak', 'user', 'trainingEmpty'));
+            dd("this work");
         } catch (\Exception $e) {
             // Catch any exceptions and show an error message
             return redirect()->back()->with('error', 'An error occurred while retrieving training details: ' . $e->getMessage());
@@ -230,7 +273,7 @@ class CATCAdmincontroller extends Controller
             Approval::create([
                 'user_id'    => Auth::id(),
                 'model_type' => Training::class,
-                'model_id'   => (string) $training->training_code,
+                'model_id'   => (string) $training->id,
                 'action'     => 'edit',
                 'new_data'   => json_encode($validated),
                 'status'     => 'pending',
@@ -364,24 +407,36 @@ class CATCAdmincontroller extends Controller
             $totalAmount = $validatedData['airfare'] + $validatedData['subsistence'] + $validatedData['incidental'] +
                 $validatedData['registration'] + $validatedData['visa'] + $validatedData['insurance'] +
                 $validatedData['warm_clothes'];
+            //add total amount to the validated data for approval
+            $validatedData['total_amount'] = $totalAmount;
 
 
-            // Update the existing Costbreak record with validated data
-            $costBreak->update([
-                'airfare' => $validatedData['airfare'],
-                'subsistence' => $validatedData['subsistence'],
-                'incidental' => $validatedData['incidental'],
-                'registration' => $validatedData['registration'],
-                'visa' => $validatedData['visa'],
-                'insurance' => $validatedData['insurance'],
-                'warm_clothes' => $validatedData['warm_clothes'],
-                'total_amount' => $totalAmount,
-                'training_id' => $validatedData['training_id']
+            // Check if there is already an approval request pending for this update
+            $existingApproval = Approval::where('model_type', Costbreak::class)
+                ->where('model_id', (string) $costBreak->id) // Cast the id to string explicitly
+                ->where('action', 'update')
+                ->where('status', 'pending')
+                ->first();
+
+            // Prevent duplicate approval requests
+            if ($existingApproval) {
+                return redirect()->back()->with('info', 'An update request is already pending approval for this cost breakdown.');
+            }
+
+            // Create an approval request for the update action
+            $approvalRequest = Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Costbreak::class,
+                'model_id'   => (string) $costBreak->id,
+                'action'     => 'update',
+                'new_data'   => json_encode($validatedData), // Save the updated data as new_data
+                'status'     => 'pending',
+                'division_id' => Auth::user()->division_id,  // Pass the division_id
             ]);
 
             // Redirect back with a success message
             return redirect()->route('Admin.CATCAdmin.training.costDetail', ['id' => $costBreak->training_id])
-                ->with('success', 'Cost Breakdown updated successfully!');
+                ->with('success', 'Your update request has been sent for approval!');
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'error updating costbreakdown : ' . $e->getMessage());
         }
@@ -409,13 +464,30 @@ class CATCAdmincontroller extends Controller
     {
         try {
             DB::beginTransaction();
+
+            // Find the Costbreak record
             $costs = Costbreak::findOrFail($id);
-            $costs->delete();
+
+            // Get the authenticated user ID
+            $userId = Auth::user()->id;
+
+            // Create an approval record for the deletion request
+            $approval = Approval::create([
+                'model_type' => Costbreak::class,
+                'model_id' => (string) $costs->id,  // Cast to string as ID is auto-increment
+                'action' => 'delete',                // Specify the action to be 'delete'
+                'status' => 'pending',               // Set status as 'pending'
+                'new_data' => null,                  // No new data for deletion
+                'user_id' => $userId,                // Add the user ID for tracking who requested the deletion
+            ]);
+
             DB::commit();
-            return redirect()->route('Admin.CATCAdmin.training.Detail')->with('success', 'Cost break down deleted successfully!');
+
+            // Return success message to inform the user that approval is pending
+            return redirect()->back()->with('success', 'Costbreak deletion request has been submitted for approval.');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Error deleting costbreak down : ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error submitting deletion request: ' . $e->getMessage());
         }
     }
     //store document for each training
@@ -463,21 +535,21 @@ class CATCAdmincontroller extends Controller
 
             // Check if an approval request already exists for this deletion
             $existingApproval = Approval::where('model_type', Training::class)
-                ->where('model_id', (string) $training->training_code)
+                ->where('model_id', (string) $training->id)
                 ->where('action', 'delete')
                 ->where('status', 'pending')
                 ->first();
 
             // Prevent duplicate approval requests
             if ($existingApproval) {
-                return redirect()->route('User.training.Detail')->with('info', 'A deletion request is already pending for this training.');
+                return redirect()->route('Admin.CATCAdmin.training.Detail')->with('error', 'A deletion request is already pending for this training.');
             }
 
             // Create an approval request for deletion
             $approvalRequest = Approval::create([
                 'user_id'    => Auth::id(),
                 'model_type' => Training::class,
-                'model_id'   => (string) $training->training_code,
+                'model_id'   => (string) $training->id,
                 'action'     => 'delete',
                 'new_data'   => null,  // No new data as we are deleting the record
                 'status'     => 'pending',
@@ -545,14 +617,21 @@ class CATCAdmincontroller extends Controller
     {
         $request->validate([
             'name'                         => 'required|string|max:255',
-            'epf_number'                   => 'required|string|max:50|unique:participants,epf_number',
+            'epf_number' => [
+                'required',
+                'string',
+                'max:50',
+                Rule::unique('participants')->where(function ($query) use ($request) {
+                    return $query->where('training_id', $request->training_id);
+                }),
+            ],
             'designation'                  => 'required|string|max:255',
-            'salary_scale'                 => 'nullable|string|max:255',
+            'salary_scale'                 => 'nullable|numeric|min:0|max:9999999999',
             'location'                     => 'nullable|string|max:255',
             'obligatory_period'            => 'nullable|string|max:255',
-            'cost_per_head'                => 'nullable|numeric', // You can use 'decimal:10,2' if you expect decimals
+            'cost_per_head'                => 'nullable|numeric|min:0|max:9999999999', // You can use 'decimal:10,2' if you expect decimals
             'bond_completion_date'         => 'nullable|date',
-            'bond_value'                   => 'nullable|numeric', // You can use 'decimal:12,2' for decimals
+            'bond_value'                   => 'nullable|numeric|min:0|max:9999999999', // You can use 'decimal:12,2' for decimals
             'date_of_signing'              => 'nullable|date',
             'age_as_at_commencement_date'  => 'nullable|numeric', // Assuming it's a decimal with 2 places after decimal
             'date_of_appointment'          => 'nullable|date',
@@ -563,7 +642,7 @@ class CATCAdmincontroller extends Controller
 
             // Surety Validation (2 sureties)
             'sureties'                      => 'nullable|array|max:2',
-            'sureties.*.suretyname'          => 'nullable|string|max:255',
+            'sureties.*.name'               => 'nullable|string|max:255',
             'sureties.*.nic'                 => 'nullable|string|max:12',
             'sureties.*.mobile'              => 'nullable|string|max:15',
             'sureties.*.address'             => 'nullable|string|max:255',
@@ -575,10 +654,6 @@ class CATCAdmincontroller extends Controller
             'remarks'                     => 'nullable|array',
             'remarks.*'                   => 'nullable|string|max:500',
         ]);
-
-        // Get logged-in user's division and section
-        $user = Auth::user();
-        $userDivision = $user->division_id;
         DB::beginTransaction();
         try {
             // Store Participant
@@ -597,7 +672,7 @@ class CATCAdmincontroller extends Controller
                 'date_of_appointment'           => $request->date_of_appointment,
                 'date_of_appointment_to_the_present_post' => $request->date_of_appointment_to_the_present_post,
                 'date_of_birth'                 => $request->date_of_birth,
-                'division_id'                   => $userDivision,
+                'division_id'                   => $request->division_id,
                 'section_id'                    => $request->section_id,
                 'training_id'                   => $request->training_id, // Passed from the clicked training
             ]);
@@ -606,7 +681,7 @@ class CATCAdmincontroller extends Controller
             if ($request->sureties) {
                 foreach ($request->sureties as $suretyData) {
                     Surety::create([
-                        'name'           => $suretyData['suretyname'],
+                        'name'           => $suretyData['name'],
                         'epf_number'     => $suretyData['epf_number'],
                         'nic'            => $suretyData['nic'],
                         'mobile'         => $suretyData['mobile'],
@@ -711,23 +786,24 @@ class CATCAdmincontroller extends Controller
                 'name'                         => 'required|string|max:255',
                 'epf_number'                   => 'required|string|max:50',
                 'designation'                  => 'required|string|max:255',
-                'salary_scale'                 => 'nullable|string|max:255',
+                'salary_scale'                 => 'nullable|numeric|min:0|max:9999999999',
                 'location'                     => 'nullable|string|max:255',
                 'obligatory_period'            => 'nullable|string|max:255',
-                'cost_per_head'                => 'nullable|numeric',
+                'cost_per_head'                => 'nullable|numeric|min:0|max:9999999999',
                 'bond_completion_date'         => 'nullable|date',
-                'bond_value'                   => 'nullable|numeric',
+                'bond_value'                   => 'nullable|numeric|min:0|max:9999999999',
                 'date_of_signing'              => 'nullable|date',
                 'age_as_at_commencement_date'  => 'nullable|numeric',
                 'date_of_appointment'          => 'nullable|date',
                 'date_of_appointment_to_the_present_post' => 'nullable|date',
                 'date_of_birth'                => 'nullable|date',
+                'division_id'                   => 'required|exists:divisions,id',
                 'section_id'                   => 'nullable|exists:sections,id',
                 'training_id'                  => 'required|exists:trainings,id',
 
                 // Surety Validation (2 sureties)
                 'sureties'                      => 'nullable|array|max:2',
-                'sureties.*.suretyname'          => 'nullable|string|max:255',
+                'sureties.*.name'               => 'nullable|string|max:255',
                 'sureties.*.nic'                 => 'nullable|string|max:12',
                 'sureties.*.mobile'              => 'nullable|string|max:15',
                 'sureties.*.address'             => 'nullable|string|max:255',
@@ -742,11 +818,10 @@ class CATCAdmincontroller extends Controller
 
             // Find the participant
             $participant = Participant::findOrFail($id);
-            // Get logged-in user's division and section
-            $user = Auth::user();
-            $userDivision = $user->division_id;
-            // Update participant details (excluding remarks and sureties)
-            $participant->update([
+
+
+            // Prepare updated data
+            $updatedData = [
                 'name'                          => $request->name,
                 'epf_number'                    => $request->epf_number,
                 'designation'                   => $request->designation,
@@ -761,61 +836,46 @@ class CATCAdmincontroller extends Controller
                 'date_of_appointment'           => $request->date_of_appointment,
                 'date_of_appointment_to_the_present_post' => $request->date_of_appointment_to_the_present_post,
                 'date_of_birth'                 => $request->date_of_birth,
-                'division_id'                   => $userDivision,
+                'division_id'                   => $request->division_id,
                 'section_id'                    => $request->section_id,
-                'training_id'                   => $request->training_id, // Passed from the clicked training
+                'training_id'                   => $request->training_id,
+                // Add Sureties and Remarks to updated data
+                'sureties'                      => $request->sureties,
+                'remarks'                       => $request->remarks,
+            ];
+
+            // Check if an approval request already exists
+            $existingApproval = Approval::where('model_type', Participant::class)
+                ->where('model_id', (string) $participant->id)
+                ->where('action', 'update')
+                ->where('status', 'pending')
+                ->first();
+
+            if ($existingApproval) {
+                return redirect()->route('Admin.CATCAdmin.participant.Detail', ['id' => $participant->training_id])
+                    ->with('error', 'An update request for this participant is already pending approval.');
+            }
+
+            // Create an approval request for the update
+            Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Participant::class,
+                'model_id'   => (string) $participant->id,
+                'action'     => 'update',
+                'new_data'   => json_encode($updatedData), // Store the updated data, including sureties and remarks
+                'status'     => 'pending',
+                'division_id' => $request->division_id,  // Pass the division_id
             ]);
 
-            // Update or create remarks
-            if ($request->has('remarks')) {
-                // Remove old remarks before adding new ones
-                $participant->remarks()->delete();
-                foreach ($request->remarks as $remarkText) {
-                    if (!empty($remarkText)) {
-                        $participant->remarks()->create([
-                            'remark' => $remarkText,
-                            'training_id' => $participant->training_id
-                        ]);
-                    }
-                }
-            }
-
-            // Update or create sureties
-            if ($request->has('sureties')) {
-                // Loop through the sureties and check if it's a new or existing one
-                foreach ($request->sureties as $index => $suretyData) {
-                    if (isset($participant->sureties[$index])) {
-                        // Update existing surety
-                        $participant->sureties[$index]->update([
-                            'name' => $suretyData['suretyname'],
-                            'nic' => $suretyData['nic'],
-                            'mobile' => $suretyData['mobile'],
-                            'address' => $suretyData['address'],
-                            'salary_scale' => $suretyData['salary_scale'],
-                            'designation' => $suretyData['suretydesignation'],
-                            'epf_number' => $suretyData['epf_number'],
-                        ]);
-                    } else {
-                        // Create new surety
-                        $participant->sureties()->create([
-                            'name' => $suretyData['suretyname'],
-                            'nic' => $suretyData['nic'],
-                            'mobile' => $suretyData['mobile'],
-                            'address' => $suretyData['address'],
-                            'salary_scale' => $suretyData['salary_scale'],
-                            'designation' => $suretyData['suretydesignation'],
-                            'epf_number' => $suretyData['epf_number'],
-                        ]);
-                    }
-                }
-            }
-
+            DB::commit();
             return redirect()->route('Admin.CATCAdmin.participant.Detail', ['id' => $participant->training_id])
-                ->with('success', 'Participant updated successfully.');
+                ->with('success', 'Your update request has been sent for approval.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Error updating participant: ' . $e->getMessage());
+            DB::rollBack();
+            return back()->with('error', 'Error occurred while sending update request: ' . $e->getMessage());
         }
     }
+
 
     protected $excel;
 
@@ -860,26 +920,39 @@ class CATCAdmincontroller extends Controller
 
 
     //delete participant
-    public function destroyparticipant($id)
+    public function destroyCatcparticipant($id)
     {
         try {
             $participant = Participant::findOrFail($id);
 
-            // Delete related remarks
-            $participant->remarks()->delete();
+            // Check if an approval request already exists for this deletion
+            $existingApproval = Approval::where('model_type', Participant::class)
+                ->where('model_id', (string) $participant->id)
+                ->where('action', 'delete')
+                ->where('status', 'pending')
+                ->first();
 
-            // Delete related sureties
-            $participant->sureties()->delete();
+            // Prevent duplicate approval requests
+            if ($existingApproval) {
+                return redirect()->back()->with('info', 'A deletion request is already pending for this participant.');
+            }
 
-            // Delete related documents
-            $participant->documents()->delete();
+            // Create an approval request for deletion
+            $approvalRequest = Approval::create([
+                'user_id'    => Auth::id(),
+                'model_type' => Participant::class,
+                'model_id'   => (string) $participant->id,
+                'action'     => 'delete',
+                'new_data'   => null,  // No new data as we are deleting the record
+                'status'     => 'pending',
+                'division_id' => Auth::user()->division_id,  // Pass the division_id
+            ]);
 
-            // Finally, delete the participant
-            $participant->delete();
-
-            return redirect()->route('Admin.CATCAdmin.participants.index')->with('success', 'Participant deleted successfully.');
+            DB::commit();
+            return redirect()->back()->with('success', 'Your deletion request has been sent for approval.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Error deleting participant: ' . $e->getMessage());
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Error occurred while sending deletion request: ' . $e->getMessage());
         }
     }
 

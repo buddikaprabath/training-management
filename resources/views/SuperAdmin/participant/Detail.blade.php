@@ -117,9 +117,15 @@
                                 <a href="{{route('SuperAdmin.participant.edit',$participant->id)}}">
                                     <i data-feather="edit"></i>
                                 </a>
-                                <a href="#">
-                                    <i data-feather="trash-2"></i>
-                                </a>
+                                <form action="{{ route('SuperAdmin.participant.delete', $participant->id) }}" method="POST" 
+                                    style="display: inline-block; vertical-align: middle; margin-left: 5px;"
+                                    onsubmit="return confirm('Are you sure you want to delete this item?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
+                                        <i data-feather="trash-2" class="text-primary"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     @endforeach

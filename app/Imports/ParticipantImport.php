@@ -25,14 +25,13 @@ class ParticipantImport implements ToModel, WithHeadingRow
      */
     public function model(array $row)
     {
-        // Get the logged-in user's role
-        $user = Auth::user();
-        $role = $user->role; // Assuming role is stored in the 'role' field in the 'users' table
+        // Check if participant EPF number already exists for the same training_id
+        $existingParticipant = Participant::where('epf_number', $row['epf_number'])
+            ->where('training_id', $this->trainingId)
+            ->first();
 
-        // Check if participant EPF number already exists in the database
-        $existingParticipant = Participant::where('epf_number', $row['epf_number'])->first();
         if ($existingParticipant) {
-            // If the EPF number exists, skip this row
+            // If the EPF number exists for the same training, skip this row
             return null;
         }
 
@@ -66,24 +65,6 @@ class ParticipantImport implements ToModel, WithHeadingRow
         $dateOfAppointmentToPresentPost = Carbon::createFromFormat('d.m.Y', $row['date_of_appointment_to_the_present_post'])->toDateString();
         $dateOfBirth = Carbon::createFromFormat('d.m.Y', $row['date_of_birth'])->toDateString();
 
-        // Determine division and section ID based on the logged-in user's role
-        if ($role == 'superadmin' || $role == 'hr_admin') {
-            // If user is Super Admin or HR Admin, keep the division and section as in the row
-            $divisionId = isset($divisionMapping[$row['division_name']]) ? $divisionMapping[$row['division_name']] : null;
-            $sectionId = isset($sectionMapping[$row['section_name']]) ? $sectionMapping[$row['section_name']] : null;
-        } elseif ($role == 'catcadmin') {
-            // If user is CATC Admin, set division_id as 2 and keep section as in the row
-            $divisionId = 2;
-            $sectionId = isset($sectionMapping[$row['section_name']]) ? $sectionMapping[$row['section_name']] : null;
-        } elseif ($role == 'user') {
-            // If user is a regular user, set division_id and section_id based on logged-in user's data
-            $divisionId = $user->division_id;  // Assuming user has 'division_id' stored
-            $sectionId = $user->section_id ?? null;  // If user doesn't have section, set it to null
-        } else {
-            // Default division and section if the role is unknown or invalid
-            $divisionId = null;
-            $sectionId = null;
-        }
 
         // Create the Participant model first
         $participant = new Participant([
@@ -101,8 +82,10 @@ class ParticipantImport implements ToModel, WithHeadingRow
             'date_of_appointment'                       => $dateOfAppointment,
             'date_of_appointment_to_the_present_post'   => $dateOfAppointmentToPresentPost,
             'date_of_birth'                             => $dateOfBirth,
-            'division_id'                               => $divisionId,
-            'section_id'                                => $sectionId,
+            'division_id'                               => $divisionMapping[$row['division_name']],
+            'section_id'                                => isset($row['section_name']) && isset($sectionMapping[$row['section_name']])
+                ? $sectionMapping[$row['section_name']]
+                : null,
             'training_id'                               => $this->trainingId // Use the passed training_id here
         ]);
 

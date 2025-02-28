@@ -84,9 +84,9 @@
                         <th class="text-center align-top">Unique Identifier</th>
                         <th class="text-center align-top">EPF Number</th>
                         <th class="text-center align-top">Participant Name</th>
-                        <th class="text-center align-top">Training Division</th>
-                        <th class="text-center align-top">Course Type</th>
                         <th class="text-center align-top">Designation</th>
+                        <th class="text-center align-top">Location</th>
+                        <th class="text-center align-top">Salary Scale</th>
                         <th class="text-center align-top">Status</th>
                         <th class="text-center align-top">Add Document</th>
                         <th class="text-center align-top">Action</th>
@@ -111,9 +111,15 @@
                                 <a href="{{route('Admin.CATCAdmin.participant.edit',$participant->id)}}">
                                     <i data-feather="edit"></i>
                                 </a>
-                                <a href="#">
-                                    <i data-feather="trash-2"></i>
-                                </a>
+                                <form action="{{ route('Admin.CATCAdmin.participant.delete', $participant->id) }}" method="POST" 
+                                    style="display: inline-block; vertical-align: middle; margin-left: 5px;"
+                                    onsubmit="return confirm('Are you sure you want to delete this item?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" style="background: none; border: none; padding: 0; cursor: pointer;">
+                                        <i data-feather="trash-2" class="text-primary"></i>
+                                    </button>
+                                </form>
                             </td>
                         </tr>
                     @endforeach

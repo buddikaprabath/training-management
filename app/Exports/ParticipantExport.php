@@ -3,7 +3,6 @@
 namespace App\Exports;
 
 use Maatwebsite\Excel\Concerns\FromArray;
-use Illuminate\Support\Facades\Auth;
 
 class ParticipantExport implements FromArray
 {
@@ -14,9 +13,6 @@ class ParticipantExport implements FromArray
      */
     public function array(): array
     {
-        // Get the logged-in user's role
-        $user = Auth::user();
-        $role = $user->role; // Assuming the role is stored in the 'role' field in the 'users' table
 
         // Base columns that will be exported for all users
         $columns = [
@@ -52,21 +48,6 @@ class ParticipantExport implements FromArray
             'surety_2_epf_number',
             'other_comments',
         ];
-
-        // Conditionally add/remove columns based on the user's role
-        if ($role == 'catcadmin') {
-            // Remove 'division_name' and 'section_name' for CATC Admin
-            $columns = array_filter($columns, function ($column) {
-                return !in_array($column, ['division_name']);
-            });
-        } elseif ($role == 'user') {
-            // Remove 'division_name' and 'section_name' for User
-            $columns = array_filter($columns, function ($column) {
-                return !in_array($column, ['division_name', 'section_name']);
-            });
-        }
-
-        // If the user is Super Admin or HR Admin, export as is (no changes to columns)
         return [$columns];
     }
 }

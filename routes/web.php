@@ -67,6 +67,7 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('export-participant-columns', 'exportParticipantColumns')->name('export-participant-columns');
                 Route::post('import-participants', 'importParticipants')->name('import-participants');
                 Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
+                Route::delete('delete/{id}', 'destroyparticipant')->name('delete');
             });
             //budget routes
             Route::prefix('budget')->name('budget.')->group(function () {
@@ -148,6 +149,7 @@ Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(func
                     Route::get('export-participant-columns', 'exportParticipantColumns')->name('export-participant-columns');
                     Route::post('import-participants', 'importParticipants')->name('import-participants');
                     Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
+                    Route::delete('delete/{id}', 'destroyparticipant')->name('delete');
                 });
                 //budget routes
                 Route::prefix('budget')->name('budget.')->group(function () {
@@ -180,6 +182,11 @@ Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(func
                 Route::prefix('report')->name('report.')->group(function () {
                     Route::get('training', 'trainingsummaryView')->name('training'); // load the training summary view
                 });
+                //notifications routes
+                Route::prefix('notifications')->name('notifications.')->group(function () {
+                    Route::get('Detail', 'getNotifications')->name('Detail');
+                    Route::put('update/{id}', 'statusupdate')->name('update');
+                });
             });
         });
     });
@@ -190,10 +197,11 @@ Route::middleware(['auth', 'verified', 'roleManager:catcadmin, 2, 0'])->group(fu
     Route::controller(CATCAdmincontroller::class)->group(function () {
         Route::prefix('Admin')->name('Admin.')->group(function () {
             Route::prefix('CATCAdmin')->name('CATCAdmin.')->group(function () {
+                //CATC dachboard
                 Route::prefix('page')->name('page.')->group(function () {
                     Route::get('dashboard', 'viewDashboard')->name('dashboard');
                 });
-                //training Routes
+                //CATC training Routes
                 Route::prefix('training')->name('training.')->group(function () {
                     Route::get('Detail', 'trainingview')->name('Detail'); //load training details view
                     Route::get('create', 'createtrainingview')->name('create'); //load the training create page
@@ -209,7 +217,7 @@ Route::middleware(['auth', 'verified', 'roleManager:catcadmin, 2, 0'])->group(fu
                     Route::put('{id}/cost-breakdown/update', 'updateCostBreakdown')->name('cost-breakdown.update');
                     Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
                 });
-                //participant routes
+                //CATC participant routes
                 Route::prefix('participant')->name('participant.')->group(function () {
                     Route::get('{id}/Detail', 'participantview')->name('Detail'); //load participant details view
                     Route::get('{id}/create', 'createparticipant')->name('create'); //load participant create view
@@ -219,10 +227,16 @@ Route::middleware(['auth', 'verified', 'roleManager:catcadmin, 2, 0'])->group(fu
                     Route::get('export-participant-columns', 'exportParticipantColumns')->name('export-participant-columns');
                     Route::post('import-participants', 'importParticipants')->name('import-participants');
                     Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
+                    Route::delete('delete/{id}', 'destroyCatcparticipant')->name('delete');
                 });
-                //reports routes
+                //CATC reports routes
                 Route::prefix('report')->name('report.')->group(function () {
                     Route::get('training', 'trainingsummaryView')->name('training'); // load the training summary view
+                });
+                //notifications routes
+                Route::prefix('notifications')->name('notifications.')->group(function () {
+                    Route::get('Detail', 'getNotifications')->name('Detail');
+                    Route::put('update/{id}', 'statusupdate')->name('update');
                 });
             });
         });
@@ -266,6 +280,10 @@ Route::middleware(['auth', 'verified', 'roleManager:user'])->group(function () {
             //reports routes
             Route::prefix('report')->name('report.')->group(function () {
                 Route::get('training', 'trainingsummaryView')->name('training'); // load the training summary view
+            });
+            Route::prefix('notifications')->name('notifications.')->group(function () {
+                Route::get('Detail', 'getNotifications')->name('Detail');
+                Route::put('update/{id}', 'statusupdate')->name('update');
             });
         });
     });
