@@ -3,7 +3,7 @@
 <div class="card card-custom">
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
         <h3 class="card-title">
-            Training Summary
+            Budget Summery
         </h3>
         <a href="{{ url()->current() }}">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-refresh-cw">
@@ -23,29 +23,17 @@
         </a>
     </div>
     <div class="card-body">
-        <form action="{{route('SuperAdmin.report.trainingSummary')}}" method="GET">
+        <form action="#" method="GET">
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
-                <div class="mb-3">
-                    <label for="start date" class="form-label">Start Date</label>
-                    <input type="date" name="start_date" id="StartDate" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label for="EndDate" class="form-label">End Date</label>
-                    <input type="date" name="end_date" id="endDate" class="form-control">
-                </div>
                 <!-- Division id -->
                 <div class="mb-3">
-                    <label for="division_id" class="form-label">Division</label>
-                    <select name="division_id" id="division" class="form-select track-change">
+                    <label for="Duration" class="form-label">Duration</label>
+                    <select name="duration" id="duration" class="form-select track-change">
                         <option selected disabled>Choose...</option>
-                        <option value="1" {{ request('division_id') == 1 ? 'selected' : '' }}>HR</option>
-                        <option value="2" {{ request('division_id') == 2 ? 'selected' : '' }}>CATC</option>
-                        <option value="3" {{ request('division_id') == 3 ? 'selected' : '' }}>IT</option>
-                        <option value="4" {{ request('division_id') == 4 ? 'selected' : '' }}>FINANCE</option>
-                        <option value="5" {{ request('division_id') == 5 ? 'selected' : '' }}>SCM</option>
-                        <option value="6" {{ request('division_id') == 6 ? 'selected' : '' }}>MARKETING</option>
-                        <option value="7" {{ request('division_id') == 7 ? 'selected' : '' }}>SECURITY</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quartely">Quartely</option>
+                        <option value="annual">Annual</option>
                     </select>
                 </div>
                 <div class="mb-3">
@@ -64,27 +52,21 @@
             {{ session('error') }}
         </div>
     @endif
-    <div class="card-body p-4 rounded-3 shadow-lg" style="background-color: #A8BDDB;">
+    <div class="card-body p-4 rounded-3 shadow-lg">
         <table class="table table-hover table-checkable" id="kt_datatable">
             <thead>
                 <tr>
-                    <th class="text-center align-top">Course Type</th>
-                    <th class="text-center align-top">No. of Programs</th>
+                    <th class="text-center align-top"></th>
+                    <th class="text-center align-top">No. of Training</th>
                     <th class="text-center align-top">No. of Participants</th>
-                    <th class="text-center align-top">Training Hours</th>
+                    <th class="text-center align-top">Total No. of Hours</th>
                     <th class="text-center align-top">Total Cost</th>
+                    <th class="text-center align-top">Available Rs.</th>
+                    <th class="text-center align-top">Initial Budget Allocations</th>
+                    <th class="text-center align-top">Budget Utilization</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach ($combinedSummary as $summary)
-                    <tr class="hover:bg-gray-100 transition">
-                        <td class="ps-4 text-center py-2">{{ $summary->course_type }}</td>
-                        <td class="ps-4 text-center py-2">{{ $summary->no_of_programs }}</td>
-                        <td class="ps-4 text-center py-2">{{ $summary->no_of_participants }}</td>
-                        <td class="ps-4 text-center py-2">{{ $summary->training_hours }}</td>
-                        <td class="ps-4 text-center py-2">{{ number_format($summary->total_cost, 2) }}</td>
-                    </tr>
-                @endforeach
             </tbody>
             
         </table>

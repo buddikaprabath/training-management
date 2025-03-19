@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Superadmin;
 
 use Log;
 use APP\Models\User;
+use App\Models\Grade;
 use App\Models\Budget;
 use App\Models\Remark;
 use App\Models\Surety;
@@ -24,10 +25,11 @@ use Illuminate\Validation\Rule;
 use PhpParser\Node\Stmt\Return_;
 use App\Exports\ParticipantExport;
 use App\Imports\ParticipantImport;
-use Illuminate\Support\Facades\DB;
 
+use Illuminate\Support\Facades\DB;
 use function Laravel\Prompts\table;
 use App\Http\Controllers\Controller;
+use Exception;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Container\Attributes\Auth;
@@ -212,6 +214,7 @@ class superadmincontroller extends Controller
             'section_id'            => 'nullable|exists:sections,id',
             'training_structure'    => 'nullable|string|max:255',
             'exp_date'              => 'nullable|date|after_or_equal:training_period_to', // Updated to ensure the expiration date is after the training end date
+            'duration'              => 'required|string|max:255',
             'institutes'            => 'required|array',
             'institutes.*'          => 'exists:institutes,id',
             'trainers'              => 'required|array',
@@ -237,6 +240,7 @@ class superadmincontroller extends Controller
                 'country'               => $validated['country'] ?? null,
                 'training_structure'    => $validated['training_structure'] ?? null,
                 'exp_date'              => $validated['exp_date'] ?? null,
+                'duration'              => $validated['duration'],
                 'batch_size'            => $validated['batch_size'] ?? null,
                 'training_custodian'    => $validated['training_custodian'] ?? null,
                 'course_type'           => $validated['course_type'],
@@ -321,6 +325,7 @@ class superadmincontroller extends Controller
             'other_comments'        => 'nullable|string|max:255', // Added max length for comments
             'training_structure'    => 'nullable|string|max:255',
             'exp_date'              => 'nullable|date|after_or_equal:training_period_to', // Updated to ensure the expiration date is after the training end date
+            'duration'              => 'required|string|max:255',
             'institutes'            => 'required|array',
             'institutes.*'          => 'exists:institutes,id',
             'trainers'              => 'required|array',
@@ -348,6 +353,7 @@ class superadmincontroller extends Controller
                 'country'               => $validated['country'] ?? null,
                 'training_structure'    => $validated['training_structure'] ?? null,
                 'exp_date'              => $validated['exp_date'] ?? null,
+                'duration'              => $validated['duration'],
                 'batch_size'            => $validated['batch_size'] ?? null,
                 'training_custodian'    => $validated['training_custodian'] ?? null,
                 'course_type'           => $validated['course_type'],
@@ -572,20 +578,17 @@ class superadmincontroller extends Controller
         }
     }
     //store document for each training
-    public function storeTrainingDocument(Request $request, $trainingId)
+    public function storeTrainingDocument(Request $request)
     {
         try {
             $validated = $request->validate([
                 'name'               => 'required|string|max:255',
                 'status'             => 'nullable|string|max:50',
                 'date_of_submitting' => 'nullable|date',
+                'training_id'        => 'required',
                 'document_file'      => 'required|file|mimes:pdf,doc,docx,jpg,png|max:2048', // Max 2MB
             ]);
             DB::beginTransaction();
-
-            // Ensure the training exists
-            $training = Training::findOrFail($trainingId);
-
             // Store file in storage/app/public/documents
             $filePath = $request->file('document_file')->store('documents', 'public');
 
@@ -594,7 +597,7 @@ class superadmincontroller extends Controller
                 'name'               => $validated['name'],
                 'status'             => $validated['status'] ?? null,
                 'date_of_submitting' => $validated['date_of_submitting'] ?? null,
-                'training_id'        => $training->id,
+                'training_id'        => $validated['training_id'],
                 'file_path'          => $filePath,
             ]);
 
@@ -606,6 +609,85 @@ class superadmincontroller extends Controller
         }
     }
 
+    public function storeSubject(Request $request)
+    {
+        $trainingId = $request->training_id;
+        // Get all subject inputs from the request (both default and dynamically added)
+        $subjects = [];
+
+        // Check for the default subject field (named "subject_name" without a number)
+        if ($request->has('subject_name') && !empty($request->subject_name)) {
+            $subjects[] = $request->subject_name;
+        }
+
+        // Get all dynamically added subject fields (named subject_name_1, subject_name_2, etc.)
+        foreach ($request->all() as $key => $value) {
+            if (strpos($key, 'subject_name_') === 0 && !empty($value)) {
+                $subjects[] = $value;
+            }
+        }
+
+        // Validate that at least one subject name is provided
+        if (empty($subjects)) {
+            return redirect()->back()->with('error', 'Please add at least one subject.');
+        }
+
+        // Check the current subject count for this training
+        $currentSubjectCount = Subject::where('training_id', $trainingId)->count();
+        $totalSubjectsAfterAdd = $currentSubjectCount + count($subjects);
+
+        // Ensure the training won't exceed 15 subjects
+        if ($totalSubjectsAfterAdd > 15) {
+            return redirect()->back()->with('error', 'A training can have a maximum of 15 subjects. You currently have ' . $currentSubjectCount . ' subjects and are trying to add ' . count($subjects) . ' more.');
+        }
+
+        // Begin transaction to ensure all subjects are saved together
+        DB::beginTransaction();
+
+        try {
+            $duplicateSubjects = [];
+            $addedSubjects = 0;
+
+            // Process each subject
+            foreach ($subjects as $subjectName) {
+                // Check if this subject already exists for this training
+                $existingSubject = Subject::where('training_id', $trainingId)
+                    ->where('subject_name', $subjectName)
+                    ->first();
+
+                if ($existingSubject) {
+                    // Add to duplicate list
+                    $duplicateSubjects[] = $subjectName;
+                    continue;
+                }
+                // Create a new subject record
+                $subject = new Subject();
+                $subject->training_id = $trainingId;
+                $subject->subject_name = $subjectName;
+                $subject->save();
+                $addedSubjects++;
+            }
+
+            DB::commit();
+
+            // Prepare response message
+            if ($addedSubjects > 0) {
+                $message = $addedSubjects . ' subject(s) added successfully.';
+
+                if (!empty($duplicateSubjects)) {
+                    $message .= ' The following subjects were not added because they already exist: ' . implode(', ', $duplicateSubjects);
+                    return redirect()->back()->with('warning', $message);
+                }
+
+                return redirect()->back()->with('success', $message);
+            } else {
+                return redirect()->back()->with('error', 'No subjects were added. All subjects already exist: ' . implode(', ', $duplicateSubjects));
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to add subjects. ' . $e->getMessage());
+        }
+    }
 
     //training delete function
     public function trainingdestroy($id)
@@ -642,35 +724,70 @@ class superadmincontroller extends Controller
 
     //end training handling functions
     //participant handling
-
     public function participantview($trainingId)
     {
         try {
-            // Attempt to retrieve training and related data, including documents and remarks
-            $training = Training::with(['remarks', 'institutes', 'documents'])  // Load remarks and documents as well
+            // Retrieve training with related data
+            $training = Training::with(['remarks', 'institutes', 'documents'])
                 ->find($trainingId);
 
             if (!$training) {
                 return redirect()->back()->with('error', 'Training not found.');
             }
 
-            // Retrieve the participants with pagination
-            $participants = $training->participants()->paginate(10); // Paginate participants
+            // Retrieve participants with pagination and their remarks
+            $participants = $training->participants()->with('remarks')->paginate(10);
 
-            // Prepare remarks data in a format suitable for the JavaScript on the front-end
-            $remarksData = $training->remarks->groupBy('training_id')->toArray(); // Group remarks by training_id
+            // Debug the subject relationship
+            $Subjects = $training->subjects;
 
             // Return the view with the data
             return view('SuperAdmin.participant.Detail', [
                 'training' => $training,
-                'participants' => $participants, // Paginated participants
+                'participants' => $participants,
                 'institutes' => $training->institutes,
-                'documents' => $training->documents, // Pass the document details
-                'remarksData' => $remarksData, // Pass the remarks to the view
+                'documents' => $training->documents,
+                'subjects' => $Subjects, // Pass all subjects to the view
             ]);
         } catch (\Exception $e) {
-            // Catch any exceptions and return an error response
             return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
+        }
+    }
+
+
+    // store participant grades
+    public function gradeStore(Request $request)
+    {
+        try {
+            $request->validate([
+                'training_id' => 'required|exists:trainings,id',
+                'participant_id' => 'required|exists:participants,id',
+                'subject_id' => 'required|exists:subjects,id',
+                'grade' => 'required|string|max:5',
+            ]);
+
+            // Check if the grade already exists for the same training, participant, and subject
+            $existingGrade = Grade::where([
+                'training_id' => $request->training_id,
+                'participant_id' => $request->participant_id,
+                'subject_id' => $request->subject_id,
+            ])->first();
+
+            if ($existingGrade) {
+                return redirect()->back()->with('error', "This participant (ID: {$request->participant_id}) already has a grade for this subject (ID: {$request->subject_id}) in training (ID: {$request->training_id}).");
+            }
+
+            // Store the grade
+            Grade::create([
+                'training_id' => $request->training_id,
+                'participant_id' => $request->participant_id,
+                'subject_id' => $request->subject_id,
+                'grade' => $request->grade,
+            ]);
+
+            return redirect()->back()->with('success', 'Grade added successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error adding grade: ' . $e->getMessage());
         }
     }
 
@@ -1299,11 +1416,152 @@ class superadmincontroller extends Controller
         return view('SuperAdmin.approvel.Detail');
     }
 
-    //reports handling
-    public function trainingsummaryView()
+    // Reports handling
+    public function trainingsummaryView(Request $request)
     {
-        return view('SuperAdmin.report.trainingSummary');
+        try {
+            // Define the course types for local and foreign
+            $localTypes = ['Local In-house', 'Local Outside', 'Local-Tailor Made'];
+            $foreignType = ['Foreign'];
+
+            // Get the date range and category from the request
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+            $division_id = $request->input('division_id');
+
+            // Query for local trainings (with date, course type filters applied if they exist)
+            $localTrainings = Training::whereIn('course_type', $localTypes)
+                ->when($startDate, function ($query) use ($startDate) {
+                    return $query->where('training_period_from', '>=', $startDate);
+                })
+                ->when($endDate, function ($query) use ($endDate) {
+                    return $query->where('training_period_to', '<=', $endDate);
+                })
+                ->when($division_id, function ($query) use ($division_id) {
+                    return $query->where('division_id', '=', $division_id);
+                })->paginate(10);
+
+            // Query for local summary (aggregated data) with filters
+            $localSummary = Training::whereIn('course_type', $localTypes)
+                ->when($startDate, function ($query) use ($startDate) {
+                    return $query->where('training_period_from', '>=', $startDate);
+                })
+                ->when($endDate, function ($query) use ($endDate) {
+                    return $query->where('training_period_to', '<=', $endDate);
+                })
+                ->when($division_id, function ($query) use ($division_id) {
+                    return $query->where('division_id', '=', $division_id);
+                })
+                ->selectRaw('
+                course_type,
+                COUNT(*) as no_of_programs,
+                SUM(batch_size) as no_of_participants,
+                SUM(total_training_hours) as training_hours,
+                SUM(total_program_cost) as total_cost
+            ')
+                ->groupBy('course_type');
+
+            // Query for foreign summary (aggregated data) with filters
+            $foreignSummary = Training::whereIn('course_type', $foreignType)
+                ->when($startDate, function ($query) use ($startDate) {
+                    return $query->where('training_period_from', '>=', $startDate);
+                })
+                ->when($endDate, function ($query) use ($endDate) {
+                    return $query->where('training_period_to', '<=', $endDate);
+                })
+                ->when($division_id, function ($query) use ($division_id) {
+                    return $query->where('division_id', '=', $division_id);
+                })
+                ->selectRaw('
+                "Foreign" as course_type,
+                COUNT(*) as no_of_programs,
+                SUM(batch_size) as no_of_participants,
+                SUM(total_training_hours) as training_hours,
+                SUM(total_program_cost) as total_cost
+            ');
+
+            // Combine both local and foreign summaries
+            $combinedSummary = $localSummary->union($foreignSummary)->get();
+
+            // Store the combined summary in session
+            session(['combinedSummary' => $combinedSummary]);
+
+            // Return the view with the combined summary
+            return view('SuperAdmin.report.trainingSummary', compact('combinedSummary'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading training summary: ' . $e->getMessage());
+        }
     }
+
+    public function epfsummaryView()
+    {
+        try {
+            return view('SuperAdmin.report.EPFSummary');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading EPF summary: ' . $e->getMessage());
+        }
+    }
+    public function bondsummaryView(Request $request)
+    {
+        try {
+            // Ensure that at least one filter is applied
+            if (!$request->filled('name') && !$request->filled('epf_number') && !$request->filled('training_name') && !$request->filled('division_id')) {
+                return view('SuperAdmin.report.BONDSummary', ['bondsummery' => collect()]);
+            }
+
+            // Subquery to get the IDs of trainings with matching participants and training_name
+            $subQuery = Training::where(function ($query) use ($request) {
+                // Filter by training_name
+                if ($request->filled('training_name')) {
+                    $query->where('training_name', 'like', '%' . $request->training_name . '%');
+                }
+            })->whereHas('participants', function ($query) use ($request) {
+                // Filter by participant fields
+                if ($request->filled('name')) {
+                    $query->where('name', 'like', '%' . $request->name . '%');
+                }
+                if ($request->filled('epf_number')) {
+                    $query->where('epf_number', $request->epf_number);
+                }
+                if ($request->filled('division_id')) {
+                    $query->where('division_id', $request->division_id);
+                }
+            })->pluck('id'); // Get the IDs of trainings that match the filters
+
+            // Main query to fetch trainings with participants and sureties
+            $query = Training::with(['participants' => function ($query) use ($request) {
+                // Apply filters on participants
+                if ($request->filled('name')) {
+                    $query->where('name', 'like', '%' . $request->name . '%');
+                }
+                if ($request->filled('epf_number')) {
+                    $query->where('epf_number', $request->epf_number);
+                }
+                if ($request->filled('division_id')) {
+                    $query->where('division_id', $request->division_id);
+                }
+            }, 'participants.sureties'])
+                ->whereIn('id', $subQuery); // Filter trainings based on the subquery
+
+            // Fetch filtered data with pagination
+            $bondsummery = $query->paginate(10);
+
+            // Return view with filtered and grouped data
+            return view('SuperAdmin.report.BONDSummary', compact('bondsummery'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading Bond summary: ' . $e->getMessage());
+        }
+    }
+
+    public function budgetSummeryView()
+    {
+        $training = 0;
+        $budgets = 0;
+        $participant = 0;
+        return view('SuperAdmin.report.BudgetSummery');
+    }
+
+
 
     public function approval()
     {

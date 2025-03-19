@@ -35,6 +35,7 @@ class Training extends Model
         'country',
         'training_structure',
         'exp_date',
+        'duration',
         'batch_size',
         'training_custodian',
         'course_type',

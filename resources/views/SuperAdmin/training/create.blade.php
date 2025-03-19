@@ -193,6 +193,15 @@
                 @enderror
             </div>
 
+            <!-- Durations -->
+            <div class="col-md-6">
+                <label for="duration" class="form-label">Duration</label>
+                <input name="duration" type="text" class="form-control track-change @error('duration') is-invalid @enderror" value="{{ old('duration', isset($training) ? $training->duration : '') }}" required>
+                @error('duration')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
+
             <!-- Category -->
             <div class="col-md-6">
                 <label for="category" class="form-label">Category</label>

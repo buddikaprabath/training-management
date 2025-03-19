@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('country')->nullable();
             $table->string('training_structure')->nullable();
             $table->date('exp_date')->nullable();
+            $table->string('duration');
             $table->integer('batch_size')->nullable();
             $table->text('training_custodian')->nullable();
             $table->string('course_type');

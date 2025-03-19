@@ -25,6 +25,7 @@ class Participant extends Model
         'date_of_appointment',
         'date_of_appointment_to_the_present_post',
         'date_of_birth',
+        'completion_status',
         'division_id',
         'training_id',
         'section_id'

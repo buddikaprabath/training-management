@@ -53,6 +53,7 @@
                         <th class="text-center align-top">Batch Size</th>
                         <th class="text-center align-top">Category</th>
                         <th class="text-center align-top">Training Status</th>
+                        <th class="text-center align-top">Subject</th>
                         <th class="text-center align-top">Participant</th>
                         <th class="text-center align-top">Cost Breakdown</th>
                         <th class="text-center align-top">Add Document</th>
@@ -89,6 +90,16 @@
                                         @endif
                                     </a>
                                 </td>
+                               <!-- Display Subject Modal -->
+                                @if ($item->division_id == 2)
+                                    <td class="text-center">
+                                        <a href="#" class="open-subject-modal" data-bs-toggle="modal" data-bs-target="#subjectModal" data-training-id="{{ $item->id }}">
+                                            <i data-feather="book-open"></i>
+                                        </a>
+                                @else
+                                    <td class="text-center"></td>
+                                @endif
+                                
                                 
                                 <td class="text-center">
                                     <a href="{{ route('SuperAdmin.participant.Detail',$item->id) }}">
@@ -110,7 +121,47 @@
                                     <a href="#" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal" data-training-id="{{ $item->id }}">
                                         <i data-feather="file-text"></i>
                                     </a>
-                                </td>                            
+                                </td>
+                                <!-- Modal for File Upload -->
+                                <div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="uploadDocumentModalLabel">Upload Document</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <form id="documentUploadForm" 
+                                                @if(!empty($item))   
+                                                    action="{{ route('SuperAdmin.training.documents.store') }}" 
+                                                @else 
+                                                    action="#" 
+                                                @endif 
+                                                method="POST" enctype="multipart/form-data">
+                                                @csrf
+                                                <div class="modal-body">
+                                                    <input type="text" class="form-control" name="training_id" id="training_id" 
+                                                        value="{{ !empty($item) ? $item->id : '' }}" hidden>
+                                                    <div class="mb-3">
+                                                        <label for="document_name" class="form-label">Document Name</label>
+                                                        <input type="text" class="form-control" name="name" id="document_name" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="submit_date" class="form-label">Date of Submitting</label>
+                                                        <input type="date" class="form-control" name="date_of_submitting" id="date_of_submitting" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label for="document" class="form-label">Choose File</label>
+                                                        <input type="file" class="form-control" name="document_file" id="document" required>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                                    <button type="submit" class="btn btn-primary">Upload</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>                            
                                 <td class="text-center">
                                     <a href="{{ route('SuperAdmin.training.edit', $item->id) }}" style="display: inline-block; vertical-align: middle;">
                                         <i data-feather="edit" class="text-primary"></i>
@@ -288,48 +339,44 @@
     </div>
 </div>
 
-
-
-<!-- Modal for File Upload -->
-<div class="modal fade" id="uploadDocumentModal" tabindex="-1" aria-labelledby="uploadDocumentModalLabel" aria-hidden="true">
+<!-- Modal for Subject -->
+<div class="modal fade" id="subjectModal" tabindex="-1" aria-labelledby="subjectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="uploadDocumentModalLabel">Upload Document</h5>
+                <h5 class="modal-title" id="subjectModalLabel">Subject</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="documentUploadForm" 
+            <form id="subjectForm" 
                 @if(!empty($item))   
-                    action="{{ route('SuperAdmin.training.documents.store',$item->id) }}" 
+                    action="{{ route('SuperAdmin.training.subject.store',$item->id) }}" 
                 @else 
                     action="#" 
                 @endif 
-                method="POST" enctype="multipart/form-data">
+                method="POST">
                 @csrf
                 <div class="modal-body">
                     <input type="hidden" name="training_id" id="training_id" 
                         value="{{ !empty($item) ? $item->id : '' }}">
                     <div class="mb-3">
-                        <label for="document_name" class="form-label">Document Name</label>
-                        <input type="text" class="form-control" name="name" id="document_name" required>
+                        <label for="subject_name" class="form-label @error('subject_name') is-invalid @enderror">Subject Name</label>
+                        <input type="text" class="form-control" name="subject_name" id="subject_name" required>
                     </div>
                     <div class="mb-3">
-                        <label for="submit_date" class="form-label">Date of Submitting</label>
-                        <input type="date" class="form-control" name="date_of_submitting" id="date_of_submitting" required>
-                    </div>
-                    <div class="mb-3">
-                        <label for="document" class="form-label">Choose File</label>
-                        <input type="file" class="form-control" name="document_file" id="document" required>
+                        <a href="#" class="addmoreSubject">
+                            <i data-feather="plus"></i>
+                        </a>
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary">Upload</button>
+                <div class="model-footer">
+                    <button type="submit" class="btn btn-primary">ADD</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
+
+
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
@@ -339,6 +386,49 @@
         const trainingStatusModal = new bootstrap.Modal(document.getElementById("trainingStatusModal"));
         const costInputs = document.querySelectorAll(".cost-input");
         const totalAmountField = document.getElementById("totalAmount");
+
+        // New functionality for adding dynamic subject input fields
+        let subjectCounter = 1; // Start from 1 for dynamic fields (since default field exists)
+        const maxFields = 15; // Maximum number of input fields
+        const addButton = document.querySelector('.addmoreSubject'); // Plus icon button
+        
+        // Open the modal when the "book-open" icon is clicked
+        const openModalButtons = document.querySelectorAll('.open-subject-modal');
+        openModalButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const trainingId = this.getAttribute('data-training-id');
+                document.getElementById('training_id').value = trainingId;
+                $('#subjectModal').modal('show'); // Using Bootstrap modal show
+            });
+        });
+
+        // Add new input field when the plus icon is clicked
+        if (addButton) {
+            addButton.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default anchor behavior
+
+                if (subjectCounter < maxFields) {
+                    const newInputGroup = document.createElement('div');
+                    newInputGroup.classList.add('mb-3');
+                    // When adding a new field:
+                    newInputGroup.innerHTML = `
+                        <label for="subject_name_${subjectCounter}" class="form-label">Subject Name ${subjectCounter + 1}</label>
+                        <input type="text" class="form-control" name="subject_name_${subjectCounter}" id="subject_name_${subjectCounter}" required>
+                    `;
+                                        
+                    // Insert the new field before the container of the plus icon
+                    this.parentElement.insertAdjacentElement('beforebegin', newInputGroup);
+                    subjectCounter++; // Increment counter after adding a field
+                    
+                    // Re-initialize Feather icons after adding new elements
+                    if (typeof feather !== 'undefined') {
+                        feather.replace();
+                    }
+                } else {
+                    alert("You can add a maximum of 15 subjects.");
+                }
+            });
+        }
 
         function initializeModals() {
             document.querySelectorAll(".open-cost-modal").forEach(button => {
@@ -360,13 +450,13 @@
                 });
             });
 
-            document.getElementById("saveCost").addEventListener("click", function () {
+            document.getElementById("saveCost")?.addEventListener("click", function () {
                 console.log("Cost details saved!");
                 costModal.hide();
             });
 
             // Handle document upload modal
-            uploadModalElement.addEventListener("show.bs.modal", function(event) {
+            uploadModalElement?.addEventListener("show.bs.modal", function(event) {
                 const button = event.relatedTarget; // Button that triggered the modal
                 const trainingId = button.getAttribute("data-training-id");
                 document.getElementById("training_id").value = trainingId;
@@ -375,7 +465,9 @@
 
         function calculateTotal() {
             const total = [...costInputs].reduce((sum, input) => sum + (parseFloat(input.value) || 0), 0);
-            totalAmountField.value = total.toFixed(2);
+            if (totalAmountField) {
+                totalAmountField.value = total.toFixed(2);
+            }
         }
 
         function attachCostCalculation() {
@@ -384,27 +476,32 @@
         }
 
         function initFeatherIcons() {
-            feather.replace();
+            if (typeof feather !== 'undefined') {
+                feather.replace();
+            }
         }
 
         function handleTrainingStatusForm() {
-            document.getElementById("saveStatus").addEventListener("click", function () {
+            document.getElementById("saveStatus")?.addEventListener("click", function () {
                 let form = document.getElementById("trainingStatusForm");
+                if (!form) return;
 
                 // Check if all checkboxes are checked
                 const allChecked = [...document.querySelectorAll(".status-switch")].every(input => input.checked);
 
                 let trainingStatusField = document.getElementById("training_status");
-                if (allChecked) {
-                    trainingStatusField.checked = true;
-                    trainingStatusField.value = 1;
-                } else {
-                    trainingStatusField.checked = false;
-                    trainingStatusField.value = 0;
-                }
+                if (trainingStatusField) {
+                    if (allChecked) {
+                        trainingStatusField.checked = true;
+                        trainingStatusField.value = 1;
+                    } else {
+                        trainingStatusField.checked = false;
+                        trainingStatusField.value = 0;
+                    }
 
-                // Enable 'training_status' before submitting
-                trainingStatusField.disabled = false;
+                    // Enable 'training_status' before submitting
+                    trainingStatusField.disabled = false;
+                }
 
                 // Convert all checkbox values to 1 or 0 before submission
                 document.querySelectorAll(".status-switch").forEach(input => {
@@ -427,7 +524,4 @@
         init();
     });
 </script>
-
-
-
 @endsection

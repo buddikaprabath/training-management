@@ -7,11 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 class Grade extends Model
 {
     // Since you're using a composite primary key, we define that here.
-    protected $primaryKey = ['unique_identifier', 'participant_id', 'subject_id'];
+    protected $primaryKey = ['training_id', 'participant_id', 'subject_id'];
     public $incrementing = false; // Disable auto-incrementing for the primary key.
 
     protected $fillable = [
-        'unique_identifier',
+        'training_id',
         'participant_id',
         'subject_id',
         'grade'
@@ -20,7 +20,7 @@ class Grade extends Model
     // Relationships
     public function training()
     {
-        return $this->belongsTo(Training::class, 'unique_identifier', 'id');
+        return $this->belongsTo(Training::class, 'training_id', 'id');
     }
 
     public function participant()

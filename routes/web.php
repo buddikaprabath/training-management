@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Training;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\Usercontroller;
@@ -49,12 +50,13 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::put('{id}/update', 'updatetraining')->name('update'); // Update training details
                 Route::post('cost-breakdown/store/{trainingId}', 'storeCostBreakdown')->name('cost-breakdown.store');
                 Route::delete('deleteTraining/{id}', 'trainingdestroy')->name('Training.delete'); // Delete user
-                Route::post('documents/store/{id}', 'storeTrainingDocument')->name('documents.store');
+                Route::post('documents/store', 'storeTrainingDocument')->name('documents.store');
                 Route::get('costDetail/{id}', 'viewCost')->name('costDetail');
                 Route::get('costbreak/{id}', 'getCostBreakdownData')->name('costbreak');
                 Route::delete('cost-breakdown/delete/{id}', 'costBreakDelete')->name('cost-breakdown.delete');
                 Route::put('{id}/cost-breakdown/update', 'updateCostBreakdown')->name('cost-breakdown.update');
                 Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
+                Route::post('subject/store/{trainingId}', 'storeSubject')->name('subject.store');
             });
 
             //participant routes
@@ -68,6 +70,7 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::post('import-participants', 'importParticipants')->name('import-participants');
                 Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
                 Route::delete('delete/{id}', 'destroyparticipant')->name('delete');
+                Route::post('grade/store', 'gradeStore')->name('grade.store');
             });
             //budget routes
             Route::prefix('budget')->name('budget.')->group(function () {
@@ -108,6 +111,9 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
             //reports routes
             Route::prefix('report')->name('report.')->group(function () {
                 Route::get('trainingSummary', 'trainingsummaryView')->name('trainingSummary'); // load the training summary view
+                Route::get('epfSummary', 'epfsummaryView')->name('EPFSummary');
+                Route::get('bondSummary', 'bondsummaryView')->name('BONDSummary');
+                Route::get('budgetSummery', 'budgetSummeryView')->name('BudgetSummery');
             });
         });
     });
