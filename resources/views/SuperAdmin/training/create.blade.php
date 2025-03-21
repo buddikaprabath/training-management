@@ -41,6 +41,12 @@
                     <option value="2" {{ old('training_code', isset($training) ? $training->training_code : '') == 2 ? 'selected' : '' }}>Code 2</option>
                     <option value="3" {{ old('training_code', isset($training) ? $training->training_code : '') == 3 ? 'selected' : '' }}>Code 3</option>
                     <option value="4" {{ old('training_code', isset($training) ? $training->training_code : '') == 4 ? 'selected' : '' }}>Code 4</option>
+                    <option value="5" {{ old('training_code', isset($training) ? $training->training_code : '') == 5 ? 'selected' : '' }}>Code 5</option>
+                    <option value="6" {{ old('training_code', isset($training) ? $training->training_code : '') == 6 ? 'selected' : '' }}>Code 6</option>
+                    <option value="7" {{ old('training_code', isset($training) ? $training->training_code : '') == 7 ? 'selected' : '' }}>Code 7</option>
+                    <option value="8" {{ old('training_code', isset($training) ? $training->training_code : '') == 8 ? 'selected' : '' }}>Code 8</option>
+                    <option value="9" {{ old('training_code', isset($training) ? $training->training_code : '') == 9 ? 'selected' : '' }}>Code 9</option>
+                    <option value="10" {{ old('training_code', isset($training) ? $training->training_code : '') == 10 ? 'selected' : '' }}>Code 10</option>
                 </select>
                 @error('training_code')
                     <div class="invalid-feedback">{{ $message }}</div>

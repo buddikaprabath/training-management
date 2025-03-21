@@ -89,6 +89,7 @@
                         @if ($participants->first() && $participants->first()->training->division_id == 2)
                             <th class="text-center align-top">Grade</th>
                         @endif
+                        <th class="text-center align-top">Completion Status</th>
                         <th class="text-center align-top">Remarks</th>
                         <th class="text-center align-top">Add Document</th>
                         <th class="text-center align-top">Action</th>
@@ -108,6 +109,17 @@
                                 <td class="text-center">
                                     <a href="#" class="add-grade-btn" data-participant-id="{{ $participant->id }}" data-bs-toggle="modal" data-bs-target="#addgradeModal">
                                         <i data-feather="award"></i>
+                                    </a>
+                                </td>
+                            @endif
+                            @if ($participant->completion_status == 'attended')
+                                <td class="text-center">Attended</td>
+                            @elseif ($participant->completion_status == 'unattended')
+                                <td class="text-center">Not Attended</td>
+                            @else
+                                <td class="text-center">
+                                    <a href="#" class="completion-status-btn" data-participant-id="{{ $participant->id }}" data-bs-toggle="modal" data-bs-target="#completionStatusModal">
+                                        <i data-feather="check-circle"></i>
                                     </a>
                                 </td>
                             @endif
@@ -320,7 +332,31 @@
     </div>
 </div>
 -->
-
+<!-- completion status modal -->
+<div class="modal fade" id="completionStatusModal" tabindex="-1" aria-labelledby="completionStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="completionStatusModalLabel">Update Completion Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="completionStatusForm" method="POST" action="">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" id="completionStatusparticipantId" name="participant_id">
+                    <div class="mb-3">
+                        <label for="completionStatus" class="form-label">Select Status</label>
+                        <div>
+                            <button type="button" class="btn btn-success" onclick="updateStatus('attended')">Attended</button>
+                            <button type="button" class="btn btn-danger" onclick="updateStatus('unattended')">Not Attended</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Modal for Add Grade -->
 <div class="modal fade" id="addgradeModal" tabindex="-1" aria-labelledby="addgradeModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -363,8 +399,31 @@
 <script>
     // Add this right before your JavaScript code
     const gradeStoreRoute = "{{ route('SuperAdmin.participant.grade.store') }}";
+    const completionStatusRoute = "{{route('SuperAdmin.participant.updateStatus')}}";
     
     document.addEventListener("DOMContentLoaded", function () {
+        var completionStatusModal = document.getElementById('completionStatusModal');
+        var participantIdInput = document.getElementById('completionStatusparticipantId');
+        var completionStatusForm = document.getElementById('completionStatusForm');
+
+        // When the modal is shown, set the participant ID
+        completionStatusModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Button that triggered the modal
+            var participantId = button.getAttribute('data-participant-id'); // Extract info from data-* attributes
+            participantIdInput.value = participantId;
+            completionStatusForm.action = completionStatusRoute; // Set the form action URL
+        });
+
+        // Function to update the status
+        window.updateStatus = function(status) {
+            var form = completionStatusForm;
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'completion_status';
+            input.value = status;
+            form.appendChild(input);
+            form.submit();
+        };
         // Initialize feather icons if you're using them
         if (typeof feather !== 'undefined') {
             feather.replace();

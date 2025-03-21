@@ -51,6 +51,19 @@
                 <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Training Report</span>
             </a>
         </li>
+
+        <li class="sidebar-item {{ request()->routeis('SuperAdmin.report.IndividualEmployeeTrainingRecordReport')?'active':''}}">
+            <a class="sidebar-link" href="{{route('SuperAdmin.report.IndividualEmployeeTrainingRecordReport')}}">
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Individual Employee Training Record</span>
+            </a>
+        </li>
+
+        <li class="sidebar-item {{ request()->routeis('SuperAdmin.report.ParticularCourseCompletedSummery')?'active':''}}">
+            <a class="sidebar-link" href="{{route('SuperAdmin.report.ParticularCourseCompletedSummery')}}">
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Particular Course Completed Summery</span>
+            </a>
+        </li>
+
         <li class="sidebar-item {{ request()->routeis('SuperAdmin.report.EPFSummary')?'active':''}}">
             <a class="sidebar-link" href="{{route('SuperAdmin.report.EPFSummary')}}">
                 <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">EPF Report</span>

@@ -128,6 +128,7 @@ class HRAdmincontroller extends Controller
             'section_id'            => 'nullable|exists:sections,id',
             'training_structure'    => 'nullable|string|max:255',
             'exp_date'              => 'nullable|date|after_or_equal:training_period_to', // Updated to ensure the expiration date is after the training end date
+            'duration'              => 'required|string|max:255',
             'institutes'            => 'required|array',
             'institutes.*'          => 'exists:institutes,id',
             'trainers'              => 'required|array',
@@ -153,6 +154,7 @@ class HRAdmincontroller extends Controller
                 'country'               => $validated['country'] ?? null,
                 'training_structure'    => $validated['training_structure'] ?? null,
                 'exp_date'              => $validated['exp_date'] ?? null,
+                'duration'              => $validated['duration'],
                 'batch_size'            => $validated['batch_size'] ?? null,
                 'training_custodian'    => $validated['training_custodian'] ?? null,
                 'course_type'           => $validated['course_type'],
@@ -234,6 +236,7 @@ class HRAdmincontroller extends Controller
             'other_comments'        => 'nullable|string|max:255',
             'training_structure'    => 'nullable|string|max:255',
             'exp_date'              => 'nullable|date|after_or_equal:training_period_to',
+            'duration'              => 'required|string|max:255',
             'institutes'            => 'required|array',
             'institutes.*'          => 'exists:institutes,id',
             'trainers'              => 'required|array',

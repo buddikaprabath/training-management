@@ -344,32 +344,34 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="subjectModalLabel">Subject</h5>
+                <h5 class="modal-title" id="subjectModalLabel">Add Subjects</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="subjectForm" 
-                @if(!empty($item))   
-                    action="{{ route('SuperAdmin.training.subject.store',$item->id) }}" 
-                @else 
-                    action="#" 
-                @endif 
-                method="POST">
+            <form id="subjectForm" action="{{ route('SuperAdmin.training.subject.store') }}" method="POST">
                 @csrf
                 <div class="modal-body">
-                    <input type="hidden" name="training_id" id="training_id" 
-                        value="{{ !empty($item) ? $item->id : '' }}">
+                    <!-- Hidden training ID field -->
+                    <input type="hidden" name="training_id" id="subject_training_id">
+                    
+                    <!-- Default subject field -->
                     <div class="mb-3">
-                        <label for="subject_name" class="form-label @error('subject_name') is-invalid @enderror">Subject Name</label>
+                        <label for="subject_name" class="form-label">Subject Name</label>
                         <input type="text" class="form-control" name="subject_name" id="subject_name" required>
                     </div>
+                    
+                    <!-- Dynamic subject fields will be added here -->
+                    
+                    <!-- Add more button -->
                     <div class="mb-3">
-                        <a href="#" class="addmoreSubject">
-                            <i data-feather="plus"></i>
-                        </a>
+                        <button type="button" class="btn btn-sm btn-primary addmoreSubject">
+                            <i data-feather="plus"></i> Add Another Subject
+                        </button>
+                        <small class="text-muted ms-2">(Maximum 15 subjects per training)</small>
                     </div>
                 </div>
-                <div class="model-footer">
-                    <button type="submit" class="btn btn-primary">ADD</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Subjects</button>
                 </div>
             </form>
         </div>
@@ -397,7 +399,7 @@
         openModalButtons.forEach(button => {
             button.addEventListener('click', function() {
                 const trainingId = this.getAttribute('data-training-id');
-                document.getElementById('training_id').value = trainingId;
+                document.getElementById('subject_training_id').value = trainingId;
                 $('#subjectModal').modal('show'); // Using Bootstrap modal show
             });
         });

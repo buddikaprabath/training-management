@@ -27,7 +27,7 @@ return new class extends Migration
             $table->date('date_of_appointment');
             $table->date('date_of_appointment_to_the_present_post');
             $table->date('date_of_birth');
-            $table->string('completion_status');
+            $table->string('completion_status')->nullable();
             $table->foreignId('division_id')->constrained()->onDelete('cascade');
             $table->string('training_id');
             $table->foreignId('section_id')->nullable()->constrained()->onDelete('cascade');

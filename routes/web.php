@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Training;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\Usercontroller;
@@ -56,7 +57,7 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::delete('cost-breakdown/delete/{id}', 'costBreakDelete')->name('cost-breakdown.delete');
                 Route::put('{id}/cost-breakdown/update', 'updateCostBreakdown')->name('cost-breakdown.update');
                 Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
-                Route::post('subject/store/{trainingId}', 'storeSubject')->name('subject.store');
+                Route::post('subject/store', 'storeSubject')->name('subject.store');
             });
 
             //participant routes
@@ -71,6 +72,7 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
                 Route::delete('delete/{id}', 'destroyparticipant')->name('delete');
                 Route::post('grade/store', 'gradeStore')->name('grade.store');
+                Route::put('updateStatus',  'updatecompletionStatus')->name('updateStatus');
             });
             //budget routes
             Route::prefix('budget')->name('budget.')->group(function () {
@@ -114,6 +116,13 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('epfSummary', 'epfsummaryView')->name('EPFSummary');
                 Route::get('bondSummary', 'bondsummaryView')->name('BONDSummary');
                 Route::get('budgetSummery', 'budgetSummeryView')->name('BudgetSummery');
+                Route::get('IndividualEmployeeTrainingRecordReport', 'IndividualEmployeeTrainingRecordView')->name('IndividualEmployeeTrainingRecordReport');
+                Route::get('ParticularCourseCompletedSummery', 'ParticularCourseCompletedSummaryView')->name('ParticularCourseCompletedSummery');
+                Route::prefix('pdf')->name('pdf.')->group(function () {
+                    Route::get('download-training-summary-pdf', 'downloadTrainingSummaryPdf')->name('download-training-summary-pdf');
+                    Route::get('download-Individual-Employee-Training-Record-Pdf', 'downloadIndividualEmployeeTrainingRecordPdf')->name('dowload-Individual-Employee-Training-Record-Pdf');
+                    Route::get('download-Particular-Course-Completed-Summery-Pdf', 'downloadParticularCourseCompletedSummaryPdf')->name('dowload-Particular-Course-Completed-Summery-Pdf');
+                });
             });
         });
     });
