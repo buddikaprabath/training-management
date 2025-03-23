@@ -3,7 +3,7 @@
 <div class="card card-custom">
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
         <h3 class="card-title">
-            Trainings Required to be Renewed/Recurrent
+            Course Code-Wise Summery
         </h3>
         <a href="{{ url()->current() }}">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-refresh-cw">
@@ -27,24 +27,32 @@
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
                 <div class="mb-3">
-                    <label for="course name" class="form-label">Course Training Name</label>
-                    <input type="text" name="training_name" id="training_name" class="form-control">
+                    <label for="Code" class="form-label">Course Code</label>
+                    <input type="text" name="course_code" id="course_code" class="form-control">
                 </div>
                 <div class="mb-3">
-                    <label for="epf_number" class="form-label">Epf Number</label>
-                    <input type="text" name="epf_number" id="epf_number" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label for="division_id" class="form-label">Division</label>
-                    <select name="division_id" id="division" class="form-select track-change">
+                    <label for="Duration" class="form-label">Monthly</label>
+                    <select name="duration" id="duration" class="form-select track-change">
                         <option selected disabled>Choose...</option>
-                        <option value="1">HR</option>
-                        <option value="2">CATC</option>
-                        <option value="3">IT</option>
-                        <option value="4">FINANCE</option>
-                        <option value="5">SCM</option>
-                        <option value="6">MARKETING</option>
-                        <option value="7">SECURITY</option>
+                        <?php
+                            for ($month = 1; $month <= 12; $month++) {
+                                $monthName = DateTime::createFromFormat('!m', $month)->format('F'); // Get full month name
+                                $monthValue = str_pad($month, 2, '0', STR_PAD_LEFT); // Ensure two-digit format (e.g., 01, 02)
+                                echo "<option value='$monthValue'>$monthName</option>";
+                            }
+                        ?>
+                    </select>
+                </div>
+                <!-- Course Type -->
+                <div class="mb-3">
+                    <label for="course_type" class="form-label">Course Type</label>
+                    <select name="course_type" id="course_type" class="form-select track-change">
+                        <option selected disabled>Choose Type...</option>
+                        <option value="Local In-house">Local In-house</option>
+                        <option value="Local Outside">Local Outside</option>
+                        <option value="Local-Tailor Made">Local-Tailor Made</option>
+                        <option value="Foreign">Foreign</option>
+                        <option value="CATC">CATC</option>
                     </select>
                 </div>
                 <div class="mb-3">
@@ -65,25 +73,18 @@
     @endif
     <div class="card-body p-4 rounded-3 shadow-lg" style="background-color: #A8BDDB;">
         <div class="d-flex justify-content-between">
-            <span>Course Name :</span>
-            <span>Employee Name : </span>
-        </div>
-        <div class="d-flex justify-content-between">
-            <span>Employee EPF :</span>
-            <span>Division : </span>
+            <span>Course Code : </span>
+            <span>Category : </span>
         </div>
         <table class="table table-hover table-checkable" id="kt_datatable">
             <thead>
                 <tr>
                     <th class="text-center align-top">S/N</th>
-                    <th class="text-center align-top">Employee EPF</th>
-                    <th class="text-center align-top">Name</th>
-                    <th class="text-center align-top">Designation</th>
-                    <th class="text-center align-top">Division</th>
-                    <th class="text-center align-top">Title of Training Required to Renew/Recurrent</th>
-                    <th class="text-center align-top">Validity Period</th>
-                    <th class="text-center align-top">Expiration Date</th>
-
+                    <th class="text-center align-top">Category</th>
+                    <th class="text-center align-top">Course/Training Name</th>
+                    <th class="text-center align-top">Np. Of Participants</th>
+                    <th class="text-center align-top">Training Hours</th>
+                    <th class="text-center align-top">Total Cost</th>
                 </tr>
             </thead>
             <tbody>

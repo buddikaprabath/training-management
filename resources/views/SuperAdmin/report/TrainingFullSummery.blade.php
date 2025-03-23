@@ -13,7 +13,7 @@
             </svg>
         </a>
         <!-- Download Button -->
-        <a href="#" class="btn btn-primary d-flex align-items-center px-3">
+        <a href="{{route('SuperAdmin.report.pdf.download-Training-Full-Summary-pdf')}}" class="btn btn-primary d-flex align-items-center px-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download me-2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -23,21 +23,29 @@
         </a>
     </div>
     <div class="card-body">
-        <form action="" method="GET">
+        <form action="{{route('SuperAdmin.report.TrainingFullSummery')}}" method="GET" id="filterForm">
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
                 <div class="mb-3">
                     <label for="Year" class="form-label">Year</label>
                     <input type="number" name="year" id="year" class="form-control">
                 </div>
-                <div class="mb-3">
-                    <label for="epf_number" class="form-label">Epf number</label>
-                    <input type="text" name="epf_number" id="epf_number" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label for="employee_Name" class="form-label">Employee Name</label>
-                    <input type="text" name="name" id="name" class="form-control">
-                </div>
+                 <!-- Category -->
+            <div class="mb-3">
+                <label for="category" class="form-label">Category</label>
+                <select name="category" id="category" class="form-select track-change">
+                    <option selected disabled>Choose Type...</option>
+                    <option value="Training">Training</option>
+                    <option value="Meeting">Meeting</option>
+                    <option value="Seminar">Seminar</option>
+                    <option value="Study Tour">Study Tour</option>
+                    <option value="FAM">FAM</option>
+                    <option value="Exhibition">Exhibition</option>
+                    <option value="Refresher">Refresher</option>
+                    <option value="Initial">Initial</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
                 <div class="mb-3">
                     <button type="submit" class="btn btn-primary" style="margin-top:30%"> <i data-feather="filter" class="m-1"></i>Filter</button>
                 </div>
@@ -56,33 +64,62 @@
     @endif
     <div class="card-body p-4 rounded-3 shadow-lg" style="background-color: #A8BDDB;">
         <div class="d-flex justify-content-between">
-            <span>Employee Name :</span>
-            <span>Service number : </span>
-        </div>
-        <div class="d-flex justify-content-between">
-            <span>Designation :</span>
-            <span>Division : </span>
+            <span>Year : {{$year ?? 'N/A'}}</span>
+            <span>Category : {{$category ?? 'N/A'}}</span>
         </div>
         <table class="table table-hover table-checkable" id="kt_datatable">
             <thead>
                 <tr>
                     <th class="text-center align-top">S/N</th>
-                    <th class="text-center align-top">Course Type</th>
-                    <th class="text-center align-top">Uniqe Identifier</th>
-                    <th class="text-center align-top">Name Of The Program</th>
-                    <th class="text-center align-top">Category</th>
+                    <th class="text-center align-top">Program Name</th>
                     <th class="text-center align-top">Institute</th>
                     <th class="text-center align-top">Trainer</th>
-                    <th class="text-center align-top">Year</th>
+                    <th class="text-center align-top">No. Of Days</th>
+                    <th class="text-center align-top">Batch Size</th>
+                    <th class="text-center align-top">Total Cost</th>
+                    <th class="text-center align-top">Training Hours</th>
+                    <th class="text-center align-top">Month</th>
 
                 </tr>
             </thead>
             <tbody>
-                
+                @if($trainings->isEmpty())
+                    <tr>
+                        <td colspan="9" class="text-center">No records found.</td>
+                    </tr>
+                @else
+                    @foreach ($trainings as $courseType => $trainingGroup)
+                        <tr>
+                            <td colspan="9" class="text-left"><strong>{{ $courseType }} Training Records</strong></td>
+                        </tr>
+                        @foreach ($trainingGroup as $training)
+                            <tr>
+                                <td class="text-center">{{ $loop->iteration }}</td>
+                                <td class="text-center">{{ $training->training_name }}</td>
+                                <td class="text-center">
+                                    @foreach ($training->institutes as $institute)
+                                        {{ $institute->name }}<br>
+                                    @endforeach
+                                </td>
+                                <td class="text-center">
+                                    @foreach ($training->trainers as $trainer)
+                                        {{ $trainer->name }}<br>
+                                    @endforeach
+                                </td>
+                                <td class="text-center">{{ $training->duration }}</td>
+                                <td class="text-center">{{ $training->batch_size }}</td>
+                                <td class="text-center">{{ $training->total_program_cost }}</td>
+                                <td class="text-center">{{ $training->total_training_hours }}</td>
+                                <td class="text-center">{{ $training->training_period_to->format('M') }}</td>
+                            </tr>
+                        @endforeach
+                    @endforeach
+                @endif
             </tbody>
             
         </table>
     </div>
 
 </div>
+
 @endsection

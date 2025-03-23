@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\Usercontroller;
 use App\Http\Controllers\Admin\HRAdmincontroller;
 use App\Http\Controllers\Admin\CATCAdmincontroller;
+use App\Http\Controllers\Superadmin\reportcontroller;
 use App\Http\Controllers\Superadmin\superadmincontroller;
 
 Route::get('/', function () {
@@ -118,11 +119,26 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('budgetSummery', 'budgetSummeryView')->name('BudgetSummery');
                 Route::get('IndividualEmployeeTrainingRecordReport', 'IndividualEmployeeTrainingRecordView')->name('IndividualEmployeeTrainingRecordReport');
                 Route::get('ParticularCourseCompletedSummery', 'ParticularCourseCompletedSummaryView')->name('ParticularCourseCompletedSummery');
+                Route::get('TrainingFullSummery', 'TrainingFullSummaryView')->name('TrainingFullSummery');
                 Route::prefix('pdf')->name('pdf.')->group(function () {
                     Route::get('download-training-summary-pdf', 'downloadTrainingSummaryPdf')->name('download-training-summary-pdf');
                     Route::get('download-Individual-Employee-Training-Record-Pdf', 'downloadIndividualEmployeeTrainingRecordPdf')->name('dowload-Individual-Employee-Training-Record-Pdf');
                     Route::get('download-Particular-Course-Completed-Summery-Pdf', 'downloadParticularCourseCompletedSummaryPdf')->name('dowload-Particular-Course-Completed-Summery-Pdf');
+                    Route::get('download-Training-Full-Summary-pdf', 'downloadTrainingFullSummaryLocalForeignPdf')->name('download-Training-Full-Summary-pdf');
                 });
+            });
+        });
+    });
+    //Super Admin reports 
+    Route::controller(reportcontroller::class)->group(function () {
+        Route::prefix('SuperAdmin')->name('SuperAdmin.')->group(function () {
+            Route::prefix('report')->name('report.')->group(function () {
+                Route::get('TrainingCustodianWiseSummery', 'TrainingCustodianWiseSummeryView')->name('TrainingCustodianWiseSummery');
+                Route::get('DesignationWiseSummery', 'DesignationWiseSummeryView')->name('DesignationWiseSummery');
+                Route::get('CourseCode-wise_summary', 'courseCodeWiseSummaryView')->name('CourseCode-wise_summary');
+                Route::get('ListOfAbsenteesReport', 'ListOfAbsenteesReportView')->name('ListOfAbsenteesReport');
+                Route::get('TrainingsRequiredtobeRenewed_Recurrent', 'TrainingsRequiredtobeRenewedRecurrentView')->name('TrainingsRequiredtobeRenewed_Recurrent');
+                Route::prefix('pdf')->name('pdf.')->group(function () {});
             });
         });
     });

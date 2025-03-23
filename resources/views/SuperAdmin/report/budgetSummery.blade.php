@@ -26,15 +26,32 @@
         <form action="#" method="GET">
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
-                <!-- Division id -->
                 <div class="mb-3">
-                    <label for="Duration" class="form-label">Duration</label>
+                    <label for="Duration" class="form-label">Monthly</label>
                     <select name="duration" id="duration" class="form-select track-change">
                         <option selected disabled>Choose...</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="quartely">Quartely</option>
-                        <option value="annual">Annual</option>
+                        <?php
+                            for ($month = 1; $month <= 12; $month++) {
+                                $monthName = DateTime::createFromFormat('!m', $month)->format('F'); // Get full month name
+                                $monthValue = str_pad($month, 2, '0', STR_PAD_LEFT); // Ensure two-digit format (e.g., 01, 02)
+                                echo "<option value='$monthValue'>$monthName</option>";
+                            }
+                        ?>
                     </select>
+                </div>
+                <div class="mb-3">
+                    <label for="Duration" class="form-label">Quartely</label>
+                    <select name="duration" id="duration" class="form-select track-change">
+                        <option selected disabled>Choose...</option>
+                        <option value="Q1">Q 1</option>
+                        <option value="Q2">Q 2</option>
+                        <option value="Q3">Q 3</option>
+                        <option value="Q4">Q 4</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="Year" class="form-label">Year</label>
+                    <input type="number" name="year" id="year" class="form-control">
                 </div>
                 <div class="mb-3">
                     <button type="submit" class="btn btn-primary" style="margin-top:30%"> <i data-feather="filter" class="m-1"></i>Filter</button>

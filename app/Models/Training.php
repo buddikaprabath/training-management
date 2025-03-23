@@ -51,6 +51,12 @@ class Training extends Model
         'user_id'
     ];
 
+    protected $casts = [
+        'training_period_from' => 'date',
+        'training_period_to' => 'date',
+        'exp_date' => 'date',
+        'dead_line' => 'date',
+    ];
     protected static function booted()
     {
         static::creating(function ($training) {

@@ -3,7 +3,7 @@
 <div class="card card-custom">
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
         <h3 class="card-title">
-            Individual Employee Training Record
+            Designation Wise Summery
         </h3>
         <a href="{{ url()->current() }}">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-refresh-cw">
@@ -27,16 +27,24 @@
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
                 <div class="mb-3">
+                    <label for="designation" class="form-label">Employee Designation</label>
+                    <input type="text" name="designation" id="Designation" class="form-control">
+                </div>
+                <div class="mb-3">
                     <label for="Year" class="form-label">Year</label>
                     <input type="number" name="year" id="year" class="form-control">
                 </div>
-                <div class="mb-3">
-                    <label for="epf_number" class="form-label">Epf number</label>
-                    <input type="text" name="epf_number" id="epf_number" class="form-control">
-                </div>
-                <div class="mb-3">
-                    <label for="employee_Name" class="form-label">Employee Name</label>
-                    <input type="text" name="name" id="name" class="form-control">
+                 <!-- Course Type -->
+                 <div class="mb-3">
+                    <label for="course_type" class="form-label">Course Type</label>
+                    <select name="course_type" id="course_type" class="form-select track-change">
+                        <option selected disabled>Choose Type...</option>
+                        <option value="Local In-house">Local In-house</option>
+                        <option value="Local Outside">Local Outside</option>
+                        <option value="Local-Tailor Made">Local-Tailor Made</option>
+                        <option value="Foreign">Foreign</option>
+                        <option value="CATC">CATC</option>
+                    </select>
                 </div>
                 <div class="mb-3">
                     <button type="submit" class="btn btn-primary" style="margin-top:30%"> <i data-feather="filter" class="m-1"></i>Filter</button>
@@ -56,24 +64,23 @@
     @endif
     <div class="card-body p-4 rounded-3 shadow-lg" style="background-color: #A8BDDB;">
         <div class="d-flex justify-content-between">
-            <span>Employee Name :</span>
-            <span>Service number : </span>
+            <span>Employee Designation :</span>
+            <span>Course Type : </span>
         </div>
         <div class="d-flex justify-content-between">
-            <span>Designation :</span>
-            <span>Division : </span>
+            <span>Period :</span>
         </div>
         <table class="table table-hover table-checkable" id="kt_datatable">
             <thead>
                 <tr>
                     <th class="text-center align-top">S/N</th>
-                    <th class="text-center align-top">Course Type</th>
-                    <th class="text-center align-top">Uniqe Identifier</th>
-                    <th class="text-center align-top">Name Of The Program</th>
+                    <th class="text-center align-top">EPF</th>
+                    <th class="text-center align-top">Employee Name</th>
+                    <th class="text-center align-top">Training Code</th>
+                    <th class="text-center align-top">Training Program</th>
                     <th class="text-center align-top">Category</th>
-                    <th class="text-center align-top">Institute</th>
-                    <th class="text-center align-top">Trainer</th>
-                    <th class="text-center align-top">Year</th>
+                    <th class="text-center align-top">Mode of Delivery</th>
+                    <th class="text-center align-top">Division</th>
 
                 </tr>
             </thead>

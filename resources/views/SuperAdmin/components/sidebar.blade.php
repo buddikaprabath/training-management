@@ -64,6 +64,36 @@
             </a>
         </li>
 
+        <li class="sidebar-item {{ request()->routeis('SuperAdmin.report.TrainingFullSummery')?'active':''}}">
+            <a class="sidebar-link" href="{{route('SuperAdmin.report.TrainingFullSummery')}}">
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Training Full Summery</span>
+            </a>
+        </li>
+        <li class="sidebar-item{{request()->routeis('SuperAdmin.report.TrainingCustodianWiseSummery')?'active':''}}">
+            <a href="{{route('SuperAdmin.report.TrainingCustodianWiseSummery')}}" class="sidebar-link">
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Training Custodian-Wise Summery</span>
+            </a>
+        </li>
+        <li class="sidebar-item{{request()->routeis('SuperAdmin.report.DesignationWiseSummery')?'active':''}}">
+            <a href="{{route('SuperAdmin.report.DesignationWiseSummery')}}" class="sidebar-link">
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Designation Wise Summery</span>
+            </a>
+        </li>
+        <li class="sidebar-item{{request()->routeis('SuperAdmin.report.CourseCode-wise_summary')?'active':''}}">
+            <a href="{{route('SuperAdmin.report.CourseCode-wise_summary')}}" class="sidebar-link">
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Course Code Wise Summery</span>
+            </a>
+        </li>
+        <li class="sidebar-item{{request()->routeis('SuperAdmin.report.ListOfAbsenteesReport')?'active':''}}">
+            <a href="{{route('SuperAdmin.report.ListOfAbsenteesReport')}}" class="sidebar-link">
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">List Of Absentees</span>
+            </a>
+        </li>
+        <li class="sidebar-item{{request()->routeis('SuperAdmin.report.TrainingsRequiredtobeRenewed_Recurrent')?'active':''}}">
+            <a href="{{route('SuperAdmin.report.TrainingsRequiredtobeRenewed_Recurrent')}}" class="sidebar-link">
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Training Required to be Renewed Recurrent</span>
+            </a>
+        </li>
         <li class="sidebar-item {{ request()->routeis('SuperAdmin.report.EPFSummary')?'active':''}}">
             <a class="sidebar-link" href="{{route('SuperAdmin.report.EPFSummary')}}">
                 <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">EPF Report</span>

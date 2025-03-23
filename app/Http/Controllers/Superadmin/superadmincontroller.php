@@ -1753,6 +1753,69 @@ class superadmincontroller extends Controller
         }
     }
 
+    //full summary view (Local/Foreign)
+    public function TrainingFullSummaryView(Request $request)
+    {
+        try {
+
+            // Ensure that at least one filter is applied
+            if (!$request->filled('year') && !$request->filled('category')) {
+                return view('SuperAdmin.report.TrainingFullSummery', ['trainings' => collect()]);
+            }
+
+            // Get values from the request
+            $year = $request->year;
+            $category = $request->category;
+
+            // Step 1: First filter trainings by year and/or category 
+            $query = Training::query();
+
+            if ($year) {
+                $query->whereRaw('YEAR(training_period_to) = ?', [$year]);
+            }
+            if ($category) {
+                $query->where('category', $category);
+            }
+
+            // Step 2: Get these trainings with institutes and trainers with participants group by course type
+            $trainings = $query->with(['institutes', 'trainers'])
+                ->get()
+                ->groupBy('course_type');
+
+            // Store the filtered data and filter option in the session
+            session([
+                'filtered_Training_Full_Summary_Local_foreign' => $trainings,
+                'Year' => $year,
+                'Category' => $category
+            ]);
+
+            //return trainings to the view
+            return view('SuperAdmin.report.TrainingFullSummery', ['trainings' => $trainings, 'year' => $year, 'category' => $category]);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading Training Full Summary: ' . $e->getMessage());
+        }
+    }
+
+    //download the Training FUll Summary(Local/Foreign)
+    public function downloadTrainingFullSummaryLocalForeignPdf(Request $request)
+    {
+        try {
+            // Retrieve the filtered data from the session
+            $trainings = session('filtered_Training_Full_Summary_Local_foreign', collect());
+            $year = session('Year', 0);
+            $category = session('Category');
+
+            // Load the view and pass the data
+            $pdf = Pdf::loadView('SuperAdmin.report.pdf.TrainingFullSummaryPdf', compact('trainings', 'year', 'category'));
+
+            // Download the PDF file
+            return $pdf->download('Training_Full_summary.pdf');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
+        }
+    }
+
+
     public function epfsummaryView()
     {
         try {
