@@ -141,6 +141,7 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::prefix('pdf')->name('pdf.')->group(function () {
                     Route::get('dowload-Training-Custodian-Wise-Summery', 'downloadTrainingCustodianWiseSummeryPdf')->name('dowload-Training-Custodian-Wise-Summery');
                     Route::get('download-Designation-Wise-Summery', 'downloadDesignationWiseSummeryPdf')->name('download-Designation-Wise-Summery');
+                    Route::get('download-List-Of-Absentees', 'downloadlistOfAbsenteesSummeryPdf')->name('download-List-Of-Absentees');
                 });
             });
         });

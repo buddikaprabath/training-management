@@ -184,7 +184,65 @@ class reportcontroller extends Controller
     //List of absentees
     public function ListOfAbsenteesReportView(Request $request)
     {
-        return view('SuperAdmin.report.ListOfAbsenteesReport');
+        try {
+            //check if atleast one filter option provide
+            if (!$request->filled('training_name') && !$request->filled('course_type')) {
+                return view('SuperAdmin.report.ListOfAbsenteesReport', ['trainings' => collect()]);
+            }
+            //get value from request
+            $training_name = $request->training_name;
+            $course_type = $request->course_type;
+
+            //filter training by training name and/or course type
+            $query = Training::query();
+
+            if ($training_name) {
+                $query->where('training_name', 'like', '%' . $training_name . '%');
+            }
+            if ($course_type) {
+                $query->where('course_type', $course_type);
+            }
+            //get participants who are absent
+            $trainings = $query->with(['participants' => function ($query) {
+                $query->where('completion_status', 'unattended');
+            }])->get();
+
+            session([
+                'list_of_absentees_report_data' => $trainings,
+                'training_name' => $training_name,
+                'course_type' => $course_type
+            ]);
+            return view('SuperAdmin.report.ListOfAbsenteesReport', [
+                'trainings' => $trainings,
+                'training_name' => $training_name,
+                'course_type' => $course_type
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'error loading list of absentees report view.');
+        }
+    }
+
+    //download the list of absentees summery pdf
+    public function downloadlistOfAbsenteesSummeryPdf(Request $request)
+    {
+        try {
+            //get velue filtered data from ListOfAbsenteesReportView method
+            $trainings = session('list_of_absentees_report_data');
+            $training_name = session('training_name');
+            $course_type = session('course_type');
+
+            //load the list of absentees pdf view with relevent data
+            $pdf = PDF::loadView('SuperAdmin.report.pdf.ListofAbsenteesPdf', [
+                'trainings' => $trainings,
+                'training_name' => $training_name,
+                'course_type' => $course_type
+            ]);
+
+            //download the list of absentees report pdf
+            return $pdf->download('List_of_absentees_report.pdf');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'error downloading list of absentees summery pdf.');
+        }
     }
 
     //Trainings Required to be Renewed Recurrent
