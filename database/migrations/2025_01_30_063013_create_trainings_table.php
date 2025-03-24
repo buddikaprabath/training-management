@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('trainings', function (Blueprint $table) {
             $table->string('id')->primary();  // Primary key with custom format
-            $table->string('training_code')->unique();  // Training code with custom format
+            $table->string('training_code');  // Training code with custom format
             $table->string('training_name');
             $table->string('mode_of_delivery');
             $table->date('training_period_from');

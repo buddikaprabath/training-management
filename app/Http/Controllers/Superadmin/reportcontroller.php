@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Superadmin;
 
-use App\Http\Controllers\Controller;
 use App\Models\Training;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Illuminate\Support\Facades\DB;
+use App\Http\Controllers\Controller;
 
 class reportcontroller extends Controller
 {
@@ -139,7 +140,45 @@ class reportcontroller extends Controller
     //Course code-wise summary
     public function courseCodeWiseSummaryView(Request $request)
     {
-        return view('SuperAdmin.report.CourseCode-wise_summary');
+        try {
+            $training_codes = DB::table('training_codes')->get();
+            //check if atleast one filter option provided
+            if (!$request->filled('course_code') && !$request->filled('duration') && !$request->filled('course_type')) {
+                return view('SuperAdmin.report.CourseCode-wise_summary', [
+                    'trainings' => collect(),
+                    'training_codes' => $training_codes,
+                ]);
+            }
+            //get filtered data to the variable
+            $course_code = $request->course_code;
+            $duration = $request->duration;
+            $course_type = $request->course_type;
+
+            //filter training by Course code/duration/course type
+            $query = Training::query();
+
+            if ($course_code) {
+                $query->where('training_code', $course_code);
+            }
+            if ($duration) {
+                $query->whereMonth('training_period_to', '=', $duration);
+            }
+            if ($course_type) {
+                $query->where('course_type', $course_type);
+            }
+            //get the participant count according to the training
+            $trainings = $query->withCount('participants')
+                ->get();
+            //laod the view with filtered data
+            return view('SuperAdmin.report.CourseCode-wise_summary', [
+                'trainings' => $trainings,
+                'course_code' => $course_code,
+                'course_type' => $course_type,
+                'training_codes' => $training_codes,
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'error loading course code wise summery page.');
+        }
     }
 
     //List of absentees

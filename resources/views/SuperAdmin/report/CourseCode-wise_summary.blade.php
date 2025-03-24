@@ -23,12 +23,20 @@
         </a>
     </div>
     <div class="card-body">
-        <form action="" method="GET">
+        <form action="#" method="GET">
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
+                <!-- Training Code selection -->
                 <div class="mb-3">
-                    <label for="Code" class="form-label">Course Code</label>
-                    <input type="text" name="course_code" id="course_code" class="form-control">
+                    <label for="course_code" class="form-label">Course Code</label>
+                    <select name="course_code" id="course_code" class="form-select track-change">
+                        <option disabled selected>Choose training Code</option>
+                        @foreach($training_codes as $code)
+                            <option value="{{ $code->training_codes }}">
+                                {{ $code->training_codes }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label for="Duration" class="form-label">Monthly</label>
@@ -73,8 +81,8 @@
     @endif
     <div class="card-body p-4 rounded-3 shadow-lg" style="background-color: #A8BDDB;">
         <div class="d-flex justify-content-between">
-            <span>Course Code : </span>
-            <span>Category : </span>
+            <span>Course Code : {{$course_code ?? 'N/A'}}</span>
+            <span>Category : {{$course_type ?? 'N/A'}}</span>
         </div>
         <table class="table table-hover table-checkable" id="kt_datatable">
             <thead>
@@ -82,12 +90,28 @@
                     <th class="text-center align-top">S/N</th>
                     <th class="text-center align-top">Category</th>
                     <th class="text-center align-top">Course/Training Name</th>
-                    <th class="text-center align-top">Np. Of Participants</th>
+                    <th class="text-center align-top">No. Of Participants</th>
                     <th class="text-center align-top">Training Hours</th>
                     <th class="text-center align-top">Total Cost</th>
                 </tr>
             </thead>
             <tbody>
+                @if ($trainings->isempty())
+                    <tr>
+                        <td colspan="6" class="text-center">No records found.</td>
+                    </tr>
+                @else
+                    @foreach ($trainings as $training)
+                        <tr>
+                            <td class="text-center">{{$loop->iteration}}</td>
+                            <td class="text-center">{{$training->category}}</td>
+                            <td class="text-center">{{$training->training_name}}</td>
+                            <td class="text-center">{{$training->participants_count }}</td>
+                            <td class="text-center">{{$training->total_training_hours}}</td>
+                            <td class="text-center">{{$training->total_program_cost}}</td>
+                        </tr>
+                    @endforeach
+                @endif
                 
             </tbody>
             

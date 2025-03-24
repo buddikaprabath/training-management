@@ -26,9 +26,17 @@
         <form action="{{route('SuperAdmin.report.ParticularCourseCompletedSummery')}}" method="GET">
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
+                <!-- Training Code selection -->
                 <div class="mb-3">
-                    <label for="training code" class="form-label">Training Code</label>
-                    <input type="text" name="training_code" id="training_code" class="form-control">
+                    <label for="training_code" class="form-label">Training Code</label>
+                    <select name="training_code" id="training_code" class="form-select track-change">
+                        <option disabled selected>Choose training Code</option>
+                        @foreach($training_codes as $code)
+                            <option value="{{ $code->training_codes }}">
+                                {{ $code->training_codes }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="mb-3">
                     <label for="training_Name" class="form-label">Training Name</label>

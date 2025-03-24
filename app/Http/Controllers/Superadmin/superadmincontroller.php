@@ -190,8 +190,9 @@ class superadmincontroller extends Controller
         $countries = DB::table('countries')->get();
         $institutes = Institute::all();
         $trainers = Trainer::all(); // Fetch all trainers
+        $training_codes = DB::table('training_codes')->get();
 
-        return view('SuperAdmin.training.create', compact('countries', 'institutes', 'trainers'));
+        return view('SuperAdmin.training.create', compact('countries', 'institutes', 'trainers', 'training_codes'));
     }
 
 
@@ -200,7 +201,7 @@ class superadmincontroller extends Controller
     {
         $validated = $request->validate([
             'training_name'         => 'required|string|max:255',
-            'training_code'         => 'required|string|max:10|unique:trainings,training_code',
+            'training_code'         => 'required|string|max:10',
             'mode_of_delivery'      => 'required|string|max:255',
             'training_period_from'  => 'required|date',
             'training_period_to'    => 'required|date|after_or_equal:training_period_from',
@@ -296,9 +297,10 @@ class superadmincontroller extends Controller
             $trainers = Trainer::all();
             $subjects = Subject::all();
             $countries = Country::all();  // Fetching the countries
+            $training_codes = DB::table('training_codes')->get();
 
             // Return the view with all necessary data
-            return view('SuperAdmin.training.create', compact('training', 'institutes', 'trainers', 'subjects', 'countries'));
+            return view('SuperAdmin.training.create', compact('training', 'institutes', 'trainers', 'subjects', 'countries', 'training_codes'));
         } catch (\Exception $e) {
             // If an error occurs, redirect back with an error message
             return back()->with('error', 'Error loading training details: ' . $e->getMessage());
@@ -1691,9 +1693,14 @@ class superadmincontroller extends Controller
     public function ParticularCourseCompletedSummaryView(Request $request)
     {
         try {
+
+            $training_codes = DB::table('training_codes')->get();
             // Ensure that at least one filter is applied
             if (!$request->filled('name') && !$request->filled('training_code')) {
-                return view('SuperAdmin.report.ParticularCourseCompletedSummery', ['trainings' => collect()]);
+                return view('SuperAdmin.report.ParticularCourseCompletedSummery', [
+                    'trainings' => collect(),
+                    'training_codes' => $training_codes,
+                ]);
             }
 
             // Get values from the request
@@ -1729,7 +1736,11 @@ class superadmincontroller extends Controller
             ]);
 
             // Return view with filtered data
-            return view('SuperAdmin.report.ParticularCourseCompletedSummery', ['trainings' => $trainings, 'attendedCount' => $attendedCount]);
+            return view('SuperAdmin.report.ParticularCourseCompletedSummery', [
+                'trainings' => $trainings,
+                'attendedCount' => $attendedCount,
+                'training_codes' => $training_codes
+            ]);
         } catch (\Exception $e) {
             return back()->with('error', 'Error loading Particular Course Completed Summary: ' . $e->getMessage());
         }
