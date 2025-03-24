@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Particular Course Completed Summary</title>
+    <title>Training Full Summary(Local/Foreign)</title>
     <style>
         /* General Styles */
         body {

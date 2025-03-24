@@ -138,7 +138,10 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('CourseCode-wise_summary', 'courseCodeWiseSummaryView')->name('CourseCode-wise_summary');
                 Route::get('ListOfAbsenteesReport', 'ListOfAbsenteesReportView')->name('ListOfAbsenteesReport');
                 Route::get('TrainingsRequiredtobeRenewed_Recurrent', 'TrainingsRequiredtobeRenewedRecurrentView')->name('TrainingsRequiredtobeRenewed_Recurrent');
-                Route::prefix('pdf')->name('pdf.')->group(function () {});
+                Route::prefix('pdf')->name('pdf.')->group(function () {
+                    Route::get('dowload-Training-Custodian-Wise-Summery', 'downloadTrainingCustodianWiseSummeryPdf')->name('dowload-Training-Custodian-Wise-Summery');
+                    Route::get('download-Designation-Wise-Summery', 'downloadDesignationWiseSummeryPdf')->name('download-Designation-Wise-Summery');
+                });
             });
         });
     });

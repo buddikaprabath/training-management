@@ -13,7 +13,7 @@
             </svg>
         </a>
         <!-- Download Button -->
-        <a href="#" class="btn btn-primary d-flex align-items-center px-3">
+        <a href="{{route('SuperAdmin.report.pdf.dowload-Training-Custodian-Wise-Summery')}}" class="btn btn-primary d-flex align-items-center px-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download me-2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -23,7 +23,7 @@
         </a>
     </div>
     <div class="card-body">
-        <form action="" method="GET">
+        <form action="{{route('SuperAdmin.report.TrainingCustodianWiseSummery')}}" method="GET">
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
                 <div class="mb-3">
@@ -64,11 +64,11 @@
     @endif
     <div class="card-body p-4 rounded-3 shadow-lg" style="background-color: #A8BDDB;">
         <div class="d-flex justify-content-between">
-            <span>Custodian Name :</span>
-            <span>Course Type : </span>
+            <span>Custodian Name : {{$custodian ?? 'N/A'}}</span>
+            <span>Course Type : {{$course_type ?? 'N/A'}}</span>
         </div>
         <div class="d-flex justify-content-between">
-            <span>Period :</span>
+            <span>Period : {{$year ?? 'N/A'}}</span>
         </div>
         <table class="table table-hover table-checkable" id="kt_datatable">
             <thead>
@@ -86,7 +86,33 @@
                 </tr>
             </thead>
             <tbody>
-                
+                @if($trainings->isEmpty())
+                    <tr>
+                        <td colspan="9" class="text-center">No records found.</td>
+                    </tr>
+                @else
+                    @foreach($trainings as $training)
+                        <tr>
+                            <td class="text-center">{{ $loop->iteration }}</td>
+                            <td class="text-center">{{ $training->training_name }}</td>
+                            <td class="text-center">
+                                @foreach ($training->institutes as $institute)
+                                    {{$institute->name}}
+                                @endforeach
+                            </td>
+                            <td class="text-center">
+                                @foreach ($training->trainers as $trainer)
+                                    {{$trainer->name}}
+                                @endforeach
+                            </td>
+                            <td class="text-center">{{ $training->duration }}</td>
+                            <td class="text-center">{{ $training->participants_count }}</td> <!-- Participant Count -->
+                            <td class="text-center">{{$training->total_program_cost}}</td>
+                            <td class="text-center">{{$training->total_training_hours}}</td>
+                            <td class="text-center">{{ $training->training_period_to->format('M') }}</td>
+                        </tr>
+                    @endforeach
+                @endif
             </tbody>
             
         </table>

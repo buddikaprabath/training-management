@@ -13,7 +13,7 @@
             </svg>
         </a>
         <!-- Download Button -->
-        <a href="#" class="btn btn-primary d-flex align-items-center px-3">
+        <a href="{{route('SuperAdmin.report.pdf.download-Designation-Wise-Summery')}}" class="btn btn-primary d-flex align-items-center px-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download me-2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -23,7 +23,7 @@
         </a>
     </div>
     <div class="card-body">
-        <form action="" method="GET">
+        <form action="{{route('SuperAdmin.report.DesignationWiseSummery')}}" method="GET">
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
                 <div class="mb-3">
@@ -64,11 +64,11 @@
     @endif
     <div class="card-body p-4 rounded-3 shadow-lg" style="background-color: #A8BDDB;">
         <div class="d-flex justify-content-between">
-            <span>Employee Designation :</span>
-            <span>Course Type : </span>
+            <span>Employee Designation : {{$designation ?? 'N/A'}}</span>
+            <span>Course Type : {{$course_type ?? 'N/A'}}</span>
         </div>
         <div class="d-flex justify-content-between">
-            <span>Period :</span>
+            <span>Period : {{$year ?? 'N/A'}}</span>
         </div>
         <table class="table table-hover table-checkable" id="kt_datatable">
             <thead>
@@ -85,7 +85,26 @@
                 </tr>
             </thead>
             <tbody>
-                
+                @if($trainings->isEmpty())
+                    <tr>
+                        <td colspan="8" class="text-center">No records found.</td>
+                    </tr>
+                @else
+                    @foreach($trainings as $training)
+                        @foreach($training->participants as $participant)
+                            <tr>
+                                <td class="text-center">{{ $loop->iteration }}</td>
+                                <td class="text-center">{{$participant->epf_number}}</td>
+                                <td class="text-center">{{$participant->name}}</td>
+                                <td class="text-center">{{$training->training_code}}</td>
+                                <td class="text-center">{{$training->training_name}}</td>
+                                <td class="text-center">{{$training->category}}</td>
+                                <td class="text-center">{{$training->mode_of_delivery}}</td>
+                                <td class="text-center">{{$participant->division->division_name}}</td>
+                            </tr>
+                        @endforeach
+                    @endforeach
+                @endif
             </tbody>
             
         </table>
