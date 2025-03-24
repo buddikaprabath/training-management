@@ -169,6 +169,13 @@ class reportcontroller extends Controller
             //get the participant count according to the training
             $trainings = $query->withCount('participants')
                 ->get();
+
+            session([
+                'corse_code_wise_summery_data' => $trainings,
+                'course_code' => $course_code,
+                'course_type' => $course_type,
+                'training_codes' => $training_codes
+            ]);
             //laod the view with filtered data
             return view('SuperAdmin.report.CourseCode-wise_summary', [
                 'trainings' => $trainings,
@@ -178,6 +185,29 @@ class reportcontroller extends Controller
             ]);
         } catch (\Exception $e) {
             return redirect()->back()->with('error', 'error loading course code wise summery page.');
+        }
+    }
+
+    //download the course code wise summery pdf
+    public function downloadCourseCoudeWiseSummeryPdf(Request $request)
+    {
+        try {
+            //get data from courseCodeWiseSummaryView method
+            $trainings = session('corse_code_wise_summery_data');
+            $course_code = session('course_code');
+            $course_type = session('course_type');
+
+            //load the course code wise summery pdf view with relevent data
+            $pdf = PDF::loadView('SuperAdmin.report.pdf.Course_Code_Wise_Summery_pdf', [
+                'trainings' => $trainings,
+                'course_code' => $course_code,
+                'course_type' => $course_type,
+            ]);
+
+            //download the course code wise summery pdf
+            return $pdf->download('Course_code_wise_Summery.pdf');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'error downloading course code wise summery pdf.');
         }
     }
 
