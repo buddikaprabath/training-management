@@ -114,7 +114,6 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
             //reports routes
             Route::prefix('report')->name('report.')->group(function () {
                 Route::get('trainingSummary', 'trainingsummaryView')->name('trainingSummary'); // load the training summary view
-                Route::get('epfSummary', 'epfsummaryView')->name('EPFSummary');
                 Route::get('bondSummary', 'bondsummaryView')->name('BONDSummary');
                 Route::get('budgetSummery', 'budgetSummeryView')->name('BudgetSummery');
                 Route::get('IndividualEmployeeTrainingRecordReport', 'IndividualEmployeeTrainingRecordView')->name('IndividualEmployeeTrainingRecordReport');
@@ -138,11 +137,17 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('CourseCode-wise_summary', 'courseCodeWiseSummaryView')->name('CourseCode-wise_summary');
                 Route::get('ListOfAbsenteesReport', 'ListOfAbsenteesReportView')->name('ListOfAbsenteesReport');
                 Route::get('TrainingsRequiredtobeRenewed_Recurrent', 'TrainingsRequiredtobeRenewedRecurrentView')->name('TrainingsRequiredtobeRenewed_Recurrent');
+                Route::get('bondSummary', 'bondsummaryView')->name('BONDSummary');
+                Route::get('budgetSummery', 'budgetSummeryView')->name('BudgetSummery');
+
+                //pdf download routes
                 Route::prefix('pdf')->name('pdf.')->group(function () {
                     Route::get('dowload-Training-Custodian-Wise-Summery', 'downloadTrainingCustodianWiseSummeryPdf')->name('dowload-Training-Custodian-Wise-Summery');
                     Route::get('download-Designation-Wise-Summery', 'downloadDesignationWiseSummeryPdf')->name('download-Designation-Wise-Summery');
                     Route::get('download-Course-code-wise-summery', 'downloadCourseCoudeWiseSummeryPdf')->name('download-Course-code-wise-summery');
                     Route::get('download-List-Of-Absentees', 'downloadlistOfAbsenteesSummeryPdf')->name('download-List-Of-Absentees');
+                    Route::get('download-Trainings-Required-to-be-Renewed-Recurrent', 'downloadTrainingsRequiredtobeRenewedRecurrentPdf')->name('download-Trainings-Required-to-be-Renewed-Recurrent');
+                    Route::get('download-Bond-Summery', 'downloadBondSummeryPdf')->name('download-Bond-Summery');
                 });
             });
         });

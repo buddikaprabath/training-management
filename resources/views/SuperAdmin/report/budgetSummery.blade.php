@@ -23,12 +23,12 @@
         </a>
     </div>
     <div class="card-body">
-        <form action="#" method="GET">
+        <form action="{{route('SuperAdmin.report.BudgetSummery')}}" method="GET">
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
                 <div class="mb-3">
                     <label for="Duration" class="form-label">Monthly</label>
-                    <select name="duration" id="duration" class="form-select track-change">
+                    <select name="duration_monthly" id="duration_monthly" class="form-select track-change">
                         <option selected disabled>Choose...</option>
                         <?php
                             for ($month = 1; $month <= 12; $month++) {
@@ -41,7 +41,7 @@
                 </div>
                 <div class="mb-3">
                     <label for="Duration" class="form-label">Quartely</label>
-                    <select name="duration" id="duration" class="form-select track-change">
+                    <select name="duration_quartely" id="duration_quartely" class="form-select track-change">
                         <option selected disabled>Choose...</option>
                         <option value="Q1">Q 1</option>
                         <option value="Q2">Q 2</option>

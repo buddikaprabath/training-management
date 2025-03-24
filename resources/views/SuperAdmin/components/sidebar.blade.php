@@ -94,11 +94,6 @@
                 <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Training Required to be Renewed Recurrent</span>
             </a>
         </li>
-        <li class="sidebar-item {{ request()->routeis('SuperAdmin.report.EPFSummary')?'active':''}}">
-            <a class="sidebar-link" href="{{route('SuperAdmin.report.EPFSummary')}}">
-                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">EPF Report</span>
-            </a>
-        </li>
         <li class="sidebar-item {{ request()->routeis('SuperAdmin.report.BONDSummary')?'active':''}}">
             <a class="sidebar-link" href="{{route('SuperAdmin.report.BONDSummary')}}">
                 <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">BOND Report</span>

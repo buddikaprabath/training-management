@@ -13,7 +13,7 @@
             </svg>
         </a>
         <!-- Download Button -->
-        <a href="#" class="btn btn-primary d-flex align-items-center px-3">
+        <a href="{{route('SuperAdmin.report.pdf.download-Trainings-Required-to-be-Renewed-Recurrent')}}" class="btn btn-primary d-flex align-items-center px-3">
             <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-download me-2">
                 <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                 <polyline points="7 10 12 15 17 10"></polyline>
@@ -23,7 +23,7 @@
         </a>
     </div>
     <div class="card-body">
-        <form action="" method="GET">
+        <form action="{{route('SuperAdmin.report.TrainingsRequiredtobeRenewed_Recurrent')}}" method="GET">
             @csrf
             <div class="d-flex flex-wrap justify-content-between align-item-center gap-2">
                 <div class="mb-3">
@@ -65,12 +65,12 @@
     @endif
     <div class="card-body p-4 rounded-3 shadow-lg" style="background-color: #A8BDDB;">
         <div class="d-flex justify-content-between">
-            <span>Course Name :</span>
-            <span>Employee Name : </span>
+            <span>Course Name : {{$training_name ?? 'N/A'}}</span>
+            <span>Employee Name : {{$employee_name ?? 'N/A'}}</span>
         </div>
         <div class="d-flex justify-content-between">
-            <span>Employee EPF :</span>
-            <span>Division : </span>
+            <span>Employee EPF : {{$epf_number ?? 'N/A'}}</span>
+            <span>Division : {{$division_name ?? 'N/A'}}</span>
         </div>
         <table class="table table-hover table-checkable" id="kt_datatable">
             <thead>
@@ -87,7 +87,24 @@
                 </tr>
             </thead>
             <tbody>
-                
+                @if ($participants->isempty())
+                    <tr>
+                        <td colspan="8" class="text-center">No Record Found</td>
+                    </tr>
+                @else
+                    @foreach ($participants as $participant)
+                        <tr>
+                            <td class="text-center">{{$loop->iteration}}</td>
+                            <td class="text-center">{{$participant->epf_number}}</td>
+                            <td class="text-center">{{$participant->name}}</td>
+                            <td class="text-center">{{$participant->designation}}</td>
+                            <td class="text-center">{{$participant->division->division_name}}</td>
+                            <td class="text-center">{{$participant->training->training_name}}</td>
+                            <td class="text-center">{{ date('Y-m-d', strtotime($participant->training->training_period_from)) }}-{{ date('Y-m-d', strtotime($participant->training->training_period_to)) }}</td>
+                            <td class="text-center">{{ $participant->training->exp_date}}</td>
+                        </tr>
+                    @endforeach
+                @endif
             </tbody>
             
         </table>

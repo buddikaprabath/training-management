@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers\Superadmin;
 
+use App\Models\Division;
 use App\Models\Training;
+use App\Models\Participant;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
+use App\Models\Budget;
 
 class reportcontroller extends Controller
 {
@@ -278,6 +281,216 @@ class reportcontroller extends Controller
     //Trainings Required to be Renewed Recurrent
     public function TrainingsRequiredtobeRenewedRecurrentView(Request $request)
     {
-        return view('SuperAdmin.report.TrainingsRequiredtobeRenewed_Recurrent');
+        try {
+            // Initialize variables with default values
+            $employee_name = null;
+            $division_name = null;
+
+            // Check if at least one filter option is provided
+            if (!$request->filled('training_name') && !$request->filled('epf_number') && !$request->filled('division_id')) {
+                return view('SuperAdmin.report.TrainingsRequiredtobeRenewed_Recurrent', ['participants' => collect()]);
+            }
+
+            // Get filtered data
+            $training_name = $request->training_name;
+            $epf_number = $request->epf_number;
+            $division_id = $request->division_id;
+
+            if ($request->filled('epf_number')) {
+                $participant = Participant::where('epf_number', $epf_number)->first();
+
+                if ($participant) {
+                    $employee_name = $participant->name;
+                    $division = Division::find($participant->division_id);
+                    $division_name = $division ? $division->division_name : null;
+                }
+            }
+
+            // Filter query
+            $query = Participant::query();
+
+            if ($epf_number) {
+                $query->where('epf_number', $epf_number);
+            }
+            if ($division_id) {
+                $query->where('division_id', $division_id);
+                // If you want to get division_name when filtering by division_id
+                if (is_null($division_name) && $division_id) {
+                    $division = Division::find($division_id);
+                    $division_name = $division ? $division->division_name : null;
+                }
+            }
+
+            // Filter participants that have recurrent trainings
+            $query->whereHas('training', function ($query) use ($training_name) {
+                $query->where('training_structure', 'Recurrent');
+                if (!empty($training_name)) {
+                    $query->where('training_name', 'LIKE', '%' . $training_name . '%');
+                }
+            });
+
+            // Load related trainings
+            $participants = $query->with(['training' => function ($query) use ($training_name) {
+                $query->where('training_structure', 'Recurrent');
+                if (!empty($training_name)) {
+                    $query->where('training_name', 'LIKE', '%' . $training_name . '%');
+                }
+            }])->get();
+
+            // Store in session and return view
+            session([
+                'TrainingsRequiredtobeRenewedRecurrentData' => $participants,
+                'epf_number' => $epf_number,
+                'training_name' => $training_name,
+                'employee_name' => $employee_name,
+                'division_name' => $division_name,
+            ]);
+
+            return view('SuperAdmin.report.TrainingsRequiredtobeRenewed_Recurrent', [
+                'participants' => $participants,
+                'epf_number' => $epf_number,
+                'training_name' => $training_name,
+                'employee_name' => $employee_name,
+                'division_name' => $division_name,
+            ]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error loading training required to be renewed/recurrent.');
+        }
+    }
+
+    //download the Trainings Required to be Renewed Recurrent report pdf
+    public function downloadTrainingsRequiredtobeRenewedRecurrentPdf(Request $request)
+    {
+        try {
+            //get data from TrainingsRequiredtobeRenewedRecurrentView method
+            $participants = session('TrainingsRequiredtobeRenewedRecurrentData');
+            $epf_number = session('epf_number');
+            $training_name = session('training_name');
+            $employee_name = session('employee_name');
+            $division_name = session('division_name');
+
+            //load the Trainings Required to be Renewed Recurrent pdf page with relevent data
+            $pdf = PDF::loadView('SuperAdmin.report.pdf.TrainingsRequiredtobeRenewedRecurrentDataPdf', [
+                'participants' => $participants,
+                'epf_number' => $epf_number,
+                'training_name' => $training_name,
+                'employee_name' => $employee_name,
+                'division_name' => $division_name,
+            ]);
+
+            //dowload the Trainings Required to be Renewed Recurrent pdf
+            return $pdf->download('Trainings_Required_to_be_Renewed_Recurrent.pdf');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'error downloading Trainings Required to be Renewed Recurrent pdf.');
+        }
+    }
+    //bond summery load with filtered data
+    public function bondsummaryView(Request $request)
+    {
+        try {
+            // Ensure that at least one filter is applied
+            if (!$request->filled('name') && !$request->filled('epf_number') && !$request->filled('training_name') && !$request->filled('division_id')) {
+                return view('SuperAdmin.report.BONDSummary', ['bondsummery' => collect()]);
+            }
+
+            // Subquery to get the IDs of trainings with matching participants and training_name
+            $subQuery = Training::where(function ($query) use ($request) {
+                // Filter by training_name
+                if ($request->filled('training_name')) {
+                    $query->where('training_name', 'like', '%' . $request->training_name . '%');
+                }
+            })->whereHas('participants', function ($query) use ($request) {
+                // Filter by participant fields
+                if ($request->filled('name')) {
+                    $query->where('name', 'like', '%' . $request->name . '%');
+                }
+                if ($request->filled('epf_number')) {
+                    $query->where('epf_number', $request->epf_number);
+                }
+                if ($request->filled('division_id')) {
+                    $query->where('division_id', $request->division_id);
+                }
+            })->pluck('id'); // Get the IDs of trainings that match the filters
+
+            // Main query to fetch trainings with participants and sureties
+            $query = Training::with(['participants' => function ($query) use ($request) {
+                // Apply filters on participants
+                if ($request->filled('name')) {
+                    $query->where('name', 'like', '%' . $request->name . '%');
+                }
+                if ($request->filled('epf_number')) {
+                    $query->where('epf_number', $request->epf_number);
+                }
+                if ($request->filled('division_id')) {
+                    $query->where('division_id', $request->division_id);
+                }
+            }, 'participants.sureties'])
+                ->whereIn('id', $subQuery); // Filter trainings based on the subquery
+
+            // Fetch filtered data with pagination
+            $bondsummery = $query->paginate(10);
+
+            session([
+                'bondsummerydata' => $bondsummery,
+            ]);
+
+            // Return view with filtered and grouped data
+            return view('SuperAdmin.report.BONDSummary', compact('bondsummery'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading Bond summary: ' . $e->getMessage());
+        }
+    }
+
+    //download the bond summery pdf
+    public function downloadBondSummeryPdf(Request $request)
+    {
+        try {
+            //get bond summery data from bondsummaryView method
+            $bondsummery = session('bondsummerydata');
+
+            //load the bond summery pdf view with relevent data
+            $pdf = PDF::loadView('SuperAdmin.report.pdf.bondsummerypdf', ['bondsummery' => $bondsummery]);
+
+            //download the bond summery pdf
+            return $pdf->download('Bond_Summery.pdf');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error downloading Bond summary pdf. ');
+        }
+    }
+
+    //load budget summery with relevent data
+    public function budgetSummeryView(Request $request)
+    {
+        try {
+            //check if at least one filter option provided
+            if (!$request->filled('duration_monthly') && !$request->filled('duration_quartely') && !$request->filled('year')) {
+                return view('SuperAdmin.report.BudgetSummery', ['budgets' => collect()]);
+            }
+
+            //get filtered option value to the variable
+            $duration_monthly = $request->duration_monthly;
+            $duration_quartely = $request->duration_quartely;
+            $year = $request->year;
+
+            //get budget details for local budget
+            $query = Budget::query();
+
+            if ($duration_monthly) {
+                $query->where();
+            }
+            if ($duration_quartely) {
+                $query->where();
+            }
+            if ($year) {
+                $query->where();
+            }
+
+            //get budget details for foreign budget
+            
+
+
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading bond Summery.');
+        }
     }
 }
