@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\User;
 
+use App\Models\Grade;
 use App\Models\Remark;
 use App\Models\Surety;
 use App\Models\Country;
@@ -126,8 +127,9 @@ class Usercontroller extends Controller
             $countries = DB::table('countries')->get();
             $institutes = Institute::all();
             $trainers = Trainer::all(); // Fetch all trainers
+            $training_codes = DB::table('training_codes')->get();
 
-            return view('User.training.create', compact('countries', 'institutes', 'trainers'));
+            return view('User.training.create', compact('countries', 'institutes', 'trainers', 'training_codes'));
         } catch (\Exception $e) {
             return back()->with('error', 'Something went wrong. Please try again later.');
         }
@@ -236,9 +238,10 @@ class Usercontroller extends Controller
             $trainers = Trainer::all();
             $subjects = Subject::all();
             $countries = Country::all();  // Fetching the countries
+            $training_codes = DB::table('training_codes')->get();
 
             // Return the view with all necessary data
-            return view('User.training.create', compact('training', 'institutes', 'trainers', 'subjects', 'countries'));
+            return view('User.training.create', compact('training', 'institutes', 'trainers', 'subjects', 'countries', 'training_codes'));
         } catch (\Exception $e) {
             // If an error occurs, redirect back with an error message
             return back()->with('error', 'Error loading training details: ' . $e->getMessage());
@@ -542,6 +545,86 @@ class Usercontroller extends Controller
         }
     }
 
+    //store subject according to the training
+    public function storeSubject(Request $request)
+    {
+        $trainingId = $request->training_id;
+        // Get all subject inputs from the request (both default and dynamically added)
+        $subjects = [];
+
+        // Check for the default subject field (named "subject_name" without a number)
+        if ($request->has('subject_name') && !empty($request->subject_name)) {
+            $subjects[] = $request->subject_name;
+        }
+
+        // Get all dynamically added subject fields (named subject_name_1, subject_name_2, etc.)
+        foreach ($request->all() as $key => $value) {
+            if (strpos($key, 'subject_name_') === 0 && !empty($value)) {
+                $subjects[] = $value;
+            }
+        }
+
+        // Validate that at least one subject name is provided
+        if (empty($subjects)) {
+            return redirect()->back()->with('error', 'Please add at least one subject.');
+        }
+
+        // Check the current subject count for this training
+        $currentSubjectCount = Subject::where('training_id', $trainingId)->count();
+        $totalSubjectsAfterAdd = $currentSubjectCount + count($subjects);
+
+        // Ensure the training won't exceed 15 subjects
+        if ($totalSubjectsAfterAdd > 15) {
+            return redirect()->back()->with('error', 'A training can have a maximum of 15 subjects. You currently have ' . $currentSubjectCount . ' subjects and are trying to add ' . count($subjects) . ' more.');
+        }
+
+        // Begin transaction to ensure all subjects are saved together
+        DB::beginTransaction();
+
+        try {
+            $duplicateSubjects = [];
+            $addedSubjects = 0;
+
+            // Process each subject
+            foreach ($subjects as $subjectName) {
+                // Check if this subject already exists for this training
+                $existingSubject = Subject::where('training_id', $trainingId)
+                    ->where('subject_name', $subjectName)
+                    ->first();
+
+                if ($existingSubject) {
+                    // Add to duplicate list
+                    $duplicateSubjects[] = $subjectName;
+                    continue;
+                }
+                // Create a new subject record
+                $subject = new Subject();
+                $subject->training_id = $trainingId;
+                $subject->subject_name = $subjectName;
+                $subject->save();
+                $addedSubjects++;
+            }
+
+            DB::commit();
+
+            // Prepare response message
+            if ($addedSubjects > 0) {
+                $message = $addedSubjects . ' subject(s) added successfully.';
+
+                if (!empty($duplicateSubjects)) {
+                    $message .= ' The following subjects were not added because they already exist: ' . implode(', ', $duplicateSubjects);
+                    return redirect()->back()->with('error', $message);
+                }
+
+                return redirect()->back()->with('success', $message);
+            } else {
+                return redirect()->back()->with('error', 'No subjects were added. All subjects already exist: ' . implode(', ', $duplicateSubjects));
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return redirect()->back()->with('error', 'Failed to add subjects. ' . $e->getMessage());
+        }
+    }
     // Training delete function
     public function trainingdestroy($id)
     {
@@ -603,8 +686,11 @@ class Usercontroller extends Controller
                 return redirect()->back()->with('error', 'Training not found.');
             }
 
-            // Retrieve the participants with pagination
-            $participants = $training->participants()->paginate(10); // Paginate participants
+            // Retrieve participants with pagination and their remarks
+            $participants = $training->participants()->with('remarks')->paginate(10);
+
+            // get the subject relationship
+            $Subjects = $training->subjects;
 
             // Return the view with the data
             return view('User.participant.Detail', [
@@ -612,6 +698,7 @@ class Usercontroller extends Controller
                 'participants' => $participants, // Paginated participants
                 'institutes' => $training->institutes,
                 'documents' => $training->documents, // Pass the document details
+                'subjects' => $Subjects,
             ]);
         } catch (\Exception $e) {
             // Catch any exceptions and return an error response
@@ -619,6 +706,60 @@ class Usercontroller extends Controller
         }
     }
 
+    public function updatecompletionStatus(Request $request)
+    {
+        try {
+            $participantId = $request->participant_id;
+            $request->validate([
+                'completion_status' => 'required|in:attended,unattended',
+            ]);
+
+            $participant = Participant::findOrFail($participantId);
+            $participant->update([
+                'completion_status' => $request->completion_status,
+            ]);
+
+            return redirect()->back()->with('success', 'Completion status updated successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
+        }
+    }
+
+    // store participant grades
+    public function gradeStore(Request $request)
+    {
+        try {
+            $request->validate([
+                'training_id' => 'required|exists:trainings,id',
+                'participant_id' => 'required|exists:participants,id',
+                'subject_id' => 'required|exists:subjects,id',
+                'grade' => 'required|string|max:5',
+            ]);
+
+            // Check if the grade already exists for the same training, participant, and subject
+            $existingGrade = Grade::where([
+                'training_id' => $request->training_id,
+                'participant_id' => $request->participant_id,
+                'subject_id' => $request->subject_id,
+            ])->first();
+
+            if ($existingGrade) {
+                return redirect()->back()->with('error', "This participant (ID: {$request->participant_id}) already has a grade for this subject (ID: {$request->subject_id}) in training (ID: {$request->training_id}).");
+            }
+
+            // Store the grade
+            Grade::create([
+                'training_id' => $request->training_id,
+                'participant_id' => $request->participant_id,
+                'subject_id' => $request->subject_id,
+                'grade' => $request->grade,
+            ]);
+
+            return redirect()->back()->with('success', 'Grade added successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error adding grade: ' . $e->getMessage());
+        }
+    }
     //load the create participant blade
     public function createparticipant($trainingId)
     {
@@ -725,7 +866,6 @@ class Usercontroller extends Controller
                 foreach ($remarks as $remark) {
                     Remark::create([
                         'remark'        => $remark,
-                        'training_id'   => $request->training_id,
                         'participant_id' => $participant->id,
                     ]);
                 }

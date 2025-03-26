@@ -1429,11 +1429,6 @@ class superadmincontroller extends Controller
 
 
 
-    // Approvel Handling
-    public function approvelview()
-    {
-        return view('SuperAdmin.approvel.Detail');
-    }
 
     // Reports handling
     public function trainingsummaryView(Request $request)
@@ -1824,6 +1819,12 @@ class superadmincontroller extends Controller
         } catch (\Exception $e) {
             return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
         }
+    }
+
+    // Approvel Handling
+    public function approvelview()
+    {
+        return view('SuperAdmin.approvel.Detail');
     }
     public function approval()
     {

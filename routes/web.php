@@ -340,6 +340,7 @@ Route::middleware(['auth', 'verified', 'roleManager:user'])->group(function () {
                 Route::delete('cost-breakdown/delete/{id}', 'costBreakDelete')->name('cost-breakdown.delete');
                 Route::put('{id}/cost-breakdown/update', 'updateCostBreakdown')->name('cost-breakdown.update');
                 Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
+                Route::post('subject/store', 'storeSubject')->name('subject.store');
             });
             //participant routes
             Route::prefix('participant')->name('participant.')->group(function () {
@@ -352,6 +353,8 @@ Route::middleware(['auth', 'verified', 'roleManager:user'])->group(function () {
                 Route::post('import-participants', 'importParticipants')->name('import-participants');
                 Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
                 Route::delete('delete/{id}', 'destroyparticipant')->name('delete');
+                Route::post('grade/store', 'gradeStore')->name('grade.store');
+                Route::put('updateStatus',  'updatecompletionStatus')->name('updateStatus');
             });
             Route::prefix('notifications')->name('notifications.')->group(function () {
                 Route::get('Detail', 'getNotifications')->name('Detail');
