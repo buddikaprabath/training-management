@@ -365,7 +365,7 @@
                 <h5 class="modal-title" id="addgradeModalLabel">Add Grade</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="addGradeForm" action="#" method="POST">
+            <form id="addGradeForm" action="{{ route('SuperAdmin.participant.grade.store') }}" method="POST">
                 @csrf
                 <div class="modal-body">
                     <input type="hidden" name="training_id" id="modal_training_id" value="{{ $training->id }}">
@@ -397,14 +397,21 @@
 </div>
 
 <script>
-    // Add this right before your JavaScript code
-    const gradeStoreRoute = "{{ route('SuperAdmin.participant.grade.store') }}";
     const completionStatusRoute = "{{route('SuperAdmin.participant.updateStatus')}}";
     
     document.addEventListener("DOMContentLoaded", function () {
         var completionStatusModal = document.getElementById('completionStatusModal');
         var participantIdInput = document.getElementById('completionStatusparticipantId');
         var completionStatusForm = document.getElementById('completionStatusForm');
+        var addgrademodal = document.getElementById('addgradeModal');
+        var participantgradeIdInput = document.getElementById('modal_participant_id');
+
+        //when the add grade modal is shown,set the participant id
+        addgrademodal.addEventListener('show.bs.modal',function(event){
+            var button = event.relatedTarget;
+            var participantId = button.getAttribute('data-participant-id');
+            participantgradeIdInput.value = participantId;
+        });
 
         // When the modal is shown, set the participant ID
         completionStatusModal.addEventListener('show.bs.modal', function (event) {
@@ -429,14 +436,6 @@
             feather.replace();
         }
         
-        // Get the modal elements
-        var modalElement = document.getElementById('myModal');
-        var modal = new bootstrap.Modal(modalElement);
-        const addGradeModal = document.getElementById("addgradeModal");
-        const addGradeForm = document.getElementById("addGradeForm");
-
-        // Get the button that opens the modal
-        var btns = document.querySelectorAll(".openModal");
 
         // Handle modal open event
         btns.forEach(btn => {
@@ -465,39 +464,6 @@
             modal.show();
         }
 
-        // Add Grade Modal Functionality
-        if (addGradeModal) {
-            addGradeModal.addEventListener('show.bs.modal', function(event) {
-                // Get the element that triggered the modal
-                const button = event.relatedTarget;
-                
-                // Extract the participant ID from the data attribute
-                const participantId = button.getAttribute('data-participant-id');
-                console.log("Opening grade modal for participant ID:", participantId);
-                
-                // Set the participant ID in the hidden input field
-                document.getElementById('modal_participant_id').value = participantId;
-                
-                // Set the form action dynamically
-                const form = document.getElementById('addGradeForm');
-                form.action = gradeStoreRoute;
-            });
-        }
-        
-        // Add validation for grade form submission
-        if (addGradeForm) {
-            addGradeForm.addEventListener('submit', function(event) {
-                // Make sure participant ID is set before submitting
-                const participantId = document.getElementById('modal_participant_id').value;
-                if (!participantId) {
-                    event.preventDefault();
-                    alert("Error: Participant ID is missing. Please try again.");
-                    return false;
-                }
-                
-                console.log("Submitting grade form with participant ID:", participantId);
-            });
-        }
 
         // For uploading modal, dynamically set form action based on participant ID
         var uploadModal = document.getElementById("uploadDocumentModal");

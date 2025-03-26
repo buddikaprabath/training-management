@@ -740,7 +740,7 @@ class superadmincontroller extends Controller
             // Retrieve participants with pagination and their remarks
             $participants = $training->participants()->with('remarks')->paginate(10);
 
-            // Debug the subject relationship
+            // get the subject relationship
             $Subjects = $training->subjects;
 
             // Return the view with the data

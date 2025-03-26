@@ -181,6 +181,7 @@ Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(func
                     Route::delete('cost-breakdown/delete/{id}', 'costBreakDelete')->name('cost-breakdown.delete');
                     Route::put('{id}/cost-breakdown/update', 'updateCostBreakdown')->name('cost-breakdown.update');
                     Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
+                    Route::post('subject/store', 'storeSubject')->name('subject.store');
                 });
                 //participant routes
                 Route::prefix('participant')->name('participant.')->group(function () {
@@ -193,6 +194,8 @@ Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(func
                     Route::post('import-participants', 'importParticipants')->name('import-participants');
                     Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
                     Route::delete('delete/{id}', 'destroyparticipant')->name('delete');
+                    Route::post('grade/store', 'gradeStore')->name('grade.store');
+                    Route::put('updateStatus',  'updatecompletionStatus')->name('updateStatus');
                 });
                 //budget routes
                 Route::prefix('budget')->name('budget.')->group(function () {
