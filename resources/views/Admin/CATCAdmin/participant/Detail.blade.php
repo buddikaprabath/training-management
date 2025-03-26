@@ -51,19 +51,21 @@
         <!-- Right Section -->
         <div class="col-md-6">
             <div class="card p-3" style="background-color: #A8BDDB;">
-                @foreach ($institutes as $institute)
-                    <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Institute Name: {{ $institute->name }}</span>
-                @endforeach
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Institute Name: 
+                    <a href="#" class="institute-btn" data-bs-toggle="modal" data-bs-target="#instituteModal">
+                        <i data-feather="book-open"></i>
+                    </a>
+                </span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Course Type : {{$training->course_type}}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Country : {{ $training->country }}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Structure : {{ $training->training_structure }}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Expiration Date : {{ $training->exp_date }}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Category : {{ $training->category }}</span>
-                @if($training)
-                    @foreach ($training->remarks as $remark)
-                        <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Other Comments: {{ $remark->remark }}</span>
-                    @endforeach
-                @endif
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Other Comments:
+                    <a href="#" class="add-grade-btn" data-bs-toggle="modal" data-bs-target="#trainingRemarks">
+                        <i data-feather="file-text"></i>
+                    </a>
+                </span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Custodian : {{ $training->training_custodian }}</span>
             </div>
         </div>
@@ -88,6 +90,9 @@
                         <th class="text-center align-top">Location</th>
                         <th class="text-center align-top">Salary Scale</th>
                         <th class="text-center align-top">Status</th>
+                        <th class="text-center align-top">Grade</th>
+                        <th class="text-center align-top">Completion Status</th>
+                        <th class="text-center align-top">Remarks</th>
                         <th class="text-center align-top">Add Document</th>
                         <th class="text-center align-top">Action</th>
                     </tr>
@@ -102,6 +107,57 @@
                             <td class="text-center">{{ $participant->location }}</td>
                             <td class="text-center">{{ $participant->salary_scale }}</td>
                             <td class="text-center">{{ $participant->status ?? 'Pending' }}</td>
+                            @if ($participant->training->division_id == 2)
+                                <td class="text-center">
+                                    <a href="#" 
+                                        class="add-grade-btn" 
+                                        data-participant-id="{{$participant->id}}" 
+                                        data-bs-toggle="modal" 
+                                        data-bs-target="#addgradeModal">
+                                            <i data-feather="award"></i>
+                                    </a>
+                                </td>
+                            @endif
+                            @if ($participant->completion_status == 'attended')
+                                <td class="text-center">Attended</td>
+                            @elseif ($participant->completion_status == 'unattended')
+                                <td class="text-center">Not Attended</td>
+                            @else
+                                <td class="text-center">
+                                    <a href="#" class="completion-status-btn" data-participant-id="{{ $participant->id }}" data-bs-toggle="modal" data-bs-target="#completionStatusModal">
+                                        <i data-feather="check-circle"></i>
+                                    </a>
+                                </td>
+                            @endif
+                            <td class="text-center">
+                                <a href="#" class="remark-btn" data-bs-toggle="modal" 
+                                    data-bs-target="#participantRemarks{{ $participant->id }}">
+                                    <i data-feather="file-text"></i>
+                                </a>
+                            </td>
+                            <!-- Modal for this participant's remarks -->
+                            <div id="participantRemarks{{ $participant->id }}" class="modal fade" 
+                                tabindex="-1" aria-labelledby="participantRemarkLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Remarks for {{ $participant->name }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="remarks-container" style="max-height: 200px; overflow-y: auto; padding-right: 10px;">
+                                            @if($participant->remarks->isNotEmpty())
+                                                @foreach ($participant->remarks as $remark)
+                                                    <p>{{ $remark->remark }}</p>
+                                                @endforeach
+                                            @else
+                                                <p>No remarks found.</p>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            </div>
                             <td class="text-center">
                                 <a href="#" class="upload-document-btn" data-participant-id="{{ $participant->id }}" data-bs-toggle="modal" data-bs-target="#uploadDocumentModal">
                                     <i data-feather="file-text"></i>
@@ -198,9 +254,181 @@
         </div>
     </div>
 </div>
+<!-- Modal for training remarks -->
+<div id="trainingRemarks" class="modal fade" tabindex="-1" aria-labelledby="trainingRemarkLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModalLabel">Other Comments</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="remarksList" class="remarks-container" style="max-height: 200px; overflow-y: auto; padding-right: 10px;">
+                    @foreach ($training->remarks->take(4) as $remark)
+                        <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">{{$remark->remark}}</span>
+                    @endforeach
+                    @if ($training->remarks->count() > 4)
+                        <div class="more-remarks">
+                            @foreach ($training->remarks->skip(4) as $remark)
+                                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">{{$remark->remark}}</span>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for view institute -->
+<div class="modal fade" id="instituteModal" tabindex="-1" aria-labelledby="instituteLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="myModalLabel">Institute</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="instituteList" class="institute-container" style="max-height: 200px; overflow-y: auto; padding-right: 10px;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th class="text-center align-top">Institute Name</th>
+                                <th class="text-center align-top">Institute Type</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if ($training->institutes && $training->institutes->count() > 0)
+                                @foreach ($training->institutes as $institute)
+                                    <tr>
+                                        <td class="text-center">{{ $institute->name }}</td>
+                                        <td class="text-center">{{ $institute->type }}</td>
+                                    </tr>  
+                                @endforeach
+                            @else
+                                <tr>
+                                    <td class="text-center" colspan="2">No institutes available</td>
+                                </tr>
+                            @endif
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- completion status modal -->
+<div class="modal fade" id="completionStatusModal" tabindex="-1" aria-labelledby="completionStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="completionStatusModalLabel">Update Completion Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="completionStatusForm" method="POST" action="">
+                    @csrf
+                    @method('PUT')
+                    <input type="hidden" id="completionStatusparticipantId" name="participant_id">
+                    <div class="mb-3">
+                        <label for="completionStatus" class="form-label">Select Status</label>
+                        <div>
+                            <button type="button" class="btn btn-success" onclick="updateStatus('attended')">Attended</button>
+                            <button type="button" class="btn btn-danger" onclick="updateStatus('unattended')">Not Attended</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal for Add Grade -->
+<div class="modal fade" id="addgradeModal" tabindex="-1" aria-labelledby="addgradeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addgradeModalLabel">Add Grade</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="addGradeForm" action="{{route('Admin.CATCAdmin.participant.grade.store')}}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <input type="hidden" name="training_id" value="{{ $training->id }}">
+                    <input type="hidden" name="participant_id" id="modalParticipantId">
+                    
+                    <!-- Subject Dropdown -->
+                    <div class="mb-3">
+                        <label for="subject_id" class="form-label">Subject</label>
+                        <select class="form-control" name="subject_id" id="subject_id">
+                            <option value="">Select Subject</option>
+                            @foreach ($subjects as $subject)
+                                <option value="{{ $subject->id }}">{{ $subject->subject_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="grade" class="form-label">Grade</label>
+                        <input type="text" class="form-control" name="grade" id="grade" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Add Grade</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <script>
+    const completionStatusRoute = "{{route('Admin.CATCAdmin.participant.updateStatus')}}";
     document.addEventListener("DOMContentLoaded", function() {
+        var completionStatusModal = document.getElementById('completionStatusModal');
+        var participantIdInput = document.getElementById('completionStatusparticipantId');
+        var completionStatusForm = document.getElementById('completionStatusForm');
+        var addgrademodal = document.getElementById('addgradeModal');
+        var participantgradeIdInput = document.getElementById('modalParticipantId');
         var uploadModal = document.getElementById("uploadDocumentModal");
+
+        //when the add grade modal is shown,set the participant id
+        addgrademodal.addEventListener('show.bs.modal',function(event){
+            var button = event.relatedTarget;
+            var participantId = button.getAttribute('data-participant-id');
+            participantgradeIdInput.value = participantId;
+        });
+        // When the modal is shown, set the participant ID
+        completionStatusModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget; // Button that triggered the modal
+            var participantId = button.getAttribute('data-participant-id'); // Extract info from data-* attributes
+            participantIdInput.value = participantId;
+            completionStatusForm.action = completionStatusRoute; // Set the form action URL
+        });
+
+        // Function to update the status
+        window.updateStatus = function(status) {
+            var form = completionStatusForm;
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'completion_status';
+            input.value = status;
+            form.appendChild(input);
+            form.submit();
+        };
+        
+        
+        // Get the button that opens the modal
+        var btns = document.querySelectorAll(".openModal");
+
+        // Handle modal open event
+        btns.forEach(btn => {
+            btn.onclick = function (event) {
+                event.preventDefault();
+                var trainingId = event.target.closest('a').getAttribute('data-training-id');
+                showRemarks(trainingId);
+            };
+        });
+
+
         uploadModal.addEventListener("show.bs.modal", function(event) {
             var button = event.relatedTarget; // Button that triggered the modal
             var participantId = button.getAttribute("data-participant-id");

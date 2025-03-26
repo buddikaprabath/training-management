@@ -51,13 +51,11 @@
         <!-- Right Section -->
         <div class="col-md-6">
             <div class="card p-3" style="background-color: #A8BDDB;">
-                @foreach ($institutes as $institute)
-                    <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Institute Name: 
-                        <a href="#" class="institute-btn" data-bs-toggle="modal" data-bs-target="#instituteModal">
-                            <i data-feather="book-open"></i>
-                        </a>
-                    </span>
-                @endforeach
+                <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Institute Name: 
+                    <a href="#" class="institute-btn" data-bs-toggle="modal" data-bs-target="#instituteModal">
+                        <i data-feather="book-open"></i>
+                    </a>
+                </span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Course Type : {{$training->course_type}}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Country : {{ $training->country }}</span>
                 <span class="bg-light text-dark rounded-pill d-block p-2 mb-2">Training Structure : {{ $training->training_structure }}</span>

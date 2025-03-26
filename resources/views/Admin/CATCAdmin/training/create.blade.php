@@ -35,12 +35,14 @@
             <!-- Training Code selection -->
             <div class="col-md-6">
                 <label for="training_code" class="form-label">Training Code</label>
-                <select name="training_code" id="training_code" class="form-select track-change @error('training_code') is-invalid @enderror">
+                <select name="training_code" id="training_code" class="form-select track-change @error('training_code') is-invalid @enderror" required>
                     <option disabled selected>Choose training Code</option>
-                    <option value="1" {{ old('training_code', isset($training) ? $training->training_code : '') == 1 ? 'selected' : '' }}>Code 1</option>
-                    <option value="2" {{ old('training_code', isset($training) ? $training->training_code : '') == 2 ? 'selected' : '' }}>Code 2</option>
-                    <option value="3" {{ old('training_code', isset($training) ? $training->training_code : '') == 3 ? 'selected' : '' }}>Code 3</option>
-                    <option value="4" {{ old('training_code', isset($training) ? $training->training_code : '') == 4 ? 'selected' : '' }}>Code 4</option>
+                    @foreach($training_codes as $code)
+                        <option value="{{ $code->training_codes }}"
+                            {{ old('training_codes', isset($training) ? $training->training_code : '') == $code->training_codes ? 'selected' : '' }}>
+                            {{ $code->training_codes }}
+                        </option>
+                    @endforeach
                 </select>
                 @error('training_code')
                     <div class="invalid-feedback">{{ $message }}</div>
@@ -193,6 +195,14 @@
                 @enderror
             </div>
 
+            <!-- Durations -->
+            <div class="col-md-6">
+                <label for="duration" class="form-label">Duration</label>
+                <input name="duration" type="text" class="form-control track-change @error('duration') is-invalid @enderror" value="{{ old('duration', isset($training) ? $training->duration : '') }}" required>
+                @error('duration')
+                    <div class="invalid-feedback">{{ $message }}</div>
+                @enderror
+            </div>
             <!-- Category -->
             <div class="col-md-6">
                 <label for="category" class="form-label">Category</label>
@@ -293,10 +303,8 @@
         const countryContainer = document.querySelector('[for="country"]').parentElement;  // Get the country container
         const countrySelect = document.getElementById('country');
 
-        // Initial check in case the division is already selected
-        toggleSectionDropdown();
-        // Function to toggle the Country dropdown based on Course Type selection
-        function toggleCountryDropdown() {
+       // Function to toggle the Country dropdown based on Course Type selection
+       function toggleCountryDropdown() {
             if (courseTypeSelect.value == 'Foreign') {  // '1' corresponds to 'Foreign'
                 countryContainer.style.display = 'block'; // Show the Country dropdown
                 countrySelect.disabled = false; // Enable the Country dropdown

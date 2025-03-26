@@ -18,15 +18,6 @@
             </a>
         </li>
         <li class="sidebar-header">
-            Reports
-        </li>
-
-        <li class="sidebar-item {{ request()->routeis('Admin.CATCAdmin.report.training')?'active':''}}">
-            <a class="sidebar-link" href="{{route('Admin.CATCAdmin.report.training')}}">
-                <i class="align-middle" data-feather="user"></i> <span class="align-middle">Training Report</span>
-            </a>
-        </li>
-        <li class="sidebar-header">
             Notifications  @if(isset($totalPending) && $totalPending > 0)
             <span class="indicator">{{ $totalPending }}</span>  {{-- Show total pending notifications --}}
         @endif

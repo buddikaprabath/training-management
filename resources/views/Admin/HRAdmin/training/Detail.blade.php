@@ -97,6 +97,7 @@
                                         <a href="#" class="open-subject-modal" data-bs-toggle="modal" data-bs-target="#subjectModal" data-training-id="{{ $item->id }}">
                                             <i data-feather="book-open"></i>
                                         </a>
+                                    </td>
                                 @else
                                     <td class="text-center"></td>
                                 @endif

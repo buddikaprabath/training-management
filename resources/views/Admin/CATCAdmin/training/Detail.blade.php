@@ -53,6 +53,7 @@
                         <th class="text-center align-top">Batch Size</th>
                         <th class="text-center align-top">Category</th>
                         <th class="text-center align-top">Training Status</th>
+                        <th class="text-center align-top">Subjects</th>
                         <th class="text-center align-top">Participant</th>
                         <th class="text-center align-top">Cost Breakdown</th>
                         <th class="text-center align-top">Add Document</th>
@@ -87,6 +88,12 @@
                                         @else
                                             <i data-feather="check-circle" class="check-icon" id="check-icon-{{ $item->id }}"></i>
                                         @endif
+                                    </a>
+                                </td>
+                                <!-- Display Subject Modal -->
+                                <td class="text-center">
+                                    <a href="#" class="open-subject-modal" data-bs-toggle="modal" data-bs-target="#subjectModal" data-training-id="{{ $item->id }}">
+                                        <i data-feather="book-open"></i>
                                     </a>
                                 </td>
                                 
@@ -337,6 +344,44 @@
     </div>
 </div>
 
+<!-- Modal for Subject -->
+<div class="modal fade" id="subjectModal" tabindex="-1" aria-labelledby="subjectModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="subjectModalLabel">Add Subjects</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="subjectForm" action="{{ route('Admin.CATCAdmin.training.subject.store') }}" method="POST">
+                @csrf
+                <div class="modal-body">
+                    <!-- Hidden training ID field -->
+                    <input type="hidden" name="training_id" id="subject_training_id">
+                    
+                    <!-- Default subject field -->
+                    <div class="mb-3">
+                        <label for="subject_name" class="form-label">Subject Name</label>
+                        <input type="text" class="form-control" name="subject_name" id="subject_name" required>
+                    </div>
+                    
+                    <!-- Dynamic subject fields will be added here -->
+                    
+                    <!-- Add more button -->
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-sm btn-primary addmoreSubject">
+                            <i data-feather="plus"></i> Add Another Subject
+                        </button>
+                        <small class="text-muted ms-2">(Maximum 15 subjects per training)</small>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Subjects</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         const costModalElement = document.getElementById("costModal");
@@ -345,6 +390,49 @@
         const trainingStatusModal = new bootstrap.Modal(document.getElementById("trainingStatusModal"));
         const costInputs = document.querySelectorAll(".cost-input");
         const totalAmountField = document.getElementById("totalAmount");
+
+        // New functionality for adding dynamic subject input fields
+        let subjectCounter = 1; // Start from 1 for dynamic fields (since default field exists)
+        const maxFields = 15; // Maximum number of input fields
+        const addButton = document.querySelector('.addmoreSubject'); // Plus icon button
+        
+        // Open the modal when the "book-open" icon is clicked
+        const openModalButtons = document.querySelectorAll('.open-subject-modal');
+        openModalButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const trainingId = this.getAttribute('data-training-id');
+                document.getElementById('subject_training_id').value = trainingId;
+                $('#subjectModal').modal('show'); // Using Bootstrap modal show
+            });
+        });
+
+        // Add new input field when the plus icon is clicked
+        if (addButton) {
+            addButton.addEventListener('click', function(event) {
+                event.preventDefault(); // Prevent default anchor behavior
+
+                if (subjectCounter < maxFields) {
+                    const newInputGroup = document.createElement('div');
+                    newInputGroup.classList.add('mb-3');
+                    // When adding a new field:
+                    newInputGroup.innerHTML = `
+                        <label for="subject_name_${subjectCounter}" class="form-label">Subject Name ${subjectCounter + 1}</label>
+                        <input type="text" class="form-control" name="subject_name_${subjectCounter}" id="subject_name_${subjectCounter}" required>
+                    `;
+                                        
+                    // Insert the new field before the container of the plus icon
+                    this.parentElement.insertAdjacentElement('beforebegin', newInputGroup);
+                    subjectCounter++; // Increment counter after adding a field
+                    
+                    // Re-initialize Feather icons after adding new elements
+                    if (typeof feather !== 'undefined') {
+                        feather.replace();
+                    }
+                } else {
+                    alert("You can add a maximum of 15 subjects.");
+                }
+            });
+        }
 
         function initializeModals() {
             document.querySelectorAll(".open-cost-modal").forEach(button => {

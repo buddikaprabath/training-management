@@ -293,6 +293,7 @@ Route::middleware(['auth', 'verified', 'roleManager:catcadmin, 2, 0'])->group(fu
                     Route::delete('cost-breakdown/delete/{id}', 'costBreakDelete')->name('cost-breakdown.delete');
                     Route::put('{id}/cost-breakdown/update', 'updateCostBreakdown')->name('cost-breakdown.update');
                     Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
+                    Route::post('subject/store', 'storeSubject')->name('subject.store');
                 });
                 //CATC participant routes
                 Route::prefix('participant')->name('participant.')->group(function () {
@@ -305,10 +306,8 @@ Route::middleware(['auth', 'verified', 'roleManager:catcadmin, 2, 0'])->group(fu
                     Route::post('import-participants', 'importParticipants')->name('import-participants');
                     Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
                     Route::delete('delete/{id}', 'destroyCatcparticipant')->name('delete');
-                });
-                //CATC reports routes
-                Route::prefix('report')->name('report.')->group(function () {
-                    Route::get('training', 'trainingsummaryView')->name('training'); // load the training summary view
+                    Route::post('grade/store', 'gradeStore')->name('grade.store');
+                    Route::put('updateStatus',  'updatecompletionStatus')->name('updateStatus');
                 });
                 //notifications routes
                 Route::prefix('notifications')->name('notifications.')->group(function () {
@@ -353,10 +352,6 @@ Route::middleware(['auth', 'verified', 'roleManager:user'])->group(function () {
                 Route::post('import-participants', 'importParticipants')->name('import-participants');
                 Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
                 Route::delete('delete/{id}', 'destroyparticipant')->name('delete');
-            });
-            //reports routes
-            Route::prefix('report')->name('report.')->group(function () {
-                Route::get('training', 'trainingsummaryView')->name('training'); // load the training summary view
             });
             Route::prefix('notifications')->name('notifications.')->group(function () {
                 Route::get('Detail', 'getNotifications')->name('Detail');

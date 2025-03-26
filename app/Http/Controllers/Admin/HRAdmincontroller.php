@@ -107,8 +107,9 @@ class HRAdmincontroller extends Controller
         $countries = DB::table('countries')->get();
         $institutes = Institute::all();
         $trainers = Trainer::all(); // Fetch all trainers
+        $training_codes = DB::table('training_codes')->get();
 
-        return view('Admin.HRAdmin.training.create', compact('countries', 'institutes', 'trainers'));
+        return view('Admin.HRAdmin.training.create', compact('countries', 'institutes', 'trainers', 'training_codes'));
     }
     //store method for training data storing
     public function createtraining(Request $request)
@@ -209,6 +210,7 @@ class HRAdmincontroller extends Controller
             $trainers = Trainer::all();
             $subjects = Subject::all();
             $countries = Country::all();  // Fetching the countries
+            $training_codes = DB::table('training_codes')->get();
 
             // Return the view with all necessary data
             return view('Admin.HRAdmin.training.create', compact('training', 'institutes', 'trainers', 'subjects', 'countries'));
