@@ -8,65 +8,46 @@
             <a class="nav-icon dropdown-toggle" href="#" id="alertsDropdown" data-bs-toggle="dropdown">
                 <div class="position-relative">
                     <i class="align-middle" data-feather="bell"></i>
-                    <span class="indicator">4</span>
+                    @if(isset($totalPending) && $totalPending > 0)
+                        <span class="indicator">{{ $totalPending }}</span>  {{-- Show total pending notifications --}}
+                    @endif
                 </div>
             </a>
-            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0" aria-labelledby="alertsDropdown">
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-end py-0">
                 <div class="dropdown-menu-header">
-                    4 New Notifications
+                    @if(isset($totalPending) && $totalPending > 0)
+                        {{ $totalPending }} New Notifications
+                    @else
+                        No new notifications
+                    @endif
                 </div>
+        
                 <div class="list-group">
-                    <a href="#" class="list-group-item">
-                        <div class="row g-0 align-items-center">
-                            <div class="col-2">
-                                <i class="text-danger" data-feather="alert-circle"></i>
-                            </div>
-                            <div class="col-10">
-                                <div class="text-dark">Update completed</div>
-                                <div class="text-muted small mt-1">Restart server 12 to complete the update.</div>
-                                <div class="text-muted small mt-1">30m ago</div>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="#" class="list-group-item">
-                        <div class="row g-0 align-items-center">
-                            <div class="col-2">
-                                <i class="text-warning" data-feather="bell"></i>
-                            </div>
-                            <div class="col-10">
-                                <div class="text-dark">Lorem ipsum</div>
-                                <div class="text-muted small mt-1">Aliquam ex eros, imperdiet vulputate hendrerit et.</div>
-                                <div class="text-muted small mt-1">2h ago</div>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="#" class="list-group-item">
-                        <div class="row g-0 align-items-center">
-                            <div class="col-2">
-                                <i class="text-primary" data-feather="home"></i>
-                            </div>
-                            <div class="col-10">
-                                <div class="text-dark">Login from 192.186.1.8</div>
-                                <div class="text-muted small mt-1">5h ago</div>
-                            </div>
-                        </div>
-                    </a>
-                    <a href="#" class="list-group-item">
-                        <div class="row g-0 align-items-center">
-                            <div class="col-2">
-                                <i class="text-success" data-feather="user-plus"></i>
-                            </div>
-                            <div class="col-10">
-                                <div class="text-dark">New connection</div>
-                                <div class="text-muted small mt-1">Christina accepted your request.</div>
-                                <div class="text-muted small mt-1">14h ago</div>
-                            </div>
-                        </div>
-                    </a>
+                    @foreach ($notifications as $notification)
+                        <form method="POST" action="{{ route('SuperAdmin.Notifications.markAsRead', $notification->id) }}" class="d-inline">
+                            @csrf
+                            <button type="submit" class="list-group-item list-group-item-action border-0 bg-transparent" style="cursor: pointer;">
+                                <div class="row g-0 align-items-center">
+                                    <div class="col-2">
+                                        <i class="text-primary" data-feather="bell"></i>
+                                    </div>
+                                    <div class="col-10">
+                                        <div class="text-dark">{{ $notification->title }}</div>
+                                        <div class="text-muted small mt-1">{{ $notification->message }}</div>
+                                        <div class="text-muted small mt-1">{{ $notification->created_at->diffForHumans() }}</div>
+                                    </div>
+                                </div>
+                            </button>
+                        </form>
+                    @endforeach
                 </div>
-                <div class="dropdown-menu-footer">
-                    <a href="#" class="text-muted">Show all notifications</a>
-                </div>
+        
+                {{-- If there are more than 4 notifications, show "View All" button --}}
+                @if($totalPending > 4)
+                    <div class="text-center py-2">
+                        <a href="{{route('SuperAdmin.approval.Detail')}}" class="text-primary">View All Notifications</a>
+                    </div>
+                @endif
             </div>
         </li>
         <li class="nav-item dropdown">
@@ -78,10 +59,10 @@
             <span class="text-dark">{{Auth::user()->name}}</span>
         </a>
         <div class="dropdown-menu dropdown-menu-end">
-            <a class="dropdown-item" href="pages-profile.html"><i class="align-middle me-1" data-feather="user"></i> Profile</a>
+            <a class="dropdown-item" href="#"><i class="align-middle me-1" data-feather="user"></i> Profile</a>
             <a class="dropdown-item" href="#"><i class="align-middle me-1" data-feather="pie-chart"></i> Analytics</a>
             <div class="dropdown-divider"></div>
-            <a class="dropdown-item" href="index.html"><i class="align-middle me-1" data-feather="settings"></i> Settings & Privacy</a>
+            <a class="dropdown-item" href="#"><i class="align-middle me-1" data-feather="settings"></i> Settings & Privacy</a>
             <a class="dropdown-item" href="#"><i class="align-middle me-1" data-feather="help-circle"></i> Help Center</a>
             <div class="dropdown-divider"></div>
             <div class="dropdown-item">

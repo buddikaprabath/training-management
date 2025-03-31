@@ -15,8 +15,8 @@
     </div>
     <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
         <!-- Search Form -->
-        <form class="d-flex" method="GET" action="#" style="max-width: 250px;">
-            <input class="form-control me-2" type="search" name="query" placeholder="Search here..." value="">
+        <form class="d-flex" method="GET" action="{{route('SuperAdmin.participant.create',$training->id ?? '')}}" style="max-width: 250px;">
+            <input class="form-control me-2" type="search" name="epf_number" placeholder="Search here..." value="">
             <button class="btn btn-outline-success" type="submit">Search</button>
         </form>
     
@@ -70,7 +70,7 @@
             <!-- EPF Number -->
             <div class="col-md-6">
                 <label for="epf_number" class="form-label">EPF Number</label>
-                <input name="epf_number" type="text" class="form-control track-change @error('epf_number') is-invalid @enderror" placeholder="EPF_Number" value="{{ old('epf_number', isset($participant) ? $participant->epf_number : '') }}" required>
+                <input name="epf_number" type="text" class="form-control track-change @error('epf_number') is-invalid @enderror" placeholder="EPF_Number" value="{{ old('epf_number', isset($employee['epf_number']) ? $employee['epf_number'] : (isset($participant) ? $participant->epf_number : '')) }}" required>
                 @error('epf_number')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -79,7 +79,7 @@
             <!-- Participant Name -->
             <div class="col-md-6">
                 <label for="name" class="form-label">Participant Name</label>
-                <input name="name" type="text" class="form-control track-change @error('name') is-invalid @enderror" placeholder="Name" value="{{ old('name', isset($participant) ? $participant->name : '') }}" required>
+                <input name="name" type="text" class="form-control track-change @error('name') is-invalid @enderror" placeholder="Name" value="{{ old('name', isset($employee['name']) ? $employee['name'] : (isset($participant) ? $participant->name : '')) }}" required>
                 @error('name')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -97,7 +97,11 @@
             <!-- salary_scale -->
             <div class="col-md-6">
                 <label for="salary_scale" class="form-label">Salary scale</label>
-                <input name="salary_scale" type="number" class="form-control track-change @error('salary_scale') is-invalid @enderror" placeholder="Salary Scale" value="{{ old('salary_scale', isset($participant) ? $participant->salary_scale : '') }}" required>
+                <input name="salary_scale" type="text" class="form-control track-change @error('salary_scale') is-invalid @enderror" 
+                       placeholder="e.g. S1, S2" 
+                       value="{{ old('salary_scale', isset($employee['salary_scale_id']) ? 'S'.$employee['salary_scale_id'] : (isset($participant) ? 'S'.$participant->salary_scale : '')) }}" 
+                       required
+                       oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = 'S' + this.value.replace(/^S/, '');">
                 @error('salary_scale')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -158,7 +162,7 @@
             <!-- date_of_birth -->
             <div class="col-md-6">
                 <label for="date_of_birth" class="form-label">Date Of Birth</label>
-                <input id="date_of_birth" name="date_of_birth" type="date" class="form-control track-change @error('date_of_birth') is-invalid @enderror" placeholder="Date of Birth" value="{{ old('date_of_birth', isset($participant) ? $participant->date_of_birth : '') }}" required>
+                <input id="date_of_birth" name="date_of_birth" type="date" class="form-control track-change @error('date_of_birth') is-invalid @enderror" placeholder="Date of Birth" value="{{ old('date_of_birth', isset($employee['DOB']) ? $employee['DOB'] : (isset($participant) ? $participant->date_of_birth : '')) }}" required>
                 @error('date_of_birth')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror

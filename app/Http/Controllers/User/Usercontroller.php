@@ -299,6 +299,19 @@ class Usercontroller extends Controller
                 'division_id' => $userDivision,  // Pass the division_id
                 'section_id' => $userSection,
             ]);
+
+            $message = "Approval Request Submitted : A new approval request has been submitted for editing a training record.                   Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $training->id,
+            ]);
+
             DB::commit();
             return redirect()->route('User.training.Detail')->with('success', 'Your update request has been sent for approval.');
         } catch (\Exception $e) {
@@ -449,6 +462,18 @@ class Usercontroller extends Controller
                 'new_data'   => json_encode($validatedData), // Save the updated data as new_data
                 'status'     => 'pending',
                 'division_id' => Auth::user()->division_id,  // Pass the division_id
+            ]);
+
+            $message = "Approval Request Submitted:  
+                        A new approval request has been submitted for updating a cost breakdown record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $costBreak->id,
             ]);
 
             // Redirect back with a success message

@@ -43,6 +43,15 @@
             </a>
         </li>
         <li class="sidebar-header">
+            Notifications 
+        </li>
+        <li class="sidebar-item {{ request()->routeis('SuperAdmin.Notifications.Notifications')?'active':''}}">
+            <a class="sidebar-link" href="{{route('SuperAdmin.Notifications.Notifications')}}">
+                <i class="align-middle" data-feather="bell"></i> <span class="align-middle">Notifications</span>
+            </a>
+        </li>
+
+        <li class="sidebar-header">
             Reports
         </li>
 

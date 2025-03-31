@@ -3,19 +3,22 @@
 namespace App\Providers;
 
 use App\Models\Notification;
+use App\Services\EmpApiService;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Facades\View;
-use Illuminate\Support\Facades\Auth;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
      */
-    public function register(): void
+    public function register()
     {
-        //
+        $this->app->bind(EmpApiService::class, function ($app) {
+            return new EmpApiService();
+        });
     }
 
     /**
@@ -33,17 +36,34 @@ class AppServiceProvider extends ServiceProvider
 
         View::composer($navbars, function ($view) {
             if (Auth::check()) { // Ensure the user is authenticated
-                // Fetch the latest 4 notifications
-                $notifications = Notification::where('user_id', Auth::id())
-                    ->where('status', 'pending')
-                    ->orderBy('created_at', 'desc')
-                    ->take(4)
-                    ->get();
+                $viewName = $view->getName(); // Get the view name being rendered
 
-                // Count total pending notifications
-                $totalPending = Notification::where('user_id', Auth::id())
-                    ->where('status', 'pending')
-                    ->count();
+                // Check if the view is for SuperAdmin
+                if ($viewName === 'SuperAdmin.components.navbar') {
+                    // Fetch notifications for SuperAdmin based on user_role
+                    $notifications = Notification::where('user_role', 'superadmin')
+                        ->where('status', 'pending')
+                        ->orderBy('created_at', 'desc')
+                        ->take(4)
+                        ->get();
+
+                    // Count total pending notifications for SuperAdmin
+                    $totalPending = Notification::where('user_role', 'superadmin')
+                        ->where('status', 'pending')
+                        ->count();
+                } else {
+                    // For other roles, fetch notifications based on user_id
+                    $notifications = Notification::where('user_id', Auth::id())
+                        ->where('status', 'pending')
+                        ->orderBy('created_at', 'desc')
+                        ->take(4)
+                        ->get();
+
+                    // Count total pending notifications for the current user
+                    $totalPending = Notification::where('user_id', Auth::id())
+                        ->where('status', 'pending')
+                        ->count();
+                }
             } else {
                 $notifications = collect([]); // Return an empty collection if not logged in
                 $totalPending = 0; // No pending notifications if not logged in

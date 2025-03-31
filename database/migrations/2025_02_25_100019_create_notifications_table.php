@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('notifications', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('user_id');
+            $table->unsignedBigInteger('user_id')->nullable();
             $table->text('message');
             $table->enum('status', ['pending', 'read'])->default('pending');
+            $table->string('user_role')->nullable();
             $table->timestamp('read_at')->nullable();
+            $table->string('model_id')->nullable();
             $table->timestamps();
 
             // Foreign key constraint

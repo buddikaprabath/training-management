@@ -8,6 +8,7 @@ use App\Http\Controllers\User\Usercontroller;
 use App\Http\Controllers\Admin\HRAdmincontroller;
 use App\Http\Controllers\Admin\CATCAdmincontroller;
 use App\Http\Controllers\Admin\hrreportcontroller;
+use App\Http\Controllers\SuperAdmin\dashboardcontroller;
 use App\Http\Controllers\Superadmin\reportcontroller;
 use App\Http\Controllers\Superadmin\superadmincontroller;
 
@@ -17,12 +18,16 @@ Route::get('/', function () {
 
 // super admin routes
 Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(function () {
-    Route::controller(superadmincontroller::class)->group(function () {
+    Route::controller(dashboardcontroller::class)->group(function () {
         Route::prefix('SuperAdmin')->name('SuperAdmin.')->group(function () {
             //dashboard routes
             Route::prefix('page')->name('page.')->group(function () {
                 Route::get('dashboard', 'index')->name('dashboard');
             });
+        });
+    });
+    Route::controller(superadmincontroller::class)->group(function () {
+        Route::prefix('SuperAdmin')->name('SuperAdmin.')->group(function () {
             //users details routes
             Route::prefix('Users')->name('Users.')->group(function () {
 
@@ -110,6 +115,12 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('Detail', 'approval')->name('Detail');
                 Route::post('{approval}/approve', 'approve')->name('approve');
                 Route::post('{approval}/reject', 'reject')->name('reject');
+            });
+
+            //notification routes
+            Route::prefix('Notifications')->name('Notifications.')->group(function () {
+                Route::get('Notifications', 'NotificationView')->name('Notifications');
+                Route::post('{id}/mark-read', 'markAsReadAndRedirect')->name('markAsRead');
             });
 
             //reports routes

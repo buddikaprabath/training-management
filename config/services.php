@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'emp_api' => [
+        'key' => env('EMP_API_KEY'),
+        'url' => env('EMP_API_URL'),
+    ],
+
 ];

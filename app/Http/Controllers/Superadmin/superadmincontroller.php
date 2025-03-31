@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Superadmin;
 
 use Log;
+use Exception;
 use APP\Models\User;
 use App\Models\Grade;
 use App\Models\Budget;
@@ -21,26 +22,21 @@ use App\Models\Institute;
 use App\Models\Participant;
 use App\Models\Notification;
 use Illuminate\Http\Request;
+use App\Services\EmpApiService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Validation\Rule;
 use PhpParser\Node\Stmt\Return_;
 use App\Exports\ParticipantExport;
 use App\Imports\ParticipantImport;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use function Laravel\Prompts\table;
 use App\Http\Controllers\Controller;
-use Exception;
 use Illuminate\Support\Facades\Hash;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Container\Attributes\Auth;
 
 class superadmincontroller extends Controller
 {
-    public function index()
-    {
-        return view('SuperAdmin.page.dashboard');
-    }
-
     public function userview(Request $request)
     {
         $query = $request->input('query');
@@ -810,22 +806,40 @@ class superadmincontroller extends Controller
         }
     }
 
+    protected EmpApiService $empApiService;
 
+    public function __construct(EmpApiService $empApiService)
+    {
+        $this->empApiService = $empApiService;
+    }
     //load the create participant blade
-    public function createparticipant($trainingId)
+    public function createparticipant(Request $request, $trainingId)
     {
         try {
-            // Attempt to find the training
-            $training = Training::findOrFail($trainingId); // This will automatically throw a ModelNotFoundException if not found
+            $training = Training::findOrFail($trainingId);
 
-            // Return the view with the training data
-            return view('SuperAdmin.participant.create', compact('training'));
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Catch the ModelNotFoundException and return an error if the training is not found
-            return redirect()->back()->with('error', 'Training not found.');
+            // If no EPF number submitted, return basic form
+            if (!$request->filled('epf_number')) {
+                return view('SuperAdmin.participant.create', compact('training'));
+            }
+
+            // Validate EPF number when present
+            $validated = $request->validate([
+                'epf_number' => 'required|string|max:20',
+            ]);
+
+            //get division name
+            $employee = $this->empApiService->getEmployeeDetailsForParticipant($validated['epf_number']);
+
+            if (!$employee) {
+                return back()->withInput()->with('error', 'Employee not found');
+            }
+            return view('SuperAdmin.participant.create', [
+                'training' => $training,
+                'employee' => $employee,
+            ]);
         } catch (\Exception $e) {
-            // Catch any other exceptions and return a generic error message
-            return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Error: ' . $e->getMessage());
         }
     }
     //store participant
@@ -842,7 +856,7 @@ class superadmincontroller extends Controller
                 }),
             ],
             'designation'                  => 'required|string|max:255',
-            'salary_scale'                 => 'nullable|numeric|min:0|max:9999999999',
+            'salary_scale'                 => 'required|string|max:2',
             'location'                     => 'nullable|string|max:255',
             'obligatory_period'            => 'nullable|date',
             'cost_per_head'                => 'nullable|numeric|min:0|max:9999999999',
@@ -1005,7 +1019,7 @@ class superadmincontroller extends Controller
                 'name'                         => 'required|string|max:255',
                 'epf_number'                   => 'required|string|max:50',
                 'designation'                  => 'required|string|max:255',
-                'salary_scale'                 => 'nullable|numeric|min:0|max:9999999999',
+                'salary_scale'                 => 'required|string|max:2',
                 'location'                     => 'nullable|string|max:255',
                 'obligatory_period'            => 'nullable|date',
                 'cost_per_head'                => 'nullable|numeric|min:0|max:9999999999',
@@ -2057,5 +2071,26 @@ class superadmincontroller extends Controller
             DB::rollBack();
             return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
         }
+    }
+    public function markAsReadAndRedirect(Request $request, $id)
+    {
+        try {
+            $notification = Notification::findOrFail($id);
+
+            // Update status to 'read'
+            $notification->update([
+                'status' => 'read',
+                'read_at' => now(),
+            ]);
+
+            // Redirect to the detail page
+            return redirect()->route('SuperAdmin.approval.Detail', ['notification_id' => $id]);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Error updating notification: ' . $e->getMessage());
+        }
+    }
+    public function NotificationView()
+    {
+        return view('SuperAdmin.Notifications.Notifications');
     }
 }

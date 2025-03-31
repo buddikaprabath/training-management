@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('name');
             $table->string('epf_number');
             $table->string('designation');
-            $table->decimal('salary_scale', 10, 2);
+            $table->string('salary_scale');
             $table->string('location');
             $table->string('obligatory_period');
             $table->decimal('cost_per_head');
