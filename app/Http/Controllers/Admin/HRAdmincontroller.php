@@ -108,7 +108,6 @@ class HRAdmincontroller extends Controller
         $institutes = Institute::all();
         $trainers = Trainer::all(); // Fetch all trainers
         $training_codes = DB::table('training_codes')->get();
-
         return view('Admin.HRAdmin.training.create', compact('countries', 'institutes', 'trainers', 'training_codes'));
     }
     //store method for training data storing
@@ -120,8 +119,9 @@ class HRAdmincontroller extends Controller
             'mode_of_delivery'      => 'required|string|max:255',
             'training_period_from'  => 'required|date',
             'training_period_to'    => 'required|date|after_or_equal:training_period_from',
-            'total_training_hours'  => 'required|integer|max:255',
+            'total_training_hours'  => 'required|integer|max:999',
             'total_program_cost'    => 'required|numeric|between:0,9999999.99',
+            'country'               => 'nullable',
             'course_type'           => 'required|string|max:255',
             'category'              => 'required|string|max:255',
             'training_custodian'    => 'nullable|string|max:255',
@@ -213,7 +213,7 @@ class HRAdmincontroller extends Controller
             $training_codes = DB::table('training_codes')->get();
 
             // Return the view with all necessary data
-            return view('Admin.HRAdmin.training.create', compact('training', 'institutes', 'trainers', 'subjects', 'countries'));
+            return view('Admin.HRAdmin.training.create', compact('training', 'institutes', 'trainers', 'subjects', 'countries', 'training_codes'));
         } catch (\Exception $e) {
             // If an error occurs, redirect back with an error message
             return back()->with('error', 'Error loading training details: ' . $e->getMessage());
@@ -228,8 +228,9 @@ class HRAdmincontroller extends Controller
             'mode_of_delivery'      => 'required|string|max:255',
             'training_period_from'  => 'required|date',
             'training_period_to'    => 'required|date|after_or_equal:training_period_from',
-            'total_training_hours'  => 'required|integer|max:255',
+            'total_training_hours'  => 'required|integer|max:999',
             'total_program_cost'    => 'required|numeric|between:0,9999999.99',
+            'country'               => 'nullable',
             'course_type'           => 'required|string|max:255',
             'category'              => 'required|string|max:255',
             'training_custodian'    => 'nullable|string|max:255',
@@ -252,7 +253,6 @@ class HRAdmincontroller extends Controller
 
         try {
             DB::beginTransaction();
-
             // Find the training by ID
             $training = Training::findOrFail($id);
 

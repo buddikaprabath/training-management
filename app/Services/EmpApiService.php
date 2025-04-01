@@ -55,7 +55,9 @@ class EmpApiService
             'epf_number' => $employee['service_no'] ?? null,
             'name' => $employee['name'] ?? null,
             'date_of_birth' => $employee['DOB'] ?? null,
-            'salary_scale_id' => $employee['salary_scale_id'] ?? null
+            'salary_scale_id' => $employee['SalarySacle'] ?? null,
+            'Division' => $employee['Division'] ?? null,
+            'Designation' => $employee['Designation'] ?? null,
         ];
     }
 

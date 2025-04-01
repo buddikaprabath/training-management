@@ -85,11 +85,11 @@
                         <th class="text-center align-top">Designation</th>
                         <th class="text-center align-top">Loacation</th>
                         <th class="text-center align-top">Salary Scale</th>
-                        <th class="text-center align-top">Status</th>
+                        <th class="text-center align-top">completion Status</th>
                         @if ($participants->first() && $participants->first()->training->division_id == 2)
                             <th class="text-center align-top">Grade</th>
                         @endif
-                        <th class="text-center align-top">Completion Status</th>
+                        <th class="text-center align-top">Status</th>
                         <th class="text-center align-top">Remarks</th>
                         <th class="text-center align-top">Add Document</th>
                         <th class="text-center align-top">Action</th>
@@ -221,7 +221,7 @@
                 <h5 class="modal-title" id="uploadDocumentModalLabel">Upload Document</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form id="documentUploadForm" action="#" method="POST" enctype="multipart/form-data">
+            <form id="documentUploadForm" action="{{route('SuperAdmin.participant.documents.store')}}" method="POST" enctype="multipart/form-data">
                 @csrf
                 <div class="modal-body">
                     <input type="hidden" name="participant_id" id="participant_id">
@@ -395,9 +395,48 @@
         </div>
     </div>
 </div>
-
 <script>
-    const completionStatusRoute = "{{route('SuperAdmin.participant.updateStatus')}}";
+    document.addEventListener("DOMContentLoaded", function () {
+        // Initialize feather icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+
+        // Handle document upload modal
+        const uploadModal = document.getElementById("uploadDocumentModal");
+        if (uploadModal) {
+            uploadModal.addEventListener("show.bs.modal", function (event) {
+                const button = event.relatedTarget;
+                const participantId = button.getAttribute("data-participant-id");
+                const form = document.getElementById("documentUploadForm");
+                
+                // Set dynamic route with participant ID
+                const baseRoute = "{{ route('SuperAdmin.participant.documents.store') }}";
+                form.action = baseRoute + (baseRoute.includes('?') ? '&' : '?') + `participant_id=${participantId}`;
+                
+                // Set hidden fields
+                document.getElementById("participant_id").value = participantId;
+                document.getElementById("training_id").value = "{{ $training->id }}"; // From Blade template
+                
+                // Reset form when modal opens
+                form.reset();
+            });
+
+            // Optional: Handle form submission with feedback
+            const uploadForm = document.getElementById("documentUploadForm");
+            if (uploadForm) {
+                uploadForm.addEventListener("submit", function(e) {
+                    // You could add loading state here
+                    const submitBtn = uploadForm.querySelector('button[type="submit"]');
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Uploading...';
+                });
+            }
+        }
+    });
+</script>
+<script>
+    const completionStatusRoute = "{{ route('SuperAdmin.participant.updateStatus') }}";
     
     document.addEventListener("DOMContentLoaded", function () {
         var completionStatusModal = document.getElementById('completionStatusModal');
@@ -406,8 +445,8 @@
         var addgrademodal = document.getElementById('addgradeModal');
         var participantgradeIdInput = document.getElementById('modal_participant_id');
 
-        //when the add grade modal is shown,set the participant id
-        addgrademodal.addEventListener('show.bs.modal',function(event){
+        // When the add grade modal is shown, set the participant id
+        addgrademodal.addEventListener('show.bs.modal', function(event) {
             var button = event.relatedTarget;
             var participantId = button.getAttribute('data-participant-id');
             participantgradeIdInput.value = participantId;
@@ -431,11 +470,11 @@
             form.appendChild(input);
             form.submit();
         };
+        
         // Initialize feather icons if you're using them
         if (typeof feather !== 'undefined') {
             feather.replace();
         }
-        
 
         // Handle modal open event
         btns.forEach(btn => {
@@ -462,25 +501,6 @@
 
             // Show the modal
             modal.show();
-        }
-
-
-        // For uploading modal, dynamically set form action based on participant ID
-        var uploadModal = document.getElementById("uploadDocumentModal");
-        if (uploadModal) {
-            uploadModal.addEventListener("show.bs.modal", function (event) {
-                var button = event.relatedTarget; // Button that triggered the modal
-                var participantId = button.getAttribute("data-participant-id");
-
-                // Set the action URL dynamically for the correct participant
-                var formAction = "{{ route('SuperAdmin.participant.documents.store', ':id') }}";
-                formAction = formAction.replace(':id', participantId);
-                document.getElementById("documentUploadForm").action = formAction;
-
-                // Ensure the correct training ID is set in the hidden input field
-                var trainingId = "{{ $training->id }}"; // Ensure this is available in your Blade template
-                document.getElementById("training_id").value = trainingId;
-            });
         }
 
         // Ensure modal can be closed with the 'close' button

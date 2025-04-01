@@ -88,7 +88,7 @@
             <!-- Designation -->
             <div class="col-md-6">
                 <label for="designation" class="form-label">Designation</label>
-                <input name="designation" type="text" class="form-control track-change @error('designation') is-invalid @enderror" placeholder="Designation" value="{{ old('designation', isset($participant) ? $participant->designation : '') }}" required>
+                <input name="designation" type="text" class="form-control track-change @error('designation') is-invalid @enderror" placeholder="Designation" value="{{ old('designation', isset($employee['Designation'])? $employee['Designation'] : (isset($participant) ? $participant->designation : '')) }}" required>
                 @error('designation')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -99,9 +99,7 @@
                 <label for="salary_scale" class="form-label">Salary scale</label>
                 <input name="salary_scale" type="text" class="form-control track-change @error('salary_scale') is-invalid @enderror" 
                        placeholder="e.g. S1, S2" 
-                       value="{{ old('salary_scale', isset($employee['salary_scale_id']) ? 'S'.$employee['salary_scale_id'] : (isset($participant) ? 'S'.$participant->salary_scale : '')) }}" 
-                       required
-                       oninput="this.value = this.value.replace(/[^0-9]/g, ''); this.value = 'S' + this.value.replace(/^S/, '');">
+                       value="{{ old('salary_scale', isset($employee['salary_scale_id']) ? $employee['salary_scale_id'] : (isset($participant) ? $participant->salary_scale : '')) }}" required>
                 @error('salary_scale')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -318,7 +316,6 @@
                 <label for="other_comments" class="form-label">Other Comments</label>
                 <textarea name="remarks[]" class="form-control track-change @error('remarks') is-invalid @enderror" 
                         placeholder="Other Comments" rows="3">
-                    {{ old('remarks.0', isset($participant) && $participant->remarks->isNotEmpty() ? $participant->remarks->first()->remark : '') }}
                 </textarea>
                 @error('remarks')
                     <div class="invalid-feedback">{{ $message }}</div>

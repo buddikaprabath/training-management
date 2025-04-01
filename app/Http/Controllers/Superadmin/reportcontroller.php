@@ -13,6 +13,396 @@ use App\Models\Budget;
 
 class reportcontroller extends Controller
 {
+    // Reports handling
+    public function trainingsummaryView(Request $request)
+    {
+        try {
+            // Define the course types for local and foreign
+            $localTypes = ['Local In-house', 'Local Outside', 'Local-Tailor Made', 'CATC'];
+            $foreignType = ['Foreign'];
+
+            // Get the date range and division from the request
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+            $division_id = $request->input('division_id');
+
+            // Initialize an empty collection to store the combined summary
+            $combinedSummary = collect();
+
+            // Fetch local trainings - process each training type separately
+            foreach ($localTypes as $type) {
+                // Base query for this training type
+                $query = Training::where('course_type', $type);
+
+                // Apply date filters if provided
+                if ($startDate && $endDate) {
+                    // Both start and end dates are provided - find trainings that overlap with the range
+                    $query->where(function ($q) use ($startDate, $endDate) {
+                        $q->where(function ($inner) use ($startDate, $endDate) {
+                            // Training starts within the range
+                            $inner->whereBetween('trainings.training_period_from', [$startDate, $endDate]);
+                        })->orWhere(function ($inner) use ($startDate, $endDate) {
+                            // Training ends within the range
+                            $inner->whereBetween('trainings.training_period_to', [$startDate, $endDate]);
+                        })->orWhere(function ($inner) use ($startDate, $endDate) {
+                            // Training spans the entire range
+                            $inner->where('trainings.training_period_from', '<=', $startDate)
+                                ->where('trainings.training_period_to', '>=', $endDate);
+                        });
+                    });
+                } elseif ($startDate) {
+                    // Only start date is provided - match exact date or date is within training period
+                    $query->where(function ($q) use ($startDate) {
+                        $q->where('trainings.training_period_from', '=', $startDate)
+                            ->orWhere(function ($inner) use ($startDate) {
+                                $inner->where('trainings.training_period_from', '<=', $startDate)
+                                    ->where('trainings.training_period_to', '>=', $startDate);
+                            });
+                    });
+                } elseif ($endDate) {
+                    // Only end date is provided - match exact date or date is within training period
+                    $query->where(function ($q) use ($endDate) {
+                        $q->where('trainings.training_period_to', '=', $endDate)
+                            ->orWhere(function ($inner) use ($endDate) {
+                                $inner->where('trainings.training_period_from', '<=', $endDate)
+                                    ->where('trainings.training_period_to', '>=', $endDate);
+                            });
+                    });
+                }
+
+                // Apply division filter if provided - explicitly specify the table
+                if ($division_id) {
+                    $query->where('trainings.division_id', $division_id);
+                }
+
+                // Get the count of programs and sum of costs/hours directly from the trainings table
+                $programSummary = (clone $query)
+                    ->selectRaw('course_type, 
+                                  COUNT(DISTINCT trainings.id) as no_of_programs, 
+                                  SUM(trainings.total_training_hours) as training_hours, 
+                                  SUM(trainings.total_program_cost) as total_cost')
+                    ->groupBy('course_type')
+                    ->first();
+
+                // Get the count of participants separately
+                $participantCount = (clone $query)
+                    ->leftJoin('participants', 'trainings.id', '=', 'participants.training_id')
+                    ->selectRaw('COUNT(participants.id) as no_of_participants')
+                    ->first();
+
+                // Combine the data if program summary exists
+                if ($programSummary) {
+                    $programSummary->no_of_participants = $participantCount ? $participantCount->no_of_participants : 0;
+                    $combinedSummary->push($programSummary);
+                }
+            }
+
+            // Fetch foreign trainings with the same enhanced filtering logic
+            $foreignQuery = Training::whereIn('course_type', $foreignType);
+
+            // Apply date filters if provided
+            if ($startDate && $endDate) {
+                // Both start and end dates are provided - find trainings that overlap with the range
+                $foreignQuery->where(function ($q) use ($startDate, $endDate) {
+                    $q->where(function ($inner) use ($startDate, $endDate) {
+                        // Training starts within the range
+                        $inner->whereBetween('trainings.training_period_from', [$startDate, $endDate]);
+                    })->orWhere(function ($inner) use ($startDate, $endDate) {
+                        // Training ends within the range
+                        $inner->whereBetween('trainings.training_period_to', [$startDate, $endDate]);
+                    })->orWhere(function ($inner) use ($startDate, $endDate) {
+                        // Training spans the entire range
+                        $inner->where('trainings.training_period_from', '<=', $startDate)
+                            ->where('trainings.training_period_to', '>=', $endDate);
+                    });
+                });
+            } elseif ($startDate) {
+                // Only start date is provided - match exact date or date is within training period
+                $foreignQuery->where(function ($q) use ($startDate) {
+                    $q->where('trainings.training_period_from', '=', $startDate)
+                        ->orWhere(function ($inner) use ($startDate) {
+                            $inner->where('trainings.training_period_from', '<=', $startDate)
+                                ->where('trainings.training_period_to', '>=', $startDate);
+                        });
+                });
+            } elseif ($endDate) {
+                // Only end date is provided - match exact date or date is within training period
+                $foreignQuery->where(function ($q) use ($endDate) {
+                    $q->where('trainings.training_period_to', '=', $endDate)
+                        ->orWhere(function ($inner) use ($endDate) {
+                            $inner->where('trainings.training_period_from', '<=', $endDate)
+                                ->where('trainings.training_period_to', '>=', $endDate);
+                        });
+                });
+            }
+
+            // Apply division filter if provided - explicitly specify the table
+            if ($division_id) {
+                $foreignQuery->where('trainings.division_id', $division_id);
+            }
+
+            // Get the count of programs and sum of costs/hours directly from the trainings table
+            $foreignProgramSummary = (clone $foreignQuery)
+                ->selectRaw('course_type, 
+                              COUNT(DISTINCT trainings.id) as no_of_programs, 
+                              SUM(trainings.total_training_hours) as training_hours, 
+                              SUM(trainings.total_program_cost) as total_cost')
+                ->groupBy('course_type')
+                ->first();
+
+            // Get the count of participants separately
+            $foreignParticipantCount = (clone $foreignQuery)
+                ->leftJoin('participants', 'trainings.id', '=', 'participants.training_id')
+                ->selectRaw('COUNT(participants.id) as no_of_participants')
+                ->first();
+
+            // Combine the data if foreign program summary exists
+            if ($foreignProgramSummary) {
+                $foreignProgramSummary->no_of_participants = $foreignParticipantCount ? $foreignParticipantCount->no_of_participants : 0;
+                $combinedSummary->push($foreignProgramSummary);
+            }
+
+            // Store the filtered data in the session
+            session(['training_summary' => $combinedSummary]);
+
+            // Return the view with the combined summary
+            return view('SuperAdmin.report.trainingSummary', compact('combinedSummary'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading training summary: ' . $e->getMessage());
+        }
+    }
+    public function downloadTrainingSummaryPdf(Request $request)
+    {
+        try {
+            // Fetch the data using the same logic and filter parameters
+            $combinedSummary = session('training_summary', collect());
+
+            // Load the view and pass the data
+            $pdf = Pdf::loadView('SuperAdmin.report.pdf.trainingSummaryPdf', compact('combinedSummary'));
+
+            // Download the PDF file
+            return $pdf->download('training_summary_report.pdf');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
+        }
+    }
+
+    //report of Individual Employee Training Record
+    public function IndividualEmployeeTrainingRecordView(Request $request)
+    {
+        try {
+            // Ensure that name or epf_number is provided (year alone is not enough)
+            if (!$request->filled('name') && !$request->filled('epf_number')) {
+                return view('SuperAdmin.report.IndividualEmployeeTrainingRecordReport', ['participants' => collect()]);
+            }
+
+            // Get values from the request
+            $name = $request->name;
+            $epf_number = $request->epf_number;
+            $year = $request->year;
+
+            // Step 1: First filter participants by name and/or EPF number
+            $query = Participant::query();
+
+            if ($name) {
+                $query->where('name', 'like', '%' . $name . '%');
+            }
+
+            if ($epf_number) {
+                $query->where('epf_number', $epf_number);
+            }
+
+            // Step 2: Get these participants with their training relationships
+            $participants = $query->get();
+
+            // Step 3: If year filter is applied, filter the related trainings
+            if ($year) {
+                // Create a collection to hold participants with training in the specified year
+                $filteredParticipants = collect();
+
+                foreach ($participants as $participant) {
+                    // Load the related training with institutes and trainers
+                    $participant->load(['training' => function ($query) use ($year) {
+                        $query->whereRaw('YEAR(training_period_to) = ?', [$year])
+                            ->with('institutes', 'trainers');
+                    }]);
+
+                    // Only include participants who have training in the specified year
+                    if ($participant->training) {
+                        $filteredParticipants->push($participant);
+                    }
+                }
+
+                // Replace original participants with filtered ones
+                $participants = $filteredParticipants;
+            } else {
+                // If no year filter, load all trainings with institutes and trainers
+                foreach ($participants as $participant) {
+                    $participant->load('training.institutes', 'training.trainers');
+                }
+            }
+            // Store the filtered data in the session
+            session(['filtered_participants' => $participants]);
+
+            // Return view with filtered data
+            return view('SuperAdmin.report.IndividualEmployeeTrainingRecordReport', ['participants' => $participants]);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading Individual Employee Training Record: ' . $e->getMessage());
+        }
+    }
+    //download the Individual Employee Training Record
+    public function downloadIndividualEmployeeTrainingRecordPdf(Request $request)
+    {
+        try {
+            // Retrieve the filtered data from the session
+            $participants = session('filtered_participants', collect());
+
+            // Load the view and pass the data
+            $pdf = Pdf::loadView('SuperAdmin.report.pdf.IndividualEmployeeTrainingRecordPdf', compact('participants'));
+
+            // Download the PDF file
+            return $pdf->download('individual_employee_training_record.pdf');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
+        }
+    }
+
+    //ParticularCourseCompletedSummaryView
+    public function ParticularCourseCompletedSummaryView(Request $request)
+    {
+        try {
+
+            $training_codes = DB::table('training_codes')->get();
+            // Ensure that at least one filter is applied
+            if (!$request->filled('name') && !$request->filled('training_code')) {
+                return view('SuperAdmin.report.ParticularCourseCompletedSummery', [
+                    'trainings' => collect(),
+                    'training_codes' => $training_codes,
+                ]);
+            }
+
+            // Get values from the request
+            $name = $request->name;
+            $training_code = $request->training_code;
+
+            // Step 1: First filter trainings by name and/or training code
+            $query = Training::query();
+
+            if ($name) {
+                $query->where('training_name', 'like', '%' . $name . '%');
+            }
+
+            if ($training_code) {
+                $query->where('training_code', $training_code);
+            }
+
+            // Step 2: Get these trainings with participants who have completed the training
+            $trainings = $query->with(['participants' => function ($query) {
+                $query->where('completion_status', 'attended');
+            }])->get();
+
+            // Step 3: Calculate the total count of attended employees
+            $attendedCount = 0;
+            foreach ($trainings as $training) {
+                $attendedCount += $training->participants->count();
+            }
+
+            // Store the filtered data and attended count in the session
+            session([
+                'filtered_course_completed_participant' => $trainings,
+                'attended_employee_count' => $attendedCount,
+            ]);
+
+            // Return view with filtered data
+            return view('SuperAdmin.report.ParticularCourseCompletedSummery', [
+                'trainings' => $trainings,
+                'attendedCount' => $attendedCount,
+                'training_codes' => $training_codes
+            ]);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading Particular Course Completed Summary: ' . $e->getMessage());
+        }
+    }
+
+    //download the Particular Course Completed Summary
+    public function downloadParticularCourseCompletedSummaryPdf(Request $request)
+    {
+        try {
+            // Retrieve the filtered data from the session
+            $trainings = session('filtered_course_completed_participant', collect());
+            $attendedCount = session('attended_employee_count', 0);
+
+            // Load the view and pass the data
+            $pdf = Pdf::loadView('SuperAdmin.report.pdf.ParticularCourseCompletedSummaryPdf', compact('trainings', 'attendedCount'));
+
+            // Download the PDF file
+            return $pdf->download('particular_course_completed_summary.pdf');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
+        }
+    }
+
+    //full summary view (Local/Foreign)
+    public function TrainingFullSummaryView(Request $request)
+    {
+        try {
+
+            // Ensure that at least one filter is applied
+            if (!$request->filled('year') && !$request->filled('category')) {
+                return view('SuperAdmin.report.TrainingFullSummery', ['trainings' => collect()]);
+            }
+
+            // Get values from the request
+            $year = $request->year;
+            $category = $request->category;
+
+            // Step 1: First filter trainings by year and/or category 
+            $query = Training::query();
+
+            if ($year) {
+                $query->whereRaw('YEAR(training_period_to) = ?', [$year]);
+            }
+            if ($category) {
+                $query->where('category', $category);
+            }
+
+            // Step 2: Get these trainings with institutes and trainers with participants group by course type
+            $trainings = $query->with(['institutes', 'trainers'])
+                ->get()
+                ->groupBy('course_type');
+
+            // Store the filtered data and filter option in the session
+            session([
+                'filtered_Training_Full_Summary_Local_foreign' => $trainings,
+                'Year' => $year,
+                'Category' => $category
+            ]);
+
+            //return trainings to the view
+            return view('SuperAdmin.report.TrainingFullSummery', ['trainings' => $trainings, 'year' => $year, 'category' => $category]);
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error loading Training Full Summary: ' . $e->getMessage());
+        }
+    }
+
+    //download the Training FUll Summary(Local/Foreign)
+    public function downloadTrainingFullSummaryLocalForeignPdf(Request $request)
+    {
+        try {
+            // Retrieve the filtered data from the session
+            $trainings = session('filtered_Training_Full_Summary_Local_foreign', collect());
+            $year = session('Year', 0);
+            $category = session('Category');
+
+            // Load the view and pass the data
+            $pdf = Pdf::loadView('SuperAdmin.report.pdf.TrainingFullSummaryPdf', compact('trainings', 'year', 'category'));
+
+            // Download the PDF file
+            return $pdf->download('Training_Full_summary.pdf');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Error generating PDF: ' . $e->getMessage());
+        }
+    }
     //Training Custodian-Wise Summery
     public function TrainingCustodianWiseSummeryView(Request $request)
     {

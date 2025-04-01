@@ -63,7 +63,7 @@
                 <label for="mode_of_delivery" class="form-label">Mode of Delivery</label>
                 <select name="mode_of_delivery" id="mode_of_delivery" class="form-select track-change @error('mode_of_delivery') is-invalid @enderror" required>
                     <option selected disabled>Choose Type...</option>
-                    <option value="In person" {{ old('mode_of_delivery', isset($training) && $training->mode_of_delivery == 'In Person' ? 'selected' : '')}}>In person</option>
+                    <option value="In person" {{ old('mode_of_delivery', isset($training) && $training->mode_of_delivery == 'In person' ? 'selected' : '')}}>In person</option>
                     <option value="Online" {{ old('mode_of_delivery', isset($training) && $training->mode_of_delivery == 'Online' ? 'selected' : '')}}>Online</option>
                 </select>
                 @error('course_type')
@@ -74,7 +74,9 @@
             <!-- Training Period From -->
             <div class="col-md-6">
                 <label for="training_period_from" class="form-label">Training Period From</label>
-                <input name="training_period_from" type="date" class="form-control track-change @error('training_period_from') is-invalid @enderror" value="{{ old('training_period_from', isset($training) ? $training->training_period_from : '') }}" required>
+                <input name="training_period_from" type="date" class="form-control track-change @error('training_period_from') is-invalid @enderror" 
+                    value="{{ old('training_period_from', isset($training) ? \Carbon\Carbon::parse($training->training_period_from)->format('Y-m-d') : '') }}" 
+                    required>
                 @error('training_period_from')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -83,7 +85,9 @@
             <!-- Training Period To -->
             <div class="col-md-6">
                 <label for="training_period_to" class="form-label">Training Period To</label>
-                <input name="training_period_to" type="date" class="form-control track-change @error('training_period_to') is-invalid @enderror" value="{{ old('training_period_to', isset($training) ? $training->training_period_to : '') }}" required>
+                <input name="training_period_to" type="date" class="form-control track-change @error('training_period_to') is-invalid @enderror" 
+                    value="{{ old('training_period_to', isset($training) ? \Carbon\Carbon::parse($training->training_period_to)->format('Y-m-d') : '') }}" 
+                    required>
                 @error('training_period_to')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -189,7 +193,9 @@
             <!-- Expire Date -->
             <div class="col-md-6">
                 <label for="exp_date" class="form-label">Expire Date</label>
-                <input name="exp_date" type="date" class="form-control track-change @error('exp_date') is-invalid @enderror" value="{{ old('exp_date', isset($training) ? $training->exp_date : '') }}" required>
+                <input name="exp_date" type="date" class="form-control track-change @error('exp_date') is-invalid @enderror" 
+                    value="{{ old('exp_date', isset($training) ? \Carbon\Carbon::parse($training->exp_date)->format('Y-m-d') : '') }}" 
+                    required>
                 @error('exp_date')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
@@ -278,10 +284,12 @@
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror
             </div>
-            <!-- deadline -->
+            <!-- Dead Line -->
             <div class="col-md-6">
                 <label for="dead_line" class="form-label">Dead Line</label>
-                <input name="dead_line" type="date" class="form-control track-change @error('dead_line') is-invalid @enderror" value="{{ old('dead_line', isset($training) ? $training->dead_line : '') }}" required>
+                <input name="dead_line" type="date" class="form-control track-change @error('dead_line') is-invalid @enderror" 
+                    value="{{ old('dead_line', isset($training) ? \Carbon\Carbon::parse($training->dead_line)->format('Y-m-d') : '') }}" 
+                    required>
                 @error('dead_line')
                     <div class="invalid-feedback">{{ $message }}</div>
                 @enderror

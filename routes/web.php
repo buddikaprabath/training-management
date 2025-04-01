@@ -1,16 +1,23 @@
 <?php
 
 use App\Models\Training;
+use App\Models\Participant;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\User\Usercontroller;
 use App\Http\Controllers\Admin\HRAdmincontroller;
-use App\Http\Controllers\Admin\CATCAdmincontroller;
 use App\Http\Controllers\Admin\hrreportcontroller;
-use App\Http\Controllers\SuperAdmin\dashboardcontroller;
+use App\Http\Controllers\Admin\CATCAdmincontroller;
 use App\Http\Controllers\Superadmin\reportcontroller;
+use App\Http\Controllers\SuperAdmin\TrainingController;
+use App\Http\Controllers\SuperAdmin\dashboardcontroller;
 use App\Http\Controllers\Superadmin\superadmincontroller;
+use App\Http\Controllers\SuperAdmin\ParticipantController;
+use App\Http\Controllers\SuperAdmin\SuperAdminApprovelController;
+use App\Http\Controllers\SuperAdmin\SuperAdminBudgetController;
+use App\Http\Controllers\SuperAdmin\SuperAdminInstituteController;
+use App\Http\Controllers\SuperAdmin\SuperAdminTrainerController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -18,16 +25,16 @@ Route::get('/', function () {
 
 // super admin routes
 Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(function () {
-    Route::controller(dashboardcontroller::class)->group(function () {
-        Route::prefix('SuperAdmin')->name('SuperAdmin.')->group(function () {
+    Route::prefix('SuperAdmin')->name('SuperAdmin.')->group(function () {
+        //super admin dashboard routes
+        Route::controller(dashboardcontroller::class)->group(function () {
             //dashboard routes
             Route::prefix('page')->name('page.')->group(function () {
                 Route::get('dashboard', 'index')->name('dashboard');
             });
         });
-    });
-    Route::controller(superadmincontroller::class)->group(function () {
-        Route::prefix('SuperAdmin')->name('SuperAdmin.')->group(function () {
+        //super admin user routes
+        Route::controller(superadmincontroller::class)->group(function () {
             //users details routes
             Route::prefix('Users')->name('Users.')->group(function () {
 
@@ -48,8 +55,9 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 // Search Route for User Details
                 Route::get('searchUsers', 'userview')->name('user.search'); // Search users by name, username, or email
             });
-
-            //training routes
+        });
+        //super admin training routes
+        Route::controller(TrainingController::class)->group(function () {
             Route::prefix('training')->name('training.')->group(function () {
                 Route::get('Detail', 'trainingview')->name('Detail'); //load training details view
                 Route::get('create', 'createtrainingview')->name('create'); //load the training create page
@@ -66,8 +74,10 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
                 Route::post('subject/store', 'storeSubject')->name('subject.store');
             });
+        });
 
-            //participant routes
+        //super admin participant routes
+        Route::controller(ParticipantController::class)->group(function () {
             Route::prefix('participant')->name('participant.')->group(function () {
                 Route::get('{id}/Detail', 'participantview')->name('Detail'); //load participant details view
                 Route::get('{id}/create', 'createparticipant')->name('create'); //load participant create view
@@ -76,19 +86,22 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::put('update/{id}', 'updateparticipant')->name('update');
                 Route::get('export-participant-columns', 'exportParticipantColumns')->name('export-participant-columns');
                 Route::post('import-participants', 'importParticipants')->name('import-participants');
-                Route::post('documents/store/{id}', 'storeParticipantDocument')->name('documents.store');
+                Route::post('documents/store', 'storeParticipantDocument')->name('documents.store');
                 Route::delete('delete/{id}', 'destroyparticipant')->name('delete');
                 Route::post('grade/store', 'gradeStore')->name('grade.store');
                 Route::put('updateStatus',  'updatecompletionStatus')->name('updateStatus');
             });
-            //budget routes
+        });
+        //super admin budget routes
+        Route::controller(SuperAdminBudgetController::class)->group(function () {
             Route::prefix('budget')->name('budget.')->group(function () {
                 Route::get('Detail', 'budgetview')->name('Detail'); //load budget details view
                 Route::get('Create', 'createBudgetView')->name('Create'); //load the create budget page
                 Route::post('store', 'budgetstore')->name('store'); // Store user (for create)
             });
-
-            //institute routes
+        });
+        //super admin institute routes
+        Route::controller(SuperAdminInstituteController::class)->group(function () {
             Route::prefix('institute')->name('institute.')->group(function () {
                 Route::get('Detail', 'instituteview')->name('Detail');
                 Route::get('create', 'instituteCreate')->name('create');
@@ -98,8 +111,9 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::delete('{id}/delete', 'instituteDelete')->name('delete');
                 Route::get('search', 'Institutesearch')->name('search');
             });
-
-            //trainers routes
+        });
+        //super admin trainer routes
+        Route::controller(SuperAdminTrainerController::class)->group(function () {
             Route::prefix('trainer')->name('trainer.')->group(function () {
                 Route::get('{id}/Detail', 'trainerview')->name('Detail'); //load the trainer details view
                 Route::get('{id}/Create', 'trainerCreate')->name('Create');
@@ -109,21 +123,17 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::put('/update/{id}', 'trainerUpdate')->name('update');
                 Route::delete('{id}/delete', 'trainerDelete')->name('delete');
             });
-
-            //approvel routes
+        });
+        //super admin approvel routes
+        Route::controller(SuperAdminApprovelController::class)->group(function () {
             Route::prefix('approval')->name('approval.')->group(function () {
                 Route::get('Detail', 'approval')->name('Detail');
                 Route::post('{approval}/approve', 'approve')->name('approve');
                 Route::post('{approval}/reject', 'reject')->name('reject');
             });
-
-            //notification routes
-            Route::prefix('Notifications')->name('Notifications.')->group(function () {
-                Route::get('Notifications', 'NotificationView')->name('Notifications');
-                Route::post('{id}/mark-read', 'markAsReadAndRedirect')->name('markAsRead');
-            });
-
-            //reports routes
+        });
+        //Super Admin reports 
+        Route::controller(reportcontroller::class)->group(function () {
             Route::prefix('report')->name('report.')->group(function () {
                 Route::get('trainingSummary', 'trainingsummaryView')->name('trainingSummary'); // load the training summary view
                 Route::get('bondSummary', 'bondsummaryView')->name('BONDSummary');
@@ -131,19 +141,6 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
                 Route::get('IndividualEmployeeTrainingRecordReport', 'IndividualEmployeeTrainingRecordView')->name('IndividualEmployeeTrainingRecordReport');
                 Route::get('ParticularCourseCompletedSummery', 'ParticularCourseCompletedSummaryView')->name('ParticularCourseCompletedSummery');
                 Route::get('TrainingFullSummery', 'TrainingFullSummaryView')->name('TrainingFullSummery');
-                Route::prefix('pdf')->name('pdf.')->group(function () {
-                    Route::get('download-training-summary-pdf', 'downloadTrainingSummaryPdf')->name('download-training-summary-pdf');
-                    Route::get('download-Individual-Employee-Training-Record-Pdf', 'downloadIndividualEmployeeTrainingRecordPdf')->name('dowload-Individual-Employee-Training-Record-Pdf');
-                    Route::get('download-Particular-Course-Completed-Summery-Pdf', 'downloadParticularCourseCompletedSummaryPdf')->name('dowload-Particular-Course-Completed-Summery-Pdf');
-                    Route::get('download-Training-Full-Summary-pdf', 'downloadTrainingFullSummaryLocalForeignPdf')->name('download-Training-Full-Summary-pdf');
-                });
-            });
-        });
-    });
-    //Super Admin reports 
-    Route::controller(reportcontroller::class)->group(function () {
-        Route::prefix('SuperAdmin')->name('SuperAdmin.')->group(function () {
-            Route::prefix('report')->name('report.')->group(function () {
                 Route::get('TrainingCustodianWiseSummery', 'TrainingCustodianWiseSummeryView')->name('TrainingCustodianWiseSummery');
                 Route::get('DesignationWiseSummery', 'DesignationWiseSummeryView')->name('DesignationWiseSummery');
                 Route::get('CourseCode-wise_summary', 'courseCodeWiseSummaryView')->name('CourseCode-wise_summary');
@@ -154,6 +151,10 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
 
                 //pdf download routes
                 Route::prefix('pdf')->name('pdf.')->group(function () {
+                    Route::get('download-training-summary-pdf', 'downloadTrainingSummaryPdf')->name('download-training-summary-pdf');
+                    Route::get('download-Individual-Employee-Training-Record-Pdf', 'downloadIndividualEmployeeTrainingRecordPdf')->name('dowload-Individual-Employee-Training-Record-Pdf');
+                    Route::get('download-Particular-Course-Completed-Summery-Pdf', 'downloadParticularCourseCompletedSummaryPdf')->name('dowload-Particular-Course-Completed-Summery-Pdf');
+                    Route::get('download-Training-Full-Summary-pdf', 'downloadTrainingFullSummaryLocalForeignPdf')->name('download-Training-Full-Summary-pdf');
                     Route::get('dowload-Training-Custodian-Wise-Summery', 'downloadTrainingCustodianWiseSummeryPdf')->name('dowload-Training-Custodian-Wise-Summery');
                     Route::get('download-Designation-Wise-Summery', 'downloadDesignationWiseSummeryPdf')->name('download-Designation-Wise-Summery');
                     Route::get('download-Course-code-wise-summery', 'downloadCourseCoudeWiseSummeryPdf')->name('download-Course-code-wise-summery');

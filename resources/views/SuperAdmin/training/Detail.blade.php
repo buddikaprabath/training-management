@@ -79,14 +79,20 @@
                                     <a href="#" 
                                     class="open-status-modal" 
                                     data-training-id="{{ $item->id }}"
+                                    data-feedback-form="{{ $item->feedback_form }}"
+                                    data-e-report="{{ $item->e_report }}"
+                                    data-warm-clothe-allowance="{{ $item->warm_clothe_allowance }}"
+                                    data-presentation="{{ $item->presentation }}"
+                                    data-training-status="{{ $item->training_status }}"
                                     @if($item->training_status) 
                                         style="pointer-events: none; color: green;" 
                                     @endif
-                                    >
-                                        @if($item->training_status)  <!-- Check if training_status is true -->
-                                            <span class="completed-status">Completed</span> <!-- Display "Completed" -->
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#trainingStatusModal">
+                                        @if($item->training_status)
+                                            <span class="completed-status">Completed</span>
                                         @else
-                                            <i data-feather="check-circle" class="check-icon" id="check-icon-{{ $item->id }}"></i>
+                                            <i data-feather="check-circle" class="check-icon"></i>
                                         @endif
                                     </a>
                                 </td>
@@ -193,7 +199,51 @@
     </div>
 </div>
 
-
+<!-- Training Status Modal -->
+<div class="modal fade" id="trainingStatusModal" tabindex="-1" aria-labelledby="trainingStatusModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Training Status</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="trainingStatusForm" method="POST" action="#">
+                    @csrf
+                    @method('PUT')
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label" for="feedback_form">Feedback Form</label>
+                        <input class="form-check-input status-switch" type="checkbox" id="feedback_form" name="feedback_form" value="1">
+                    </div>
+            
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label" for="e_report">E-Report</label>
+                        <input class="form-check-input status-switch" type="checkbox" id="e_report" name="e_report" value="1">
+                    </div>
+            
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label" for="warm_clothe_allowance">Warm Clothes Allowance</label>
+                        <input class="form-check-input status-switch" type="checkbox" id="warm_clothe_allowance" name="warm_clothe_allowance" value="1">
+                    </div>
+            
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label" for="presentation">Presentation</label>
+                        <input class="form-check-input status-switch" type="checkbox" id="presentation" name="presentation" value="1">
+                    </div>
+            
+                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
+                        <label class="form-check-label" for="training_status">Training Completed</label>
+                        <input class="form-check-input status-switch" type="checkbox" id="training_status" name="training_status" value="1">
+                    </div>
+            
+                    <div class="modal-footer">
+                        <button type="submit" class="btn btn-primary" id="saveStatus">Save</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 <!-- Modal for Cost Breakdown -->
 <div class="modal fade" id="costModal" tabindex="-1" aria-labelledby="costModalLabel" aria-hidden="true">
@@ -283,63 +333,6 @@
     </div>
 </div>
 
-<!-- Training Status Modal -->
-<div class="modal fade" id="trainingStatusModal" tabindex="-1" aria-labelledby="trainingStatusModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Training Status</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="trainingStatusForm" method="POST" 
-                    @if (!empty($item))
-                        action="{{ route('SuperAdmin.training.update-status', $item->id) }}"
-                    @else
-                        action="#" 
-                    @endif>
-                    @csrf
-                    @method('PUT')
-                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
-                        <label class="form-check-label" for="feedback_form">Feedback Form</label>
-                        <input class="form-check-input status-switch" type="checkbox" id="feedback_form" name="feedback_form" 
-                            @if(!empty($item) && $item->feedback_form == 1) checked @endif>
-                    </div>
-            
-                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
-                        <label class="form-check-label" for="e_report">E-Report</label>
-                        <input class="form-check-input status-switch" type="checkbox" id="e_report" name="e_report" 
-                            @if(!empty($item) && $item->e_report == 1) checked @endif>
-                    </div>
-            
-                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
-                        <label class="form-check-label" for="warm_clothe_allowance">Warm Clothes Allowance</label>
-                        <input class="form-check-input status-switch" type="checkbox" id="warm_clothe_allowance" name="warm_clothe_allowance" 
-                            @if(!empty($item) && $item->warm_clothe_allowance == 1) checked @endif>
-                    </div>
-            
-                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
-                        <label class="form-check-label" for="presentation">Presentation</label>
-                        <input class="form-check-input status-switch" type="checkbox" id="presentation" name="presentation" 
-                            @if(!empty($item) && $item->presentation == 1) checked @endif>
-                    </div>
-            
-                    <div class="form-check form-switch d-flex justify-content-between align-items-center">
-                        <label class="form-check-label" for="training_status">Training Completed</label>
-                        <input class="form-check-input" type="checkbox" id="training_status" name="training_status" 
-                            @if(!empty($item) && $item->training_status == 1) checked @endif>
-                    </div>
-            
-                    <div class="modal-footer">
-                        <button type="submit" class="btn btn-primary" id="saveStatus" 
-                            @if(empty($item)) disabled @endif>Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Modal for Subject -->
 <div class="modal fade" id="subjectModal" tabindex="-1" aria-labelledby="subjectModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -378,7 +371,88 @@
         </div>
     </div>
 </div>
-
+<script>
+   document.addEventListener("DOMContentLoaded", function () {
+        const statusModal = new bootstrap.Modal(document.getElementById('trainingStatusModal'));
+        
+        // Handle status modal opening
+        document.querySelectorAll('.open-status-modal').forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (this.getAttribute('data-training-status') !== "1") {
+                    const trainingId = this.getAttribute('data-training-id');
+                    const form = document.getElementById('trainingStatusForm');
+                    form.action = `/SuperAdmin/training/update-status/${trainingId}`;
+                    
+                    // Get all data attributes
+                    const feedbackForm = this.getAttribute('data-feedback-form') === "1";
+                    const eReport = this.getAttribute('data-e-report') === "1";
+                    const warmClotheAllowance = this.getAttribute('data-warm-clothe-allowance') === "1";
+                    const presentation = this.getAttribute('data-presentation') === "1";
+                    const trainingStatus = this.getAttribute('data-training-status') === "1";
+                    
+                    // Update checkboxes
+                    document.getElementById('feedback_form').checked = feedbackForm;
+                    document.getElementById('e_report').checked = eReport;
+                    document.getElementById('warm_clothe_allowance').checked = warmClotheAllowance;
+                    document.getElementById('presentation').checked = presentation;
+                    document.getElementById('training_status').checked = trainingStatus;
+                    
+                    // Disable checkboxes if training is already completed
+                    const switches = document.querySelectorAll('.status-switch');
+                    switches.forEach(checkbox => {
+                        checkbox.disabled = trainingStatus;
+                    });
+                    
+                    // Initialize the validation
+                    validateTrainingStatus();
+                }
+            });
+        });
+        
+        // Function to validate training status dependencies
+        function validateTrainingStatus() {
+            const trainingStatusCheckbox = document.getElementById('training_status');
+            const otherCheckboxes = [
+                document.getElementById('feedback_form'),
+                document.getElementById('e_report'),
+                document.getElementById('warm_clothe_allowance'),
+                document.getElementById('presentation')
+            ];
+            
+            // Check if all required checkboxes are checked
+            function checkRequirements() {
+                const allChecked = otherCheckboxes.every(checkbox => checkbox.checked);
+                trainingStatusCheckbox.disabled = !allChecked;
+                
+                // Add/remove visual feedback
+                if (!allChecked) {
+                    trainingStatusCheckbox.parentElement.classList.add('text-muted');
+                    trainingStatusCheckbox.parentElement.title = "Complete all other requirements first";
+                } else {
+                    trainingStatusCheckbox.parentElement.classList.remove('text-muted');
+                    trainingStatusCheckbox.parentElement.title = "";
+                }
+            }
+            
+            // Initial check
+            checkRequirements();
+            
+            // Add event listeners to all checkboxes
+            otherCheckboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', checkRequirements);
+            });
+        }
+        
+        // Add event listener to the form to prevent submission if requirements aren't met
+        document.getElementById('trainingStatusForm')?.addEventListener('submit', function(e) {
+            const trainingStatus = document.getElementById('training_status');
+            if (trainingStatus.checked && trainingStatus.disabled) {
+                e.preventDefault();
+                alert('Please complete all other requirements before marking training as completed.');
+            }
+        });
+    });
+</script>
 
 
 <script>
@@ -386,7 +460,6 @@
         const costModalElement = document.getElementById("costModal");
         const uploadModalElement = document.getElementById("uploadDocumentModal");
         const costModal = new bootstrap.Modal(costModalElement);
-        const trainingStatusModal = new bootstrap.Modal(document.getElementById("trainingStatusModal"));
         const costInputs = document.querySelectorAll(".cost-input");
         const totalAmountField = document.getElementById("totalAmount");
 
@@ -445,14 +518,6 @@
                 });
             });
 
-            document.querySelectorAll(".open-status-modal").forEach(button => {
-                button.addEventListener("click", function () {
-                    const trainingId = this.dataset.trainingId;
-                    document.getElementById("trainingStatusForm").action = `/SuperAdmin/training/update-status/${trainingId}`;
-                    trainingStatusModal.show();
-                });
-            });
-
             document.getElementById("saveCost")?.addEventListener("click", function () {
                 console.log("Cost details saved!");
                 costModal.hide();
@@ -484,44 +549,11 @@
             }
         }
 
-        function handleTrainingStatusForm() {
-            document.getElementById("saveStatus")?.addEventListener("click", function () {
-                let form = document.getElementById("trainingStatusForm");
-                if (!form) return;
-
-                // Check if all checkboxes are checked
-                const allChecked = [...document.querySelectorAll(".status-switch")].every(input => input.checked);
-
-                let trainingStatusField = document.getElementById("training_status");
-                if (trainingStatusField) {
-                    if (allChecked) {
-                        trainingStatusField.checked = true;
-                        trainingStatusField.value = 1;
-                    } else {
-                        trainingStatusField.checked = false;
-                        trainingStatusField.value = 0;
-                    }
-
-                    // Enable 'training_status' before submitting
-                    trainingStatusField.disabled = false;
-                }
-
-                // Convert all checkbox values to 1 or 0 before submission
-                document.querySelectorAll(".status-switch").forEach(input => {
-                    input.value = input.checked ? 1 : 0;
-                });
-
-                // Submit the form
-                form.submit();
-            });
-        }
-
         // Initialize all functionalities
         function init() {
             initializeModals();
             attachCostCalculation();
             initFeatherIcons();
-            handleTrainingStatusForm();
         }
 
         init();
