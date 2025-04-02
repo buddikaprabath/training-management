@@ -147,8 +147,4 @@ class superadmincontroller extends Controller
             return redirect()->back()->with('error', 'Error updating notification: ' . $e->getMessage());
         }
     }
-    public function NotificationView()
-    {
-        return view('SuperAdmin.Notifications.Notifications');
-    }
 }

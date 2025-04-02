@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CATCAdmin\CATCAdminParticipantController;
 use App\Models\Training;
 use App\Models\Participant;
 use Illuminate\Support\Facades\Http;
@@ -9,6 +10,11 @@ use App\Http\Controllers\User\Usercontroller;
 use App\Http\Controllers\Admin\HRAdmincontroller;
 use App\Http\Controllers\Admin\hrreportcontroller;
 use App\Http\Controllers\Admin\CATCAdmincontroller;
+use App\Http\Controllers\Admin\HRAdmin\HRAdminBudgetController;
+use App\Http\Controllers\Admin\HRAdmin\HRAdminDashboardController;
+use App\Http\Controllers\Admin\HRAdmin\HRAdminInstituteController;
+use App\Http\Controllers\Admin\HRAdmin\HRAdminParticipantController;
+use App\Http\Controllers\Admin\HRAdmin\HRAdminTrainerController;
 use App\Http\Controllers\Superadmin\reportcontroller;
 use App\Http\Controllers\SuperAdmin\TrainingController;
 use App\Http\Controllers\SuperAdmin\dashboardcontroller;
@@ -18,6 +24,7 @@ use App\Http\Controllers\SuperAdmin\SuperAdminApprovelController;
 use App\Http\Controllers\SuperAdmin\SuperAdminBudgetController;
 use App\Http\Controllers\SuperAdmin\SuperAdminInstituteController;
 use App\Http\Controllers\SuperAdmin\SuperAdminTrainerController;
+use App\Http\Controllers\User\UserParticipantController;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -54,6 +61,10 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
 
                 // Search Route for User Details
                 Route::get('searchUsers', 'userview')->name('user.search'); // Search users by name, username, or email
+            });
+            //notifications routes
+            Route::prefix('Notifications')->name('Notifications.')->group(function () {
+                Route::post('markAsRead/{id}', 'markAsReadAndRedirect')->name('markAsRead');
             });
         });
         //super admin training routes
@@ -171,13 +182,17 @@ Route::middleware(['auth', 'verified', 'roleManager:superadmin, 1, 0'])->group(f
 
 //hr admin routes
 Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(function () {
-    Route::controller(HRAdmincontroller::class)->group(function () {
-        Route::prefix('Admin')->name('Admin.')->group(function () {
-            Route::prefix('HRAdmin')->name('HRAdmin.')->group(function () {
-                //dashboard route
+    //Admin routes
+    Route::prefix('Admin')->name('Admin.')->group(function () {
+        Route::prefix('HRAdmin')->name('HRAdmin.')->group(function () {
+            //hr admin dashboard routes
+            Route::controller(HRAdminDashboardController::class)->group(function () {
+                //dashboard routes
                 Route::prefix('page')->name('page.')->group(function () {
-                    Route::get('dashboard', 'viewDashboard')->name('dashboard');
+                    Route::get('dashboard', 'index')->name('dashboard');
                 });
+            });
+            Route::controller(HRAdmincontroller::class)->group(function () {
                 //training Routes
                 Route::prefix('training')->name('training.')->group(function () {
                     Route::get('Detail', 'trainingview')->name('Detail'); //load training details view
@@ -195,6 +210,13 @@ Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(func
                     Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
                     Route::post('subject/store', 'storeSubject')->name('subject.store');
                 });
+                //notifications routes
+                Route::prefix('notifications')->name('notifications.')->group(function () {
+                    Route::get('Detail', 'getNotifications')->name('Detail');
+                    Route::put('update/{id}', 'statusupdate')->name('update');
+                });
+            });
+            Route::controller(HRAdminParticipantController::class)->group(function () {
                 //participant routes
                 Route::prefix('participant')->name('participant.')->group(function () {
                     Route::get('{id}/Detail', 'participantview')->name('Detail'); //load participant details view
@@ -209,12 +231,16 @@ Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(func
                     Route::post('grade/store', 'gradeStore')->name('grade.store');
                     Route::put('updateStatus',  'updatecompletionStatus')->name('updateStatus');
                 });
+            });
+            Route::controller(HRAdminBudgetController::class)->group(function () {
                 //budget routes
                 Route::prefix('budget')->name('budget.')->group(function () {
                     Route::get('Detail', 'budgetview')->name('Detail'); //load budget details view
                     Route::get('Create', 'createBudgetView')->name('Create'); //load the create budget page
                     Route::post('store', 'budgetstore')->name('store'); // Store user (for create)
                 });
+            });
+            Route::controller(HRAdminInstituteController::class)->group(function () {
                 //institute routes
                 Route::prefix('institute')->name('institute.')->group(function () {
                     Route::get('Detail', 'instituteview')->name('Detail');
@@ -225,7 +251,8 @@ Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(func
                     Route::delete('{id}/delete', 'instituteDelete')->name('delete');
                     Route::get('search', 'Institutesearch')->name('search');
                 });
-
+            });
+            Route::controller(HRAdminTrainerController::class)->group(function () {
                 //trainers routes
                 Route::prefix('trainer')->name('trainer.')->group(function () {
                     Route::get('{id}/Detail', 'trainerview')->name('Detail'); //load the trainer details view
@@ -236,18 +263,9 @@ Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(func
                     Route::put('/update/{id}', 'trainerUpdate')->name('update');
                     Route::delete('{id}/delete', 'trainerDelete')->name('delete');
                 });
-                //notifications routes
-                Route::prefix('notifications')->name('notifications.')->group(function () {
-                    Route::get('Detail', 'getNotifications')->name('Detail');
-                    Route::put('update/{id}', 'statusupdate')->name('update');
-                });
             });
-        });
-    });
-    //Super Admin reports 
-    Route::controller(hrreportcontroller::class)->group(function () {
-        Route::prefix('Admin')->name('Admin.')->group(function () {
-            Route::prefix('HRAdmin')->name('HRAdmin.')->group(function () {
+            //Super Admin reports 
+            Route::controller(hrreportcontroller::class)->group(function () {
                 Route::prefix('report')->name('report.')->group(function () {
                     Route::get('trainingSummary', 'trainingsummaryView')->name('trainingSummary');
                     Route::get('IndividualEmployeeTrainingRecordReport', 'IndividualEmployeeTrainingRecordView')->name('IndividualEmployeeTrainingRecordReport');
@@ -283,13 +301,9 @@ Route::middleware(['auth', 'verified', 'roleManager:hradmin, 1, 0'])->group(func
 
 //catc admin routes
 Route::middleware(['auth', 'verified', 'roleManager:catcadmin, 2, 0'])->group(function () {
-    Route::controller(CATCAdmincontroller::class)->group(function () {
-        Route::prefix('Admin')->name('Admin.')->group(function () {
-            Route::prefix('CATCAdmin')->name('CATCAdmin.')->group(function () {
-                //CATC dachboard
-                Route::prefix('page')->name('page.')->group(function () {
-                    Route::get('dashboard', 'viewDashboard')->name('dashboard');
-                });
+    Route::prefix('Admin')->name('Admin.')->group(function () {
+        Route::prefix('CATCAdmin')->name('CATCAdmin.')->group(function () {
+            Route::controller(CATCAdmincontroller::class)->group(function () {
                 //CATC training Routes
                 Route::prefix('training')->name('training.')->group(function () {
                     Route::get('Detail', 'trainingview')->name('Detail'); //load training details view
@@ -307,6 +321,13 @@ Route::middleware(['auth', 'verified', 'roleManager:catcadmin, 2, 0'])->group(fu
                     Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
                     Route::post('subject/store', 'storeSubject')->name('subject.store');
                 });
+                //notifications routes
+                Route::prefix('notifications')->name('notifications.')->group(function () {
+                    Route::get('Detail', 'getNotifications')->name('Detail');
+                    Route::put('update/{id}', 'statusupdate')->name('update');
+                });
+            });
+            Route::controller(CATCAdminParticipantController::class)->group(function () {
                 //CATC participant routes
                 Route::prefix('participant')->name('participant.')->group(function () {
                     Route::get('{id}/Detail', 'participantview')->name('Detail'); //load participant details view
@@ -321,22 +342,14 @@ Route::middleware(['auth', 'verified', 'roleManager:catcadmin, 2, 0'])->group(fu
                     Route::post('grade/store', 'gradeStore')->name('grade.store');
                     Route::put('updateStatus',  'updatecompletionStatus')->name('updateStatus');
                 });
-                //notifications routes
-                Route::prefix('notifications')->name('notifications.')->group(function () {
-                    Route::get('Detail', 'getNotifications')->name('Detail');
-                    Route::put('update/{id}', 'statusupdate')->name('update');
-                });
             });
         });
     });
 });
 //user routes
 Route::middleware(['auth', 'verified', 'roleManager:user'])->group(function () {
-    Route::controller(Usercontroller::class)->group(function () {
-        Route::prefix('User')->name('User.')->group(function () {
-            Route::prefix('page')->name('page.')->group(function () {
-                Route::get('dashboard', 'viewDashboard')->name('dashboard');
-            });
+    Route::prefix('User')->name('User.')->group(function () {
+        Route::controller(Usercontroller::class)->group(function () {
             //training Routes
             Route::prefix('training')->name('training.')->group(function () {
                 Route::get('Detail', 'trainingview')->name('Detail'); //load training details view
@@ -354,6 +367,14 @@ Route::middleware(['auth', 'verified', 'roleManager:user'])->group(function () {
                 Route::put('update-status/{trainingId}', 'updateStatus')->name('update-status');
                 Route::post('subject/store', 'storeSubject')->name('subject.store');
             });
+
+            Route::prefix('notifications')->name('notifications.')->group(function () {
+                Route::get('Detail', 'getNotifications')->name('Detail');
+                Route::put('update/{id}', 'statusupdate')->name('update');
+            });
+        });
+        //user participant routes
+        Route::controller(UserParticipantController::class)->group(function () {
             //participant routes
             Route::prefix('participant')->name('participant.')->group(function () {
                 Route::get('{id}/Detail', 'participantview')->name('Detail'); //load participant details view
@@ -367,10 +388,6 @@ Route::middleware(['auth', 'verified', 'roleManager:user'])->group(function () {
                 Route::delete('delete/{id}', 'destroyparticipant')->name('delete');
                 Route::post('grade/store', 'gradeStore')->name('grade.store');
                 Route::put('updateStatus',  'updatecompletionStatus')->name('updateStatus');
-            });
-            Route::prefix('notifications')->name('notifications.')->group(function () {
-                Route::get('Detail', 'getNotifications')->name('Detail');
-                Route::put('update/{id}', 'statusupdate')->name('update');
             });
         });
     });

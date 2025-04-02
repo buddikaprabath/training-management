@@ -6,12 +6,6 @@
             Pages
         </li>
 
-        <li class="sidebar-item {{ request()->routeIs('User.page.dashboard')?'active':''}}">
-            <a class="sidebar-link" href="{{route('User.page.dashboard')}}">
-                <i class="align-middle" data-feather="sliders"></i> <span class="align-middle">Dashboard</span>
-            </a>
-        </li>
-
         <li class="sidebar-item {{ request()->routeis('User.training.Detail')?'active':''}}">
             <a class="sidebar-link" href="{{route('User.training.Detail')}}">
                 <i class="align-middle" data-feather="user"></i> <span class="align-middle">Manage Training</span>

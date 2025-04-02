@@ -37,9 +37,9 @@ class AuthenticatedSessionController extends Controller
         } elseif ($authUserRole == 'hradmin' && $authUserDivision == '1') {
             return redirect()->intended(route('Admin.HRAdmin.page.dashboard', absolute: false));
         } elseif ($authUserRole == 'catcadmin' && $authUserDivision == '2') {
-            return redirect()->intended(route('Admin.CATCAdmin.page.dashboard', absolute: false));
+            return redirect()->intended(route('Admin.CATCAdmin.training.Detail', absolute: false));
         } elseif ($authUserRole == 'user') {
-            return redirect()->intended(route('User.page.dashboard', absolute: false));
+            return redirect()->intended(route('User.training.Detail', absolute: false));
         } else {
             return redirect()->intended(route('login', absolute: false));
         }
