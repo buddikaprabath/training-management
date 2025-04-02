@@ -67,7 +67,7 @@
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" style="border: none; background: transparent; padding: 0;" onclick="return confirm('Are you sure you want to delete user {{ $user->name }}?')">
-                                            <i class="align-middle me-2 text-primary" data-feather="trash-2"></i>
+                                            <i class="align-middle me-2 text-danger" data-feather="trash-2"></i>
                                         </button>
                                     </form>
                                 </td>

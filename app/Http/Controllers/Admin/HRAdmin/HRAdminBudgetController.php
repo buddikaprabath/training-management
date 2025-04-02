@@ -8,7 +8,7 @@ use App\Http\Controllers\Controller;
 
 class HRAdminBudgetController extends Controller
 {
-    
+
     //budget handling
     public function budgetview(Request $request)
     {
@@ -44,10 +44,24 @@ class HRAdminBudgetController extends Controller
     {
         try {
             $request->validate([
-                'type'              => 'string|required',
-                'provide_type'      => 'required|string',
-                'amount'            => 'numeric |max:999999999'
+                'type' => 'string|required',
+                'provide_type' => 'required|string',
+                'amount' => 'numeric|max:999999999'
             ]);
+
+            $currentYear = date('Y');
+
+            // Check if this is an initial budget and one already exists for this year and category
+            if ($request->type === 'Initial') {
+                $existingInitial = Budget::where('type', 'Initial')
+                    ->where('provide_type', $request->provide_type)
+                    ->whereYear('created_at', $currentYear)
+                    ->exists();
+
+                if ($existingInitial) {
+                    return back()->with('error', "An initial {$request->provide_type} budget already exists for this year!");
+                }
+            }
 
             Budget::create([
                 'type' => $request->type,
