@@ -70,8 +70,8 @@
                 @method('PUT') <!-- HTTP method spoofing for PUT request -->
             @endif
             
-           <!-- EPF Number -->
-           <div class="col-md-6">
+            <!-- EPF Number -->
+            <div class="col-md-6">
                 <label for="epf_number" class="form-label">EPF Number</label>
                 <input name="epf_number" type="text" class="form-control track-change @error('epf_number') is-invalid @enderror" placeholder="EPF_Number" value="{{ old('epf_number', isset($employee['epf_number']) ? $employee['epf_number'] : (isset($participant) ? $participant->epf_number : '')) }}" required>
                 @error('epf_number')
@@ -88,8 +88,8 @@
                 @enderror
             </div>
 
-             <!-- Designation -->
-             <div class="col-md-6">
+            <!-- Designation -->
+            <div class="col-md-6">
                 <label for="designation" class="form-label">Designation</label>
                 <input name="designation" type="text" class="form-control track-change @error('designation') is-invalid @enderror" placeholder="Designation" value="{{ old('designation', isset($employee['Designation'])? $employee['Designation'] : (isset($participant) ? $participant->designation : '')) }}" required>
                 @error('designation')

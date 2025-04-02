@@ -5,21 +5,5 @@
                 <a class="text-muted" href="https://adminkit.io/" target="_blank"><strong>AASL</strong></a> - <a class="text-muted" href="https://adminkit.io/" target="_blank"><strong>Airport & Aviation Services Sri Lanka</strong></a>								&copy;
             </p>
         </div>
-        <div class="col-6 text-end">
-            <ul class="list-inline">
-                <li class="list-inline-item">
-                    <a class="text-muted" href="https://adminkit.io/" target="_blank">Support</a>
-                </li>
-                <li class="list-inline-item">
-                    <a class="text-muted" href="https://adminkit.io/" target="_blank">Help Center</a>
-                </li>
-                <li class="list-inline-item">
-                    <a class="text-muted" href="https://adminkit.io/" target="_blank">Privacy</a>
-                </li>
-                <li class="list-inline-item">
-                    <a class="text-muted" href="https://adminkit.io/" target="_blank">Terms</a>
-                </li>
-            </ul>
-        </div>
     </div>
 </div>

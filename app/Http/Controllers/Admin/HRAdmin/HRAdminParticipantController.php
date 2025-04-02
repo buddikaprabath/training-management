@@ -11,6 +11,7 @@ use App\Models\Training;
 use App\Models\Participant;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Excel;
+use App\Services\EmpApiService;
 use Illuminate\Validation\Rule;
 use App\Exports\ParticipantExport;
 use App\Imports\ParticipantImport;
@@ -21,6 +22,14 @@ use Illuminate\Support\Facades\Auth;
 class HRAdminParticipantController extends Controller
 {
     //participant handling
+    protected $excel;
+    protected EmpApiService $empApiService;
+
+    public function __construct(EmpApiService $empApiService, Excel $excel)
+    {
+        $this->empApiService = $empApiService;
+        $this->excel = $excel;
+    }
 
     //load the participant view blade
     public function participantview($trainingId)
@@ -111,17 +120,31 @@ class HRAdminParticipantController extends Controller
     }
 
     //load the create participant blade
-    public function createparticipant($trainingId)
+    public function createparticipant(Request $request, $trainingId)
     {
         try {
             // Attempt to find the training
             $training = Training::findOrFail($trainingId); // This will automatically throw a ModelNotFoundException if not found
 
+            // check if the epf number is provided
+            if (!$request->filled('epf_number')) {
+                return view('Admin.HRAdmin.participant.create', compact('training'));
+            }
+            // Validate EPF number when present
+            $validated = $request->validate([
+                'epf_number' => 'required|string|max:20',
+            ]);
+            //get employee details
+            $employee = $this->empApiService->getEmployeeDetailsForParticipant($validated['epf_number']);
+
+            if (!$employee) {
+                return back()->withInput()->with('error', 'Employee not found');
+            }
             // Return the view with the training data
-            return view('Admin.HRAdmin.participant.create', compact('training'));
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            // Catch the ModelNotFoundException and return an error if the training is not found
-            return redirect()->back()->with('error', 'Training not found.');
+            return view('Admin.HRAdmin.participant.create', [
+                'training' => $training,
+                'employee' => $employee,
+            ]);
         } catch (\Exception $e) {
             // Catch any other exceptions and return a generic error message
             return redirect()->back()->with('error', 'An error occurred: ' . $e->getMessage());
@@ -135,13 +158,13 @@ class HRAdminParticipantController extends Controller
             'epf_number' => [
                 'required',
                 'string',
-                'max:50',
+                'max:10',
                 Rule::unique('participants')->where(function ($query) use ($request) {
                     return $query->where('training_id', $request->training_id);
                 }),
             ],
             'designation'                  => 'required|string|max:255',
-            'salary_scale'                 => 'nullable|numeric|min:0|max:9999999999',
+            'salary_scale'                 => 'string|max:2',
             'location'                     => 'nullable|string|max:255',
             'obligatory_period'            => 'nullable|date',
             'cost_per_head'                => 'nullable|numeric|min:0|max:9999999999', // You can use 'decimal:10,2' if you expect decimals
@@ -302,9 +325,9 @@ class HRAdminParticipantController extends Controller
             // Validate the request data
             $request->validate([
                 'name'                         => 'required|string|max:255',
-                'epf_number'                   => 'required|string|max:50',
+                'epf_number'                   => 'required|string|max:10',
                 'designation'                  => 'required|string|max:255',
-                'salary_scale'                 => 'nullable|numeric|min:0|max:9999999999',
+                'salary_scale'                 => 'string|max:2',
                 'location'                     => 'nullable|string|max:255',
                 'obligatory_period'            => 'nullable|date',
                 'cost_per_head'                => 'nullable|numeric|min:0|max:9999999999',
@@ -390,11 +413,6 @@ class HRAdminParticipantController extends Controller
             DB::rollBack();
             return back()->with('error', 'Error occurred while sending update request: ' . $e->getMessage());
         }
-    }
-    protected $excel;
-    public function __construct(Excel $excel)
-    {
-        $this->excel = $excel;
     }
     public function exportParticipantColumns()
     {
