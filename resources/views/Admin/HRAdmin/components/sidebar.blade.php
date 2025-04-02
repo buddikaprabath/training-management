@@ -56,28 +56,28 @@
 
         <li class="sidebar-item {{ request()->routeis('Admin.HRAdmin.report.ParticularCourseCompletedSummery')?'active':''}}">
             <a class="sidebar-link" href="{{route('Admin.HRAdmin.report.ParticularCourseCompletedSummery')}}">
-                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Particular Course Completed Summery</span>
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Particular Course Completed Summary</span>
             </a>
         </li>
 
         <li class="sidebar-item {{ request()->routeis('Admin.HRAdmin.report.TrainingFullSummery')?'active':''}}">
             <a class="sidebar-link" href="{{route('Admin.HRAdmin.report.TrainingFullSummery')}}">
-                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Training Full Summery</span>
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Training Full Summary</span>
             </a>
         </li>
         <li class="sidebar-item{{request()->routeis('Admin.HRAdmin.report.TrainingCustodianWiseSummery')?'active':''}}">
             <a href="{{route('Admin.HRAdmin.report.TrainingCustodianWiseSummery')}}" class="sidebar-link">
-                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Training Custodian-Wise Summery</span>
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Training Custodian-Wise Summary</span>
             </a>
         </li>
         <li class="sidebar-item{{request()->routeis('Admin.HRAdmin.report.DesignationWiseSummery')?'active':''}}">
             <a href="{{route('Admin.HRAdmin.report.DesignationWiseSummery')}}" class="sidebar-link">
-                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Designation Wise Summery</span>
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Designation Wise Summary</span>
             </a>
         </li>
         <li class="sidebar-item{{request()->routeis('Admin.HRAdmin.report.CourseCode-wise_summary')?'active':''}}">
             <a href="{{route('Admin.HRAdmin.report.CourseCode-wise_summary')}}" class="sidebar-link">
-                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Course Code Wise Summery</span>
+                <i class="align-middle" data-feather="file-text"></i> <span class="align-middle">Course Code Wise Summary</span>
             </a>
         </li>
         <li class="sidebar-item{{request()->routeis('Admin.HRAdmin.report.ListOfAbsenteesReport')?'active':''}}">

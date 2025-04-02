@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Course Code-Wise Summery</title>
+    <title>Course Code-Wise Summary</title>
     <style>
         /* General Styles */
         body {
@@ -115,7 +115,7 @@
     <!-- Header -->
     <div class="header">
         <h1>Training And Development Department</h1>
-        <h3>Course Code-Wise Summery</h3>
+        <h3>Course Code-Wise Summary</h3>
     </div>
 
     <!-- Display employee details using the first participant -->

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Bond Summery</title>
+    <title>Bond Summary</title>
     <style>
         /* General Styles */
         body {
@@ -100,7 +100,7 @@
     <!-- Header -->
     <div class="header">
         <h1>Training And Development Department</h1>
-        <h3>Bond Summery Report</h3>
+        <h3>Bond Summary Report</h3>
     </div>
 
     <!-- Table -->

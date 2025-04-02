@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Budget Summery</title>
+    <title>Budget Summary</title>
     <style>
         /* General Styles */
         body {
@@ -100,7 +100,7 @@
     <!-- Header -->
     <div class="header">
         <h1>Training And Development Department</h1>
-        <h3>Budget Summery Report</h3>
+        <h3>Budget Summary Report</h3>
     </div>
 
     <!-- Table -->
