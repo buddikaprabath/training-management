@@ -66,7 +66,7 @@
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" style="border: none; background: none; padding: 0; cursor: pointer;">
-                                        <i data-feather="trash-2" class="align-middle me-2"></i>
+                                        <i data-feather="trash-2" class="align-middle me-2 text-danger"></i>
                                     </button>
                                 </form>
                             </td>

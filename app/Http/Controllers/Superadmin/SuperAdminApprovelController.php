@@ -15,7 +15,7 @@ use App\Http\Controllers\Controller;
 
 class SuperAdminApprovelController extends Controller
 {
-    
+
     // Approvel Handling
     public function approvelview()
     {
@@ -209,8 +209,6 @@ class SuperAdminApprovelController extends Controller
             }
         }
     }
-
-
 
     public function reject(Approval $approval)
     {
