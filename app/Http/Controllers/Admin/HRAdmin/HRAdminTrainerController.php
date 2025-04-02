@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin\HRAdmin;
 use App\Models\Trainer;
 use App\Models\Approval;
 use App\Models\Institute;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -12,7 +13,7 @@ use Illuminate\Support\Facades\Auth;
 
 class HRAdminTrainerController extends Controller
 {
-     
+
     // Trainer handling
     public function trainerview(Request $request, $id)
     {
@@ -131,6 +132,17 @@ class HRAdminTrainerController extends Controller
                 'new_data'   => json_encode($updatedData), // Store the updated data, including sureties and remarks
                 'status'     => 'pending',
             ]);
+            $message = "Approval Request Submitted : A new approval request has been submitted for editing a Trainer record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $trainer->id,
+            ]);
 
             DB::commit();
             return redirect()->route('Admin.HRAdmin.trainer.Detail', ['id' => $trainer->institute_id])
@@ -168,7 +180,17 @@ class HRAdminTrainerController extends Controller
                 'new_data'   => null,  // No new data as we are deleting the record
                 'status'     => 'pending',
             ]);
+            $message = "Approval Request Submitted : A new approval request has been submitted for deleting a Trainer record.Please review and take the necessary action.";
 
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $trainer->id,
+            ]);
             DB::commit();
             return redirect()->back()->with('success', 'Your deletion request has been sent for approval.');
         } catch (\Exception $e) {

@@ -272,6 +272,17 @@ class CATCAdmincontroller extends Controller
                 'status'     => 'pending',
                 'division_id' => $userDivision,  // Pass the division_id
             ]);
+            $message = "Approval Request Submitted : A new approval request has been submitted for editing a training record.                   Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $training->id,
+            ]);
 
             DB::commit();
             return redirect()->route('Admin.CATCAdmin.training.Detail')->with('success', 'Your update request has been sent for approval.');
@@ -427,6 +438,18 @@ class CATCAdmincontroller extends Controller
                 'division_id' => Auth::user()->division_id,  // Pass the division_id
             ]);
 
+            $message = "Approval Request Submitted : A new approval request has been submitted for editing a Cost Break down record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => $id,
+            ]);
+
             // Redirect back with a success message
             return redirect()->route('Admin.CATCAdmin.training.costDetail', ['id' => $costBreak->training_id])
                 ->with('success', 'Your update request has been sent for approval!');
@@ -472,6 +495,18 @@ class CATCAdmincontroller extends Controller
                 'status' => 'pending',               // Set status as 'pending'
                 'new_data' => null,                  // No new data for deletion
                 'user_id' => $userId,                // Add the user ID for tracking who requested the deletion
+            ]);
+
+            $message = "Approval Request Submitted : A new approval request has been submitted for deleting a cost break down record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $costs->id,
             ]);
 
             DB::commit();
@@ -629,6 +664,18 @@ class CATCAdmincontroller extends Controller
                 'division_id' => Auth::user()->division_id,  // Pass the division_id
             ]);
 
+            $message = "Approval Request Submitted : A new approval request has been submitted for deleting a training record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $training->id,
+            ]);
+
             DB::commit();
             return redirect()->route('Admin.CATCAdmin.training.Detail')->with('success', 'Your deletion request has been sent for approval.');
         } catch (\Exception $e) {
@@ -638,10 +685,4 @@ class CATCAdmincontroller extends Controller
     }
     //end training handling
 
-
-    //training handling
-    public function trainingsummaryView()
-    {
-        return view('Admin.CATCAdmin.report.training');
-    }
 }

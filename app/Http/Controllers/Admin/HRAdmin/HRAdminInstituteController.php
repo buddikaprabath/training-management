@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin\HRAdmin;
 
 use App\Models\Approval;
 use App\Models\Institute;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
@@ -103,6 +104,17 @@ class HRAdminInstituteController extends Controller
                 'status'     => 'pending',
             ]);
 
+            $message = "Approval Request Submitted : A new approval request has been submitted for editing a Institute record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $institute->id,
+            ]);
             DB::commit();
             return redirect()->route('Admin.HRAdmin.institute.Detail')
                 ->with('success', 'Your update request has been sent for approval.');
@@ -135,6 +147,18 @@ class HRAdminInstituteController extends Controller
                 'action'     => 'delete',
                 'new_data'   => null,  // No new data as we are deleting the record
                 'status'     => 'pending',
+            ]);
+
+            $message = "Approval Request Submitted : A new approval request has been submitted for deleting a Institute record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $institute->id,
             ]);
 
             DB::commit();

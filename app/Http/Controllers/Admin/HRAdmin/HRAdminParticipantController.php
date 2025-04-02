@@ -9,6 +9,7 @@ use App\Models\Approval;
 use App\Models\Document;
 use App\Models\Training;
 use App\Models\Participant;
+use App\Models\Notification;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Excel;
 use App\Services\EmpApiService;
@@ -406,6 +407,18 @@ class HRAdminParticipantController extends Controller
                 'status'     => 'pending',
             ]);
 
+            $message = "Approval Request Submitted : A new approval request has been submitted for editing a participant record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $participant->id,
+            ]);
+
             DB::commit();
             return redirect()->route('Admin.HRAdmin.participant.Detail', ['id' => $participant->training_id])
                 ->with('success', 'Your update request has been sent for approval.');
@@ -474,6 +487,17 @@ class HRAdminParticipantController extends Controller
                 'new_data'   => null,  // No new data as we are deleting the record
                 'status'     => 'pending',
                 'division_id' => Auth::user()->division_id,  // Pass the division_id
+            ]);
+            $message = "Approval Request Submitted : A new approval request has been submitted for deleting a participant record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $participant->id,
             ]);
 
             DB::commit();

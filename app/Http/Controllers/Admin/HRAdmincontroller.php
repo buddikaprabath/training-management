@@ -254,6 +254,18 @@ class HRAdmincontroller extends Controller
                 'status'     => 'pending'
             ]);
 
+            $message = "Approval Request Submitted : A new approval request has been submitted for editing a training record.                   Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $training->id,
+            ]);
+
             DB::commit();
             return redirect()->route('Admin.HRAdmin.training.Detail')->with('success', 'Your update request has been sent for approval.');
         } catch (\Exception $e) {
@@ -409,6 +421,17 @@ class HRAdmincontroller extends Controller
                 'status'     => 'pending',
             ]);
 
+            $message = "Approval Request Submitted : A new approval request has been submitted for editing a Cost Break Down record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $id,
+            ]);
             // Redirect back with a success message
             return redirect()->route('Admin.HRAdmin.training.costDetail', ['id' => $costBreak->training_id])
                 ->with('success', 'Your update request has been sent for approval!');
@@ -454,6 +477,18 @@ class HRAdmincontroller extends Controller
                 'status' => 'pending',               // Set status as 'pending'
                 'new_data' => null,                  // No new data for deletion
                 'user_id' => $userId,                // Add the user ID for tracking who requested the deletion
+            ]);
+
+            $message = "Approval Request Submitted : A new approval request has been submitted for deleting a cost break down record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $costs->id,
             ]);
 
             DB::commit();
@@ -609,6 +644,17 @@ class HRAdmincontroller extends Controller
                 'new_data'   => null,  // No new data as we are deleting the record
                 'status'     => 'pending',
                 'division_id' => Auth::user()->division_id,  // Pass the division_id
+            ]);
+            $message = "Approval Request Submitted : A new approval request has been submitted for deleting a Training record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $training->id,
             ]);
 
             DB::commit();

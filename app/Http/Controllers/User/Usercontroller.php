@@ -511,6 +511,18 @@ class Usercontroller extends Controller
                 'user_id' => $userId,                // Add the user ID for tracking who requested the deletion
             ]);
 
+            $message = "Approval Request Submitted : A new approval request has been submitted for deleting a cost break down record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => (string) $costs->id,
+            ]);
+
             DB::commit();
 
             // Return success message to inform the user that approval is pending
@@ -672,6 +684,18 @@ class Usercontroller extends Controller
                 'division_id' => Auth::user()->division_id,  // Pass the division_id
             ]);
 
+            $message = "Approval Request Submitted : A new approval request has been submitted for deleting a training record.Please review and take the necessary action.";
+
+            $user_role = 'superadmin';
+
+            // Create a notification
+            Notification::create([
+                'message'  => $message,
+                'status'   => 'pending',
+                'user_role' => $user_role,
+                'model_id'   => $trainingCode,
+            ]);
+
             DB::commit();
             return redirect()->route('User.training.Detail')->with('success', 'Your deletion request has been sent for approval.');
         } catch (\Exception $e) {
@@ -683,11 +707,4 @@ class Usercontroller extends Controller
 
 
     //end training handling
-
-
-    //training handling
-    public function trainingsummaryView()
-    {
-        return view('User.report.training');
-    }
 }
