@@ -118,8 +118,7 @@ class ParticipantImport implements ToModel, WithHeadingRow
         // Create Remark entry for 'other_comments'
         Remark::create([
             'remark' => $row['other_comments'],
-            'participant_id' => $participant->id,
-            'training_id' => $this->trainingId, // Use the participant's training_id
+            'participant_id' => $participant->id
         ]);
 
         return $participant;

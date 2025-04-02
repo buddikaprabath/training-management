@@ -40,25 +40,39 @@ class SuperAdminBudgetController extends Controller
     }
 
     public function budgetstore(Request $request)
-    {
-        try {
-            $request->validate([
-                'type'              => 'string|required',
-                'provide_type'      => 'required|string',
-                'amount'            => 'numeric |max:999999999'
-            ]);
+{
+    try {
+        $request->validate([
+            'type' => 'string|required',
+            'provide_type' => 'required|string',
+            'amount' => 'numeric|max:999999999'
+        ]);
 
-            Budget::create([
-                'type' => $request->type,
-                'amount' => $request->amount,
-                'provide_type' => $request->provide_type,
-                'division_id' => 1
-            ]);
-
-            return redirect()->route('SuperAdmin.budget.Detail')->with('success', 'Budget created successfully!');
-        } catch (\Exception $e) {
-            return back()->with('error', 'Error storing budget detail: ' . $e->getMessage());
+        $currentYear = date('Y');
+        
+        // Check if this is an initial budget and one already exists for this year and category
+        if ($request->type === 'Initial') {
+            $existingInitial = Budget::where('type', 'Initial')
+                                    ->where('provide_type', $request->provide_type)
+                                    ->whereYear('created_at', $currentYear)
+                                    ->exists();
+            
+            if ($existingInitial) {
+                return back()->with('error', "An initial {$request->provide_type} budget already exists for this year!");
+            }
         }
+
+        Budget::create([
+            'type' => $request->type,
+            'amount' => $request->amount,
+            'provide_type' => $request->provide_type,
+            'division_id' => 1
+        ]);
+
+        return redirect()->route('SuperAdmin.budget.Detail')->with('success', 'Budget created successfully!');
+    } catch (\Exception $e) {
+        return back()->with('error', 'Error storing budget detail: ' . $e->getMessage());
     }
+}
     //end budget handling functions
 }

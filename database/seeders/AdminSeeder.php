@@ -21,5 +21,14 @@ class AdminSeeder extends Seeder
             'role' => 'hradmin',
             'division_id' => 1,
         ]);
+        // Create CATC Admin
+        User::factory()->create([
+            'name' => 'CATC Admin',
+            'username' => 'catcadmin',
+            'password' => bcrypt('password'),
+            'email' => 'catcadmin@example.com',
+            'role' => 'catcadmin',
+            'division_id' => 2,
+        ]);
     }
 }

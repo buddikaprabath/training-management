@@ -23,7 +23,7 @@ class SuperAdminApprovelController extends Controller
     }
     public function approval()
     {
-        $approvals = Approval::where('status', 'pending')->get();
+        $approvals = Approval::where('status', 'pending')->paginate(10);
         return view('SuperAdmin.approval.Detail', compact('approvals'));
     }
 

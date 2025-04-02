@@ -31,7 +31,10 @@
                 <label for="type" class="form-label">Type</label>
                 <select name="type" id="type" class="form-select track-change @error('type') is-invalid @enderror" required>
                     <option value="" disabled selected>Choose Type</option>
-                    <option value="Initial">Initial</option>
+                    <option value="Initial" 
+                            @if(isset($disableInitial) && $disableInitial) disabled @endif>
+                        Initial
+                    </option>
                     <option value="Transfer">Transfer</option>
                 </select>
                 @error('type')

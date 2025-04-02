@@ -61,13 +61,13 @@
                                 <td>{{ $user->section ? $user->section->section_name : 'None'}}</td>
                                 <td>
                                     <a href="{{ route('SuperAdmin.Users.edit', $user->id) }}">
-                                        <i class="align-middle me-2" data-feather="edit"></i>
+                                        <i class="align-middle me-2" data-feather="edit" ></i>
                                     </a>
                                     <form action="{{ route('SuperAdmin.Users.user.delete', $user->id) }}" method="POST" style="display:inline;">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" style="border: none; background: transparent; padding: 0;" onclick="return confirm('Are you sure you want to delete user {{ $user->name }}?')">
-                                            <i class="align-middle me-2" data-feather="trash-2"></i>
+                                            <i class="align-middle me-2 text-primary" data-feather="trash-2"></i>
                                         </button>
                                     </form>
                                 </td>
